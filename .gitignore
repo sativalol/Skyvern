@@ -15,7 +15,7 @@ Thumbs.db
 *.db-journal
 *.sqlite
 *.sqlite3
-
+.agents/
 *.log
 crash_*.log
 skyvern.log
@@ -50,4 +50,5 @@ ngrok.zip
 ngrok.log
 
 # Obfuscator
-internal/obfuscator/
+internal/obfuscator/
+
