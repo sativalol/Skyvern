@@ -47,4 +47,7 @@ vendor/
 # ngrok files
 ngrok.exe
 ngrok.zip
-ngrok.log
+ngrok.log
+
+# Obfuscator
+internal/obfuscator/
