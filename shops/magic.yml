@@ -1,0 +1,18 @@
+pages:
+  page1:
+    gui-rows: 3
+    items:
+      enchanted_book:
+        material: ENCHANTED_BOOK
+        displayname: <#AA00FF><bold>Enchantments
+        section: enchanting
+        slot: 12
+      potion:
+        material: POTION
+        displayname: '&d&lPotions'
+        potiontypes:
+        - long_swiftness
+        item-flags:
+        - '*'
+        section: potions
+        slot: 16

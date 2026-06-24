@@ -3,6 +3,7 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"runtime"
 	"runtime/debug"
@@ -43,7 +44,7 @@ func (m *Manager) flushAnalytics() {
 
 	for id, a := range dirty {
 		if err := m.db.SaveAnalytics(id, a); err != nil {
-			fmt.Printf("flush %q: %v\n", id, err)
+			log.Printf("flush %q: %v", id, err)
 		}
 	}
 }

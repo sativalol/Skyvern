@@ -5,8 +5,6 @@ import (
 	"skyvern/internal/config"
 	"skyvern/internal/manager"
 	"skyvern/internal/moderation"
-	"skyvern/internal/storage"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -36,43 +34,22 @@ var Ban = &manager.Command{
 	Description: "Ban a user from the server",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionBanMembers) {
-			return ctx.Reply("[!] You do not have permission to ban members.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: ban <user> [reason]")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		r := strings.Join(ctx.Args[1:], " ")
-		if r == "" {
-			r = "No reason provided."
-		}
-
-		moderation.DMUserAction(ctx.Session, gid, "Ban", m.User.ID, ctx.AuthorID(), r)
-
-		if err := ctx.Ban(m.User.ID, r, 0); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to ban: %v", err))
-		}
-
-		c := storage.Case{
-			UserID:    m.User.ID,
-			ModID:     ctx.AuthorID(),
-			Type:      "ban",
-			Reason:    r,
-			Timestamp: time.Now(),
-		}
-		id, _ := ctx.DB.AddCase(gid, c)
-
-		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Ban (Case #%d)", id), ctx.AuthorID(), m.User.ID, r)
-		return ctx.Reply(fmt.Sprintf("[+] Banned **%s** (Case #%d) | Reason: %s", m.User.Username, id, r))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionBanMembers,
+			MinArgs:   1,
+			Usage:     "ban <user> [reason]",
+			CheckHier: true,
+			DMAction:  "Ban",
+			CaseType:  "ban",
+			LogName:   "Ban",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Ban(tid, reason, 0)
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Banned **%s** (Case #%d) | Reason: %s", uname, cid, reason)
+			},
+		})
 	},
 }
 
@@ -83,23 +60,20 @@ var Unban = &manager.Command{
 	Description: "Unban a user by their ID",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionBanMembers) {
-			return ctx.Reply("[!] You do not have permission to unban members.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: unban <user_id>")
-		}
-		gid := ctx.GuildID()
-		uid := ctx.Args[0]
-
-		moderation.DMUserAction(ctx.Session, gid, "Unban", uid, ctx.AuthorID(), "Manual unban command")
-
-		if err := ctx.Unban(uid, "Manual unban command"); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to unban: %v", err))
-		}
-		moderation.LogAction(ctx.Session, ctx.DB, gid, "Unban", ctx.AuthorID(), uid, "Manual unban command")
-		return ctx.Reply(fmt.Sprintf("[+] Unbanned user ID **%s**.", uid))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionBanMembers,
+			MinArgs:   1,
+			Usage:     "unban <user_id>",
+			CheckHier: false,
+			LogName:   "Unban",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Unban(tid, "Manual unban command")
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Unbanned user ID **%s**.", uname)
+			},
+		})
 	},
 }
 
@@ -110,40 +84,22 @@ var Hardban = &manager.Command{
 	Description: "Ban user and purge their messages",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionBanMembers) {
-			return ctx.Reply("[!] You do not have permission to ban members.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: hardban <user> [reason]")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		r := strings.Join(ctx.Args[1:], " ") + " (Purge 7d)"
-
-		moderation.DMUserAction(ctx.Session, gid, "Hardban", m.User.ID, ctx.AuthorID(), r)
-
-		if err := ctx.Ban(m.User.ID, r, 7); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to hardban: %v", err))
-		}
-
-		c := storage.Case{
-			UserID:    m.User.ID,
-			ModID:     ctx.AuthorID(),
-			Type:      "hardban",
-			Reason:    r,
-			Timestamp: time.Now(),
-		}
-		id, _ := ctx.DB.AddCase(gid, c)
-
-		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Hardban (Case #%d)", id), ctx.AuthorID(), m.User.ID, r)
-		return ctx.Reply(fmt.Sprintf("[+] Hardbanned **%s** (Case #%d) and purged message history.", m.User.Username, id))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionBanMembers,
+			MinArgs:   1,
+			Usage:     "hardban <user> [reason]",
+			CheckHier: true,
+			DMAction:  "Hardban",
+			CaseType:  "hardban",
+			LogName:   "Hardban",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Ban(tid, reason+" (Purge 7d)", 7)
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Hardbanned **%s** (Case #%d) and purged message history.", uname, cid)
+			},
+		})
 	},
 }
 
@@ -154,41 +110,25 @@ var Softban = &manager.Command{
 	Description: "Kick user and purge their messages via quick ban/unban",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionBanMembers) {
-			return ctx.Reply("[!] You do not have permission to ban members.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: softban <user>")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		reason := "Softban (ban & unban to purge messages)"
-
-		moderation.DMUserAction(ctx.Session, gid, "Softban", m.User.ID, ctx.AuthorID(), reason)
-
-		if err := ctx.Ban(m.User.ID, "Softban (Purge)", 7); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed ban phase: %v", err))
-		}
-		_ = ctx.Unban(m.User.ID, "Softban completion")
-
-		c := storage.Case{
-			UserID:    m.User.ID,
-			ModID:     ctx.AuthorID(),
-			Type:      "softban",
-			Reason:    reason,
-			Timestamp: time.Now(),
-		}
-		id, _ := ctx.DB.AddCase(gid, c)
-
-		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Softban (Case #%d)", id), ctx.AuthorID(), m.User.ID, reason)
-		return ctx.Reply(fmt.Sprintf("[+] Softbanned and kicked **%s** (Case #%d) (purged messages).", m.User.Username, id))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionBanMembers,
+			MinArgs:   1,
+			Usage:     "softban <user>",
+			CheckHier: true,
+			DMAction:  "Softban",
+			CaseType:  "softban",
+			LogName:   "Softban",
+			ActionFn: func(tid string, reason string) error {
+				if err := ctx.Ban(tid, "Softban (Purge)", 7); err != nil {
+					return err
+				}
+				return ctx.Unban(tid, "Softban completion")
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Softbanned and kicked **%s** (Case #%d) (purged messages).", uname, cid)
+			},
+		})
 	},
 }
 
@@ -199,22 +139,9 @@ var Tempban = &manager.Command{
 	Description: "Temporarily ban a user",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionBanMembers) {
-			return ctx.Reply("[!] You do not have permission to ban members.")
-		}
 		if len(ctx.Args) < 2 {
 			return ctx.SendHelp("tempban")
 		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-
 		durStr := ctx.Args[1]
 		lastChar := durStr[len(durStr)-1]
 		if lastChar >= '0' && lastChar <= '9' {
@@ -224,33 +151,34 @@ var Tempban = &manager.Command{
 		if err != nil {
 			return ctx.Reply("[!] Invalid duration. Use e.g. 60m, 2h, 1d.")
 		}
-		reason := "No reason provided."
-		if len(ctx.Args) > 2 {
-			reason = strings.Join(ctx.Args[2:], " ")
-		}
 
-		moderation.DMUserAction(ctx.Session, gid, "Tempban", m.User.ID, ctx.AuthorID(), fmt.Sprintf("Duration: %s | Reason: %s", dur.String(), reason))
-
-		if err := ctx.Ban(m.User.ID, fmt.Sprintf("Tempban: %s | Reason: %s", dur.String(), reason), 0); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed tempban: %v", err))
-		}
-
-		c := storage.Case{
-			UserID:    m.User.ID,
-			ModID:     ctx.AuthorID(),
-			Type:      "tempban",
-			Reason:    fmt.Sprintf("Tempban: %s | Reason: %s", dur.String(), reason),
-			Timestamp: time.Now(),
-		}
-		id, _ := ctx.DB.AddCase(gid, c)
-
-		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Tempban (Case #%d)", id), ctx.AuthorID(), m.User.ID, reason, config.Field("Duration", dur.String(), true))
-		go func() {
-			time.Sleep(dur)
-			_ = ctx.Unban(m.User.ID, "Temporary ban expired")
-			moderation.LogAction(ctx.Session, ctx.DB, gid, "Tempban Expired (Auto-Unban)", ctx.Session.State.User.ID, m.User.ID, "Automatic temporary ban expiration")
-		}()
-		return ctx.Reply(fmt.Sprintf("[+] Tempbanned **%s** (Case #%d) for %s | Reason: %s", m.User.Username, id, dur.String(), reason))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionBanMembers,
+			MinArgs:   2,
+			Usage:     "tempban <user> <duration> [reason]",
+			CheckHier: true,
+			DMAction:  "Tempban",
+			CaseType:  "tempban",
+			LogName:   "Tempban",
+			ExtraFields: []*discordgo.MessageEmbedField{
+				config.Field("Duration", dur.String(), true),
+			},
+			ActionFn: func(tid string, reason string) error {
+				if err := ctx.Ban(tid, fmt.Sprintf("Tempban: %s | Reason: %s", dur.String(), reason), 0); err != nil {
+					return err
+				}
+				go func() {
+					time.Sleep(dur)
+					_ = ctx.Unban(tid, "Temporary ban expired")
+					moderation.LogAction(ctx.Session, ctx.DB, ctx.GuildID(), "Tempban Expired (Auto-Unban)", ctx.Session.State.User.ID, tid, "Automatic temporary ban expiration")
+				}()
+				return nil
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Tempbanned **%s** (Case #%d) for %s | Reason: %s", uname, cid, dur.String(), reason)
+			},
+		})
 	},
 }
 
@@ -261,40 +189,22 @@ var Kick = &manager.Command{
 	Description: "Kick a user from the server",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionKickMembers) {
-			return ctx.Reply("[!] You do not have permission to kick members.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: kick <user>")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		reason := "Manual kick command"
-
-		moderation.DMUserAction(ctx.Session, gid, "Kick", m.User.ID, ctx.AuthorID(), reason)
-
-		if err := ctx.Kick(m.User.ID, reason); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to kick: %v", err))
-		}
-
-		c := storage.Case{
-			UserID:    m.User.ID,
-			ModID:     ctx.AuthorID(),
-			Type:      "kick",
-			Reason:    reason,
-			Timestamp: time.Now(),
-		}
-		id, _ := ctx.DB.AddCase(gid, c)
-
-		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Kick (Case #%d)", id), ctx.AuthorID(), m.User.ID, reason)
-		return ctx.Reply(fmt.Sprintf("[+] Kicked **%s** (Case #%d).", m.User.Username, id))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionKickMembers,
+			MinArgs:   1,
+			Usage:     "kick <user>",
+			CheckHier: true,
+			DMAction:  "Kick",
+			CaseType:  "kick",
+			LogName:   "Kick",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Kick(tid, reason)
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Kicked **%s** (Case #%d).", uname, cid)
+			},
+		})
 	},
 }
 
@@ -305,22 +215,9 @@ var Timeout = &manager.Command{
 	Description: "Timeout a user",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionModerateMembers) {
-			return ctx.Reply("[!] You do not have permission to moderate members.")
-		}
 		if len(ctx.Args) < 2 {
 			return ctx.SendHelp("timeout")
 		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-
 		durStr := ctx.Args[1]
 		lastChar := durStr[len(durStr)-1]
 		if lastChar >= '0' && lastChar <= '9' {
@@ -330,29 +227,27 @@ var Timeout = &manager.Command{
 		if err != nil {
 			return ctx.Reply("[!] Invalid duration. Use e.g. 15m, 2h, 1d.")
 		}
-		reason := "No reason provided."
-		if len(ctx.Args) > 2 {
-			reason = strings.Join(ctx.Args[2:], " ")
-		}
 		until := time.Now().Add(dur)
 
-		moderation.DMUserAction(ctx.Session, gid, "Timeout", m.User.ID, ctx.AuthorID(), fmt.Sprintf("Duration: %s | Reason: %s", dur.String(), reason))
-
-		if err := ctx.Timeout(m.User.ID, &until, reason); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to timeout: %v", err))
-		}
-
-		c := storage.Case{
-			UserID:    m.User.ID,
-			ModID:     ctx.AuthorID(),
-			Type:      "timeout",
-			Reason:    reason,
-			Timestamp: time.Now(),
-		}
-		id, _ := ctx.DB.AddCase(gid, c)
-
-		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Timeout (Case #%d)", id), ctx.AuthorID(), m.User.ID, reason, config.Field("Duration", dur.String(), true))
-		return ctx.Reply(fmt.Sprintf("[+] Timed out **%s** (Case #%d) until %s | Reason: %s", m.User.Username, id, until.Format("15:04:05"), reason))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionModerateMembers,
+			MinArgs:   2,
+			Usage:     "timeout <user> <duration> [reason]",
+			CheckHier: true,
+			DMAction:  "Timeout",
+			CaseType:  "timeout",
+			LogName:   "Timeout",
+			ExtraFields: []*discordgo.MessageEmbedField{
+				config.Field("Duration", dur.String(), true),
+			},
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Timeout(tid, &until, reason)
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Timed out **%s** (Case #%d) until %s | Reason: %s", uname, cid, until.Format("15:04:05"), reason)
+			},
+		})
 	},
 }
 
@@ -363,30 +258,21 @@ var Untimeout = &manager.Command{
 	Description: "Remove timeout from a user",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionModerateMembers) {
-			return ctx.Reply("[!] You do not have permission to moderate members.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: untimeout <user>")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		reason := "Manual untimeout command"
-
-		moderation.DMUserAction(ctx.Session, gid, "Untimeout", m.User.ID, ctx.AuthorID(), reason)
-
-		if err := ctx.Timeout(m.User.ID, nil, reason); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to remove timeout: %v", err))
-		}
-		moderation.LogAction(ctx.Session, ctx.DB, gid, "Untimeout", ctx.AuthorID(), m.User.ID, reason)
-		return ctx.Reply(fmt.Sprintf("[+] Removed timeout from **%s**.", m.User.Username))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionModerateMembers,
+			MinArgs:   1,
+			Usage:     "untimeout <user>",
+			CheckHier: true,
+			DMAction:  "Untimeout",
+			LogName:   "Untimeout",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Timeout(tid, nil, reason)
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Removed timeout from **%s**.", uname)
+			},
+		})
 	},
 }
 
@@ -397,27 +283,20 @@ var Nickname = &manager.Command{
 	Description: "Change a user's nickname",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionManageNicknames) {
-			return ctx.Reply("[!] You do not have permission to manage nicknames.")
-		}
-		if len(ctx.Args) < 2 {
-			return ctx.Reply("Usage: nickname <user> <new_nickname>")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		nick := strings.Join(ctx.Args[1:], " ")
-		if err := ctx.Nick(m.User.ID, nick, fmt.Sprintf("New nickname: %s", nick)); err != nil {
-			return ctx.Reply(fmt.Sprintf("[!] Failed to change nickname: %v", err))
-		}
-		moderation.LogAction(ctx.Session, ctx.DB, gid, "Nickname Change", ctx.AuthorID(), m.User.ID, fmt.Sprintf("New nickname: %s", nick))
-		return ctx.Reply(fmt.Sprintf("[+] Changed **%s** nickname to **%s**.", m.User.Username, nick))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionManageNicknames,
+			MinArgs:   1,
+			Usage:     "nickname <user> <new_nickname>",
+			CheckHier: true,
+			LogName:   "Nickname Change",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.Nick(tid, reason, fmt.Sprintf("New nickname: %s", reason))
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[+] Changed **%s** nickname to **%s**.", uname, reason)
+			},
+		})
 	},
 }
 
@@ -428,26 +307,21 @@ var ForceNick = &manager.Command{
 	Description: "Locks a user's nickname so they cannot change it",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionManageNicknames) {
-			return ctx.Reply("[!] You do not have permission to manage nicknames.")
-		}
-		if len(ctx.Args) < 2 {
-			return ctx.Reply("Usage: forcenick <user> <nickname>")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		nick := strings.Join(ctx.Args[1:], " ")
-		_ = ctx.DB.SaveNicklock(gid, m.User.ID, nick)
-		_ = ctx.Nick(m.User.ID, nick, fmt.Sprintf("Locked nickname: %s", nick))
-		moderation.LogAction(ctx.Session, ctx.DB, gid, "Nickname Force Lock", ctx.AuthorID(), m.User.ID, fmt.Sprintf("Locked nickname: %s", nick))
-		return ctx.Reply(fmt.Sprintf("[Locked] Nickname lock active for **%s** -> **%s**.", m.User.Username, nick))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionManageNicknames,
+			MinArgs:   1,
+			Usage:     "forcenick <user> <nickname>",
+			CheckHier: true,
+			LogName:   "Nickname Force Lock",
+			ActionFn: func(tid string, reason string) error {
+				_ = ctx.DB.SaveNicklock(ctx.GuildID(), tid, reason)
+				return ctx.Nick(tid, reason, fmt.Sprintf("Locked nickname: %s", reason))
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[Locked] Nickname lock active for **%s** -> **%s**.", uname, reason)
+			},
+		})
 	},
 }
 
@@ -458,23 +332,19 @@ var UnforceNick = &manager.Command{
 	Description: "Unlock a user's nickname",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		ctx.Cfg.EmbedColor = 0x808080
-		if !checkPerm(ctx, discordgo.PermissionManageNicknames) {
-			return ctx.Reply("[!] You do not have permission to manage nicknames.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: unforcenick <user>")
-		}
-		gid := ctx.GuildID()
-		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
-		if err != nil || m == nil {
-			return ctx.Reply("[!] Could not resolve member.")
-		}
-		if !checkHierarchy(ctx, m.User.ID) {
-			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
-		}
-		_ = ctx.DB.DeleteNicklock(gid, m.User.ID)
-		moderation.LogAction(ctx.Session, ctx.DB, gid, "Nickname Force Unlock", ctx.AuthorID(), m.User.ID, "Manual nickname unlock")
-		return ctx.Reply(fmt.Sprintf("[Unlocked] Nickname lock removed for **%s**.", m.User.Username))
+		return runModAction(ModAction{
+			Ctx:       ctx,
+			Perm:      discordgo.PermissionManageNicknames,
+			MinArgs:   1,
+			Usage:     "unforcenick <user>",
+			CheckHier: true,
+			LogName:   "Nickname Force Unlock",
+			ActionFn: func(tid string, reason string) error {
+				return ctx.DB.DeleteNicklock(ctx.GuildID(), tid)
+			},
+			SuccessMsg: func(uname string, cid int, reason string) string {
+				return fmt.Sprintf("[Unlocked] Nickname lock removed for **%s**.", uname)
+			},
+		})
 	},
 }

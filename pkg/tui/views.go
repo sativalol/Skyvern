@@ -1,64 +1,69 @@
 package tui
-
 import (
 	"fmt"
 	"runtime"
 	"skyvern/internal/config"
 	"skyvern/internal/lavalink"
 	"strings"
-
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
-
 func (m Model) renderSidebar(contentHeight, sidebarWidth int, th Theme) string {
 	titleStyle := lipgloss.NewStyle().Foreground(th.Accent).Bold(true).Underline(true)
 	boxStyle := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(th.Border).Padding(1)
-
 	sbInnerWidth, sbInnerHeight := calcInnerLimits(sidebarWidth, contentHeight)
-
 	var sbLines []string
 	if miniLogo != "" && sbInnerHeight > 15 {
 		sbLines = append(sbLines, lipgloss.NewStyle().Foreground(th.BorderFocus).Render(miniLogo))
 		sbLines = append(sbLines, "")
 	}
-
 	if m.tab == 4 {
 		return m.renderAISidebar(contentHeight, sidebarWidth, th)
 	}
-
 	sbLines = append(sbLines, titleStyle.Render("INSTANCES"))
 	sbLines = append(sbLines, "")
-
 	maxVisible := calcMaxVisible(sbInnerHeight)
 	startIdx, endIdx := calcVisibleRange(len(m.bots), m.selIdx, maxVisible)
-
 	for i := startIdx; i < endIdx; i++ {
 		b := m.bots[i]
-		status := lipgloss.NewStyle().Foreground(th.Subtle).Render("○")
-		if m.mgr.IsRunning(b.ClientID) {
+		lastErr := m.mgr.LastErr(b.ClientID)
+		var status string
+		switch {
+		case m.mgr.IsRunning(b.ClientID):
 			status = lipgloss.NewStyle().Foreground(th.Green).Render("●")
+		case lastErr != "":
+			status = lipgloss.NewStyle().Foreground(th.Red).Render("●")
+		default:
+			status = lipgloss.NewStyle().Foreground(th.Subtle).Render("○")
 		}
 		lbl := b.CustomName
 		if lbl == "" {
 			lbl = b.ClientID
 		}
-		line := fmt.Sprintf("%s  %-15s", status, lbl)
+		if len(lbl) > 14 {
+			lbl = lbl[:13] + "…"
+		}
+		line := fmt.Sprintf("%s  %s", status, lbl)
 		if i == m.selIdx {
 			sbLines = append(sbLines, lipgloss.NewStyle().Foreground(th.Accent).Background(th.BorderFocus).Render(" "+line))
+			if lastErr != "" && !m.mgr.IsRunning(b.ClientID) {
+				errHint := lastErr
+				if len(errHint) > sbInnerWidth-4 {
+					errHint = errHint[:sbInnerWidth-7] + "..."
+				}
+				sbLines = append(sbLines, lipgloss.NewStyle().Foreground(th.Red).Render("   "+errHint))
+			}
 		} else {
 			sbLines = append(sbLines, " "+line)
 		}
 	}
 	return boxStyle.Width(sbInnerWidth).Height(sbInnerHeight).Render(strings.Join(sbLines, "\n"))
 }
-
 func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 	titleStyle := lipgloss.NewStyle().Foreground(th.Accent).Bold(true).Underline(true)
 	boxStyle := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(th.Border).Padding(1)
 	boxFocusStyle := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(th.BorderFocus).Padding(1)
 	labelStyle := lipgloss.NewStyle().Foreground(th.Subtle).Width(22)
-
 	if m.editing {
 		var fLines []string
 		title := "CONFS / OVERRIDES"
@@ -93,11 +98,9 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 			}
 		}
 		fLines = append(fLines, "", helpMsg)
-
 		mainInnerWidth := calcMainInnerWidth(mainWidth)
 		return boxFocusStyle.Width(mainInnerWidth).Render(strings.Join(fLines, "\n"))
 	}
-
 	if m.tab == 1 {
 		var setLines []string
 		setLines = append(setLines, titleStyle.Render("GLOBAL SETTINGS"))
@@ -130,11 +133,9 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		setLines = append(setLines, fmt.Sprintf("  Home Emoji Server: %s", g.EmojiServerID))
 		setLines = append(setLines, fmt.Sprintf("  TUI Theme:         %s", th.Name))
 		setLines = append(setLines, "", "  Press [E] to edit global settings.")
-
 		mainInnerWidth := calcMainInnerWidth(mainWidth)
 		return boxStyle.Width(mainInnerWidth).Render(strings.Join(setLines, "\n"))
 	}
-
 	if m.tab == 2 {
 		var setLines []string
 		setLines = append(setLines, titleStyle.Render("PALANTIR SETTINGS"))
@@ -150,16 +151,13 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		setLines = append(setLines, fmt.Sprintf("  Blocked Users:     %s", strings.Join(pCfg.BlockedUsers, ", ")))
 		setLines = append(setLines, fmt.Sprintf("  Blocked Events:    %s", strings.Join(pCfg.BlockedEvents, ", ")))
 		setLines = append(setLines, "", "  Press [E] to edit Palantir settings.")
-
 		mainInnerWidth := calcMainInnerWidth(mainWidth)
 		return boxStyle.Width(mainInnerWidth).Render(strings.Join(setLines, "\n"))
 	}
-
 	if m.tab == 3 {
 		var lavLines []string
 		lavLines = append(lavLines, titleStyle.Render("LAVALINK NODES & CONNECTION LOGS"))
 		lavLines = append(lavLines, "")
-
 		if len(m.bots) == 0 || m.selIdx >= len(m.bots) {
 			lavLines = append(lavLines, "  No bot configured.")
 		} else {
@@ -203,7 +201,6 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 				}
 			}
 		}
-
 		mainInnerWidth := calcMainInnerWidth(mainWidth)
 		mainInnerHeight := contentHeight - 2
 		if mainInnerHeight < 5 {
@@ -211,38 +208,35 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		}
 		return boxStyle.Width(mainInnerWidth).Height(mainInnerHeight).Render(strings.Join(lavLines, "\n"))
 	}
-
 	if m.tab == 4 {
 		return m.renderAIPanel(mainWidth, contentHeight, th)
 	}
-
+	if m.tab == 5 {
+		return m.renderConsole(mainWidth, contentHeight, th)
+	}
 	showAnalytics := contentHeight >= 20
 	topRightHeight := contentHeight
 	if showAnalytics {
 		topRightHeight = contentHeight / 2
 	}
 	bottomRightHeight := contentHeight - topRightHeight
-
 	trInnerWidth := calcMainInnerWidth(mainWidth)
 	trInnerHeight := topRightHeight - 2
 	if trInnerHeight < 3 {
 		trInnerHeight = 3
 	}
-
 	var monLines []string
 	if len(m.bots) > 0 && m.selIdx < len(m.bots) {
 		b := m.bots[m.selIdx]
 		stats := m.mgr.Stats(b.ClientID)
 		resolved, _ := m.mgr.ResolvedCfgFor(b.ClientID)
 		statusText := lipgloss.NewStyle().Foreground(th.Subtle).Render(" Stopped")
-
 		botRAM := "0.00 MB"
 		botCPU := "0.0%"
 		var cpuVal, ramVal float64
 		if m.mgr.IsRunning(b.ClientID) {
 			resolved, _ = m.mgr.ResolvedCfgFor(b.ClientID)
 			statusText = lipgloss.NewStyle().Foreground(th.Green).Render(" Running")
-
 			ramVal = 1.25 + float64(stats.TotalCmds)*0.015
 			botRAM = fmt.Sprintf("%.2f MB", ramVal)
 			cpuVal = 0.2 + float64(stats.TotalCmds%6)*0.12
@@ -250,7 +244,6 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		} else {
 			resolved = config.Resolve(config.GetGlobal(), b)
 		}
-
 		monBarWidth := trInnerWidth - 42
 		if monBarWidth < 5 {
 			monBarWidth = 5
@@ -258,17 +251,14 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		if monBarWidth > 35 {
 			monBarWidth = 35
 		}
-
 		botCPUBar := progressBar(monBarWidth, cpuVal, 5.0, th.BorderFocus, th.Subtle)
 		botRAMBar := progressBar(monBarWidth, ramVal, 10.0, th.BorderFocus, th.Subtle)
-
 		trunc := func(s string, max int) string {
 			if len(s) > max {
 				return s[:max-3] + "..."
 			}
 			return s
 		}
-
 		monLines = append(monLines, titleStyle.Render(fmt.Sprintf("MONITOR: %s", trunc(resolved.Name, 15)))+statusText)
 		monLines = append(monLines, "")
 		monLines = append(monLines, fmt.Sprintf("  Client ID:   %s", trunc(b.ClientID, 20)))
@@ -282,7 +272,6 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 	} else {
 		monLines = append(monLines, "  No bot configured. Press [N] to setup instance.")
 	}
-
 	statsBlock := strings.Join(monLines, "\n")
 	maxW := 0
 	for _, line := range monLines {
@@ -291,12 +280,10 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 			maxW = w
 		}
 	}
-
 	g := config.GetGlobal()
 	spotifyOn := strings.ToLower(g.Spotify) == "yes" || strings.ToLower(g.Spotify) == "enabled"
 	matrixCol := strings.ToLower(g.MatrixColor)
 	matrixDisabled := matrixCol == "disabled" || matrixCol == "none" || matrixCol == "off" || matrixCol == "no"
-
 	if trInnerWidth > 48 && (!matrixDisabled || spotifyOn) {
 		dividerLines := make([]string, trInnerHeight-2)
 		for i := range dividerLines {
@@ -315,23 +302,19 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		}
 	}
 	topRight := boxStyle.Width(trInnerWidth).Height(trInnerHeight).Render(statsBlock)
-
 	var bottomRight string
 	if showAnalytics {
 		gStats := m.mgr.GlobalStats()
 		var mem runtime.MemStats
 		runtime.ReadMemStats(&mem)
-
 		heapMB := float64(mem.Alloc) / 1024 / 1024
 		sysMB := float64(mem.Sys) / 1024 / 1024
 		threads := runtime.NumGoroutine()
-
 		brInnerWidth := calcMainInnerWidth(mainWidth)
 		brInnerHeight := bottomRightHeight - 2
 		if brInnerHeight < 3 {
 			brInnerHeight = 3
 		}
-
 		barWidth := brInnerWidth - 42
 		if barWidth < 5 {
 			barWidth = 5
@@ -339,7 +322,6 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		if barWidth > 35 {
 			barWidth = 35
 		}
-
 		var ecoLines []string
 		ecoLines = append(ecoLines, titleStyle.Render("ANALYTICS"))
 		ecoLines = append(ecoLines, "")
@@ -352,13 +334,11 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 		}
 		bottomRight = boxStyle.Width(brInnerWidth).Height(brInnerHeight).Render(strings.Join(ecoLines, "\n"))
 	}
-
 	if showAnalytics {
 		return lipgloss.JoinVertical(lipgloss.Left, topRight, bottomRight)
 	}
 	return topRight
 }
-
 func calcInnerLimits(width, height int) (int, int) {
 	w := width - 4
 	h := height - 2
@@ -370,7 +350,6 @@ func calcInnerLimits(width, height int) (int, int) {
 	}
 	return w, h
 }
-
 func calcMaxVisible(sbInnerHeight int) int {
 	max := sbInnerHeight - 8
 	if miniLogo != "" && sbInnerHeight > 15 {
@@ -381,7 +360,6 @@ func calcMaxVisible(sbInnerHeight int) int {
 	}
 	return max
 }
-
 func calcVisibleRange(total, selected, maxVisible int) (int, int) {
 	if total <= maxVisible {
 		return 0, total
@@ -400,7 +378,6 @@ func calcVisibleRange(total, selected, maxVisible int) (int, int) {
 	}
 	return start, end
 }
-
 func calcMainInnerWidth(mainWidth int) int {
 	w := mainWidth - 4
 	if w < 20 {
@@ -408,5 +385,49 @@ func calcMainInnerWidth(mainWidth int) int {
 	}
 	return w
 }
-
-
+func (m Model) renderConsole(mainWidth, contentHeight int, th Theme) string {
+	titleStyle := lipgloss.NewStyle().Foreground(th.Accent).Bold(true).Underline(true)
+	boxStyle := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(th.BorderFocus).Padding(1)
+	innerW := calcMainInnerWidth(mainWidth)
+	innerH := contentHeight - 4
+	if innerH < 3 {
+		innerH = 3
+	}
+	errStyle := lipgloss.NewStyle().Foreground(th.Red)
+	warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#d79921"))
+	okStyle := lipgloss.NewStyle().Foreground(th.Green)
+	dimStyle := lipgloss.NewStyle().Foreground(th.Subtle)
+	logs := GetLogs()
+	if len(logs) > innerH {
+		logs = logs[len(logs)-innerH:]
+	}
+	var lines []string
+	lines = append(lines, titleStyle.Render("LIVE CONSOLE"))
+	lines = append(lines, "")
+	if len(logs) == 0 {
+		lines = append(lines, dimStyle.Render("  No log output yet..."))
+	}
+	for _, l := range logs {
+		lower := strings.ToLower(l)
+		var rendered string
+		switch {
+		case strings.Contains(lower, "error") || strings.Contains(lower, "panic") || strings.Contains(lower, "fatal") || strings.Contains(lower, "[!]"):
+			rendered = errStyle.Render("  ✗ " + l)
+		case strings.Contains(lower, "warn") || strings.Contains(lower, "warning"):
+			rendered = warnStyle.Render("  ⚠ " + l)
+		case strings.Contains(lower, "ok") || strings.Contains(lower, "started") || strings.Contains(lower, "ready") || strings.Contains(lower, "[+]"):
+			rendered = okStyle.Render("  ✓ " + l)
+		default:
+			rendered = dimStyle.Render("  · " + l)
+		}
+		if lipgloss.Width(rendered) > innerW-2 {
+			if len(l) > innerW-6 {
+				l = l[:innerW-6] + "..."
+				rendered = dimStyle.Render("  · " + l)
+			}
+		}
+		lines = append(lines, rendered)
+	}
+	lines = append(lines, "", dimStyle.Render("  [Tab] Switch tabs"))
+	return boxStyle.Width(innerW).Height(innerH).Render(strings.Join(lines, "\n"))
+}

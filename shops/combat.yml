@@ -1,0 +1,24 @@
+pages:
+  page1:
+    gui-rows: 3
+    items:
+      iron_pickaxe:
+        material: IRON_PICKAXE
+        displayname: <#A8A8A8><bold>Tools
+        section: tools
+        slot: 11
+      iron_sword:
+        material: IRON_SWORD
+        displayname: '&4&lWeapons'
+        section: weapons
+        slot: 13
+      iron_chestplate:
+        material: IRON_CHESTPLATE
+        displayname: <#5B8CFF><bold>Armor
+        section: armor
+        slot: 15
+      redstone:
+        material: REDSTONE
+        displayname: '&c&lRedstone'
+        section: redstone
+        slot: 17

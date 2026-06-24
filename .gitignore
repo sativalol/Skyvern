@@ -42,4 +42,9 @@ lavalink/plugins/
 
 # References and vendor
 dischord_ref/
-vendor/
+vendor/
+
+# ngrok files
+ngrok.exe
+ngrok.zip
+ngrok.log

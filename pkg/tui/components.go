@@ -1,22 +1,17 @@
 package tui
-
 import (
 	"fmt"
 	"os"
 	"skyvern/internal/config"
 	"strings"
-
 	"github.com/charmbracelet/lipgloss"
 )
-
 var miniLogo string
-
 func init() {
 	if data, err := os.ReadFile(config.ResolvePath("ascii")); err == nil {
 		miniLogo = Shrink(string(data), 4)
 	}
 }
-
 func Shrink(art string, factor int) string {
 	lines := strings.Split(art, "\n")
 	if len(lines) == 0 {
@@ -68,12 +63,10 @@ func Shrink(art string, factor int) string {
 	}
 	return sb.String()
 }
-
 const Logo = ` ___ _                       
 / __| |___ _ ___ _____ _ _ ___ 
 \__ \ / / \ V / -_)  _/ \ ' / -_)
 |___/_\_\  \_/\___|_|  \_/\_/\___|`
-
 func progressBar(width int, val, max float64, borderFocus, subtleCol lipgloss.Color) string {
 	if max <= 0 {
 		return strings.Repeat("░", width)
@@ -91,7 +84,6 @@ func progressBar(width int, val, max float64, borderFocus, subtleCol lipgloss.Co
 	emptyStyle := lipgloss.NewStyle().Foreground(subtleCol)
 	return barStyle.Render(strings.Repeat("█", filled)) + emptyStyle.Render(strings.Repeat("░", empty))
 }
-
 func (m Model) renderMatrixRain(w, h int, th Theme) string {
 	if w <= 0 || h <= 0 {
 		return ""
@@ -103,20 +95,17 @@ func (m Model) renderMatrixRain(w, h int, th Theme) string {
 			grid[r][c] = " "
 		}
 	}
-
 	word := "esoteric.win"
 	startX := (w - len(word)) / 2
 	if startX < 0 {
 		startX = 0
 	}
 	midY := h / 2
-
 	g := config.GetGlobal()
 	colMode := strings.ToLower(g.MatrixColor)
 	if colMode == "" {
 		colMode = "rgb"
 	}
-
 	getStyle := func(c, r, age int) lipgloss.Style {
 		var baseCol lipgloss.Color
 		switch colMode {
@@ -156,27 +145,21 @@ func (m Model) renderMatrixRain(w, h int, th Theme) string {
 		}
 		return style
 	}
-
 	chars := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+-=")
-
 	for c := 0; c < w; c++ {
 		offset := (c * 7) % 37
 		dropY := (m.ticks/2 + offset) % (h + 6)
-
 		for r := 0; r < h; r++ {
 			isWord := r == midY && c >= startX && c < startX+len(word)
 			var char rune
 			age := r - dropY
-
 			if isWord {
-				// Pseudo-random reveal: 30% chance or if drop is over it
 				revealSeed := (r + c + m.ticks/4) % 7
 				if (age >= 0 && age < 5) || revealSeed == 0 {
 					char = rune(word[c-startX])
 					style := getStyle(c, r, age)
 					grid[r][c] = style.Render(string(char))
 				} else {
-					// Blend with rain as faint random character
 					charIdx := (r*c + m.ticks + offset) % len(chars)
 					char = chars[charIdx]
 					grid[r][c] = lipgloss.NewStyle().Foreground(th.Subtle).Render(string(char))
@@ -191,7 +174,6 @@ func (m Model) renderMatrixRain(w, h int, th Theme) string {
 			}
 		}
 	}
-
 	var sb strings.Builder
 	for r := 0; r < h; r++ {
 		sb.WriteString(strings.Join(grid[r], ""))
@@ -201,12 +183,10 @@ func (m Model) renderMatrixRain(w, h int, th Theme) string {
 	}
 	return sb.String()
 }
-
 func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 	if w <= 0 || h <= 0 {
 		return ""
 	}
-
 	g := config.GetGlobal()
 	col := strings.ToLower(g.MatrixColor)
 	var lCol lipgloss.Color
@@ -228,10 +208,8 @@ func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 			lCol = lipgloss.Color("#1DB954")
 		}
 	}
-
 	var info []string
 	info = append(info, lipgloss.NewStyle().Foreground(th.Accent).Bold(true).Render("SPOTIFY"))
-
 	tr := func(s string, max int) string {
 		if max < 4 {
 			return "..."
@@ -241,11 +219,9 @@ func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 		}
 		return s
 	}
-
 	song := m.spTrack
 	prog := m.spProg
 	tot := m.spTot
-
 	if song == "" {
 		info = append(info, lipgloss.NewStyle().Foreground(th.Subtle).Italic(true).Render("Paused / Idle"))
 	} else {
@@ -256,17 +232,14 @@ func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 			art = p[0]
 			name = p[1]
 		}
-
 		if art != "" {
 			info = append(info, lipgloss.NewStyle().Foreground(th.Subtle).Render("Artist: "+tr(art, w-2)))
 			info = append(info, lipgloss.NewStyle().Foreground(th.Subtle).Render("Title:  "+tr(name, w-2)))
 		} else {
 			info = append(info, lipgloss.NewStyle().Foreground(th.Subtle).Render("Track:  "+tr(name, w-2)))
 		}
-
 		pStr := fmt.Sprintf("%02d:%02d", prog/60, prog%60)
 		tStr := fmt.Sprintf("%02d:%02d", tot/60, tot%60)
-
 		barW := w - 13
 		if barW < 4 {
 			barW = 4
@@ -274,10 +247,8 @@ func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 		pBar := progressBar(barW, float64(prog), float64(tot), lCol, th.Subtle)
 		info = append(info, fmt.Sprintf("%s [%s] %s", pStr, pBar, tStr))
 	}
-
 	txt := strings.Join(info, "\n")
 	availHeight := h - len(info) - 1
-
 	var logo []string
 	if w >= 38 && availHeight >= 13 {
 		logo = []string{
@@ -306,7 +277,6 @@ func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 			"    ⠈⠙⠛⠛⠋⠁    ",
 		}
 	}
-
 	if len(logo) == 0 {
 		return txt
 	}
@@ -316,6 +286,5 @@ func (m Model) renderSpotifyPanel(w, h int, th Theme) string {
 		lines = append(lines, sty.Render(l))
 	}
 	lStr := strings.Join(lines, "\n")
-
 	return lipgloss.JoinVertical(lipgloss.Left, txt, "", lStr)
 }

@@ -1,6 +1,7 @@
 package general
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"skyvern/internal/config"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	bolt "go.etcd.io/bbolt"
 )
 
 func init() {
@@ -25,9 +27,11 @@ func init() {
 			Syntax:      ".vouch remove <user>",
 			Description: "Remove your vouch for a user.",
 		},
+	})
+	manager.RegisterHelp("vouches", []manager.HelpPage{
 		{
-			Command:     "Vouch List",
-			Syntax:      ".vouch list [@user]",
+			Command:     "Vouches",
+			Syntax:      ".vouches [@user] [page]",
 			Description: "List vouches for a user (scrollable).",
 		},
 	})
@@ -64,7 +68,7 @@ func resolveVouchUser(s *discordgo.Session, gid, query string) string {
 var Vouch = &manager.Command{
 	Trigger:     "vouch",
 	Name:        "vouch",
-	Description: "Vouch for a user or manage/list vouches",
+	Description: "Vouch for a user or manage vouches",
 	Category:    "general",
 	Execute: func(ctx *manager.CommandContext) error {
 		if len(ctx.Args) == 0 {
@@ -87,52 +91,63 @@ var Vouch = &manager.Command{
 			return ctx.Reply(fmt.Sprintf("[+] Removed your vouch for <@%s>.", target))
 		}
 
-		if sub == "list" {
-			target := sender
-			if len(ctx.Args) > 1 {
-				t := resolveVouchUser(ctx.Session, gid, ctx.Args[1])
-				if t != "" {
-					target = t
-				}
-			}
-
-			list, err := ctx.DB.ListVouches(target)
-			if err != nil || len(list) == 0 {
-				return ctx.Reply("[*] This user has no vouches.")
-			}
-
-			pages := (len(list) + 4) / 5
-			end := 5
-			if end > len(list) {
-				end = len(list)
-			}
-
-			emb := renderVouchPage(ctx.Cfg, target, list[0:end], 1, pages, len(list))
-			comp := getVouchButtons(target, 1, pages)
-
-			if ctx.Interact != nil {
-				return ctx.Session.InteractionRespond(ctx.Interact, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Embeds:     []*discordgo.MessageEmbed{emb},
-						Components: comp,
-					},
-				})
-			}
-
-			_, err = ctx.Session.ChannelMessageSendComplex(ctx.ChanID(), &discordgo.MessageSend{
-				Embeds:     []*discordgo.MessageEmbed{emb},
-				Components: comp,
-			})
-			return err
-		}
-
 		target := resolveVouchUser(ctx.Session, gid, ctx.Args[0])
 		if target == "" {
 			return ctx.Reply("[!] Could not resolve target user.")
 		}
 		if target == sender {
 			return ctx.Reply("[!] You cannot vouch for yourself.")
+		}
+
+		u, err := ctx.Session.User(target)
+		if err == nil && u.Bot {
+			return ctx.Reply("[!] You cannot vouch for bots.")
+		}
+
+		var existing storage.Vouch
+		hasExisting := false
+		_ = ctx.DB.View(func(tx *bolt.Tx) error {
+			bkt := tx.Bucket([]byte("Vouches"))
+			if bkt == nil {
+				return nil
+			}
+			val := bkt.Get([]byte(target + ":" + sender))
+			if val != nil {
+				if json.Unmarshal(val, &existing) == nil {
+					hasExisting = true
+				}
+			}
+			return nil
+		})
+		if hasExisting {
+			diff := time.Now().Unix() - existing.Time
+			if diff < 2*24*60*60 {
+				rem := 2*24*60*60 - diff
+				hours := rem / 3600
+				mins := (rem % 3600) / 60
+				return ctx.Reply(fmt.Sprintf("[!] You have already vouched for this user. You can update/revouch in %d hours and %d minutes.", hours, mins))
+			}
+		}
+
+		var dailyCount int
+		now := time.Now().Unix()
+		_ = ctx.DB.View(func(tx *bolt.Tx) error {
+			bkt := tx.Bucket([]byte("Vouches"))
+			if bkt == nil {
+				return nil
+			}
+			return bkt.ForEach(func(k, v []byte) error {
+				var vc storage.Vouch
+				if json.Unmarshal(v, &vc) == nil {
+					if vc.VoucherID == sender && (now-vc.Time) < 24*60*60 {
+						dailyCount++
+					}
+				}
+				return nil
+			})
+		})
+		if dailyCount >= 5 {
+			return ctx.Reply("[!] You have reached the daily limit of 5 vouches per 24 hours.")
 		}
 
 		comment := "No comment provided."
@@ -149,6 +164,74 @@ var Vouch = &manager.Command{
 
 		_ = ctx.DB.SaveVouch(v)
 		return ctx.Reply(fmt.Sprintf("[+] Vouched for <@%s>: \"%s\"", target, comment))
+	},
+}
+
+var Vouches = &manager.Command{
+	Trigger:     "vouches",
+	Name:        "vouches",
+	Description: "List vouches for a user (scrollable)",
+	Category:    "general",
+	Execute: func(ctx *manager.CommandContext) error {
+		gid := ctx.GuildID()
+		sender := ctx.AuthorID()
+
+		target := sender
+		page := 1
+
+		if len(ctx.Args) > 0 {
+			if p, err := strconv.Atoi(ctx.Args[0]); err == nil && p > 0 {
+				page = p
+			} else {
+				t := resolveVouchUser(ctx.Session, gid, ctx.Args[0])
+				if t != "" {
+					target = t
+				}
+				if len(ctx.Args) > 1 {
+					if p, err := strconv.Atoi(ctx.Args[1]); err == nil && p > 0 {
+						page = p
+					}
+				}
+			}
+		}
+
+		list, err := ctx.DB.ListVouches(target)
+		if err != nil || len(list) == 0 {
+			return ctx.Reply("[*] This user has no vouches.")
+		}
+
+		pages := (len(list) + 4) / 5
+		if page < 1 {
+			page = 1
+		}
+		if page > pages {
+			page = pages
+		}
+
+		start := (page - 1) * 5
+		end := start + 5
+		if end > len(list) {
+			end = len(list)
+		}
+
+		emb := renderVouchPage(ctx.Cfg, target, list[start:end], page, pages, len(list))
+		comp := getVouchButtons(target, page, pages)
+
+		if ctx.Interact != nil {
+			return ctx.Session.InteractionRespond(ctx.Interact, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds:     []*discordgo.MessageEmbed{emb},
+					Components: comp,
+				},
+			})
+		}
+
+		_, err = ctx.Session.ChannelMessageSendComplex(ctx.ChanID(), &discordgo.MessageSend{
+			Embeds:     []*discordgo.MessageEmbed{emb},
+			Components: comp,
+		})
+		return err
 	},
 }
 

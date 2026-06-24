@@ -1,0 +1,128 @@
+pages:
+  page1:
+    items:
+      cookie:
+        material: COOKIE
+        buy: 33.6
+        sell: 8.48
+        stack-size: 16
+      bread:
+        material: BREAD
+        buy: 252
+        sell: 63.04
+        stack-size: 16
+      baked_potato:
+        material: BAKED_POTATO
+        buy: 84
+        sell: 21.12
+        stack-size: 16
+      cooked_beef:
+        material: COOKED_BEEF
+        buy: 50.4
+        sell: 12.64
+        stack-size: 8
+      cooked_mutton:
+        material: COOKED_MUTTON
+        buy: 50.4
+        sell: 12.64
+        stack-size: 8
+      cooked_porkchop:
+        material: COOKED_PORKCHOP
+        buy: 50.4
+        sell: 12.64
+        stack-size: 8
+      cooked_chicken:
+        material: COOKED_CHICKEN
+        buy: 50.4
+        sell: 12.64
+        stack-size: 8
+      cooked_cod:
+        material: COOKED_COD
+        buy: 50.4
+        sell: 12.64
+        stack-size: 8
+      cooked_salmon:
+        material: COOKED_SALMON
+        buy: 50.4
+        sell: 12.64
+        stack-size: 8
+      cooked_rabbit:
+        material: COOKED_RABBIT
+        buy: 25.2
+        sell: 6.32
+        stack-size: 4
+      apple:
+        material: APPLE
+        buy: 40
+        sell: 10
+        stack-size: 4
+      pumpkin_pie:
+        material: PUMPKIN_PIE
+        buy: 42.48
+        sell: 10.64
+        stack-size: 4
+      golden_carrot:
+        material: GOLDEN_CARROT
+        buy: 48.8
+        sell: 12.2
+        stack-size: 4
+      golden_apple:
+        material: GOLDEN_APPLE
+        buy: 79.96
+        sell: 19.99
+      glistering_melon_slice:
+        material: GLISTERING_MELON_SLICE
+        buy: 8
+        sell: 2
+      honey_bottle:
+        material: HONEY_BOTTLE
+        buy: 7.94
+        sell: 1.99
+      beef:
+        material: BEEF
+        buy: 6
+        sell: 1.5
+      mutton:
+        material: MUTTON
+        buy: 6
+        sell: 1.5
+      chicken:
+        material: CHICKEN
+        buy: 6
+        sell: 1.5
+      porkchop:
+        material: PORKCHOP
+        buy: 6
+        sell: 1.5
+      rabbit:
+        material: RABBIT
+        buy: 6
+        sell: 1.5
+      cod:
+        material: COD
+        buy: 6
+        sell: 1.5
+      salmon:
+        material: SALMON
+        buy: 6
+        sell: 1.5
+      melon_slice:
+        material: MELON_SLICE
+        buy: 1
+        sell: 0.25
+      beetroot_soup:
+        material: BEETROOT_SOUP
+        buy: 38.72
+        sell: 9.68
+      mushroom_stew:
+        material: MUSHROOM_STEW
+        buy: 5.12
+        sell: 1.28
+      rabbit_stew:
+        material: RABBIT_STEW
+        buy: 20.39
+        sell: 5.1
+      cake:
+        material: CAKE
+        buy: 79.32
+        sell: 19.83

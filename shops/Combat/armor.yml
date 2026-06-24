@@ -1,0 +1,276 @@
+pages:
+  page1:
+    items:
+      leather_helmet:
+        material: LEATHER_HELMET
+        buy: 176.4
+        sell: 44.1
+        slot: 11
+      leather_chestplate:
+        material: LEATHER_CHESTPLATE
+        buy: 282.24
+        sell: 70.56
+        slot: 20
+      leather_leggings:
+        material: LEATHER_LEGGINGS
+        buy: 246.96
+        sell: 61.74
+        slot: 29
+      leather_boots:
+        material: LEATHER_BOOTS
+        buy: 141.12
+        sell: 35.28
+        slot: 38
+      chainmail_helmet:
+        material: CHAINMAIL_HELMET
+        buy: 40
+        sell: 10
+        slot: 12
+      chainmail_chestplate:
+        material: CHAINMAIL_CHESTPLATE
+        buy: 60
+        sell: 15
+        slot: 21
+      chainmail_leggings:
+        material: CHAINMAIL_LEGGINGS
+        buy: 60
+        sell: 15
+        slot: 30
+      chainmail_boots:
+        material: CHAINMAIL_BOOTS
+        buy: 40
+        sell: 10
+        slot: 39
+      copper_helmet:
+        material: COPPER_HELMET
+        buy: 5.23
+        sell: 1.27
+        slot: 13
+      copper_chestplate:
+        material: COPPER_CHESTPLATE
+        buy: 7.56
+        sell: 1.95
+        slot: 22
+      copper_leggings:
+        material: COPPER_LEGGINGS
+        buy: 6.64
+        sell: 1.72
+        slot: 31
+      copper_boots:
+        material: COPPER_BOOTS
+        buy: 3.84
+        sell: 1.02
+        slot: 40
+      iron_helmet:
+        material: IRON_HELMET
+        buy: 28.95
+        sell: 7.24
+        slot: 14
+      iron_chestplate:
+        material: IRON_CHESTPLATE
+        buy: 46.31
+        sell: 11.58
+        slot: 23
+      iron_leggings:
+        material: IRON_LEGGINGS
+        buy: 40.52
+        sell: 10.13
+        slot: 32
+      iron_boots:
+        material: IRON_BOOTS
+        buy: 23.16
+        sell: 5.79
+        slot: 41
+      golden_helmet:
+        material: GOLDEN_HELMET
+        buy: 43.42
+        sell: 10.86
+        slot: 15
+      golden_chestplate:
+        material: GOLDEN_CHESTPLATE
+        buy: 69.46
+        sell: 17.37
+        slot: 24
+      golden_leggings:
+        material: GOLDEN_LEGGINGS
+        buy: 60.78
+        sell: 15.2
+        slot: 33
+      golden_boots:
+        material: GOLDEN_BOOTS
+        buy: 34.73
+        sell: 8.69
+        slot: 42
+      diamond_helmet:
+        material: DIAMOND_HELMET
+        buy: 275.63
+        sell: 68.91
+        slot: 16
+      diamond_chestplate:
+        material: DIAMOND_CHESTPLATE
+        buy: 441
+        sell: 110.25
+        slot: 25
+      diamond_leggings:
+        material: DIAMOND_LEGGINGS
+        buy: 385.88
+        sell: 96.47
+        slot: 34
+      diamond_boots:
+        material: DIAMOND_BOOTS
+        buy: 220.5
+        sell: 55.13
+        slot: 43
+      netherite_helmet:
+        material: NETHERITE_HELMET
+        buy: 2775.41
+        sell: 693.86
+        slot: 17
+      netherite_chestplate:
+        material: NETHERITE_CHESTPLATE
+        buy: 2949.05
+        sell: 737.27
+        slot: 26
+      netherite_leggings:
+        material: NETHERITE_LEGGINGS
+        buy: 2891.17
+        sell: 722.8
+        slot: 35
+      netherite_boots:
+        material: NETHERITE_BOOTS
+        buy: 2717.53
+        sell: 679.39
+        slot: 44
+  page2:
+    items:
+      leather_horse_armor:
+        material: LEATHER_HORSE_ARMOR
+        buy: 100
+        sell: 25
+      copper_horse_armor:
+        material: COPPER_HORSE_ARMOR
+        buy: 75
+        sell: 28.6
+      iron_horse_armor:
+        material: IRON_HORSE_ARMOR
+        buy: 175
+        sell: 43.75
+      golden_horse_armor:
+        material: GOLDEN_HORSE_ARMOR
+        buy: 775
+        sell: 193.75
+      diamond_horse_armor:
+        material: DIAMOND_HORSE_ARMOR
+        buy: 2250
+        sell: 562.5
+      netherite_horse_armor:
+        material: NETHERITE_HORSE_ARMOR
+        buy: 3750
+        sell: 871
+      wolf_armor:
+        material: WOLF_ARMOR
+        buy: 3339
+        sell: 834.75
+      turtle_helmet:
+        material: TURTLE_HELMET
+        buy: 2782.5
+        sell: 695.63
+      copper_nautilus_armor:
+        material: COPPER_NAUTILUS_ARMOR
+        buy: 125
+        sell: 42.5
+      iron_nautilus_armor:
+        material: IRON_NAUTILUS_ARMOR
+        buy: 800
+        sell: 250
+      golden_nautilus_armor:
+        material: GOLDEN_NAUTILUS_ARMOR
+        buy: 1725
+        sell: 450
+      diamond_nautilus_armor:
+        material: DIAMOND_NAUTILUS_ARMOR
+        buy: 3400
+        sell: 925
+      netherite_nautilus_armor:
+        material: NETHERITE_NAUTILUS_ARMOR
+        buy: 4850
+        sell: 1250
+      bolt_armor_trim_smithing_template:
+        material: BOLT_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 389.93
+        sell: 97.49
+      coast_armor_trim_smithing_template:
+        material: COAST_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.3
+        sell: 48.33
+      dune_armor_trim_smithing_template:
+        material: DUNE_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 199.24
+        sell: 49.81
+      eye_armor_trim_smithing_template:
+        material: EYE_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 195.57
+        sell: 48.9
+      flow_armor_trim_smithing_template:
+        material: FLOW_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 406.88
+        sell: 101.72
+      host_armor_trim_smithing_template:
+        material: HOST_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 204.52
+        sell: 51.13
+      netherite_upgrade_smithing_template:
+        material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
+        buy: 193.05
+        sell: 48.27
+      raiser_armor_trim_smithing_template:
+        material: RAISER_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 204.52
+        sell: 51.13
+      rib_armor_trim_smithing_template:
+        material: RIB_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.05
+        sell: 48.27
+      sentry_armor_trim_smithing_template:
+        material: SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.3
+        sell: 48.33
+      shaper_armor_trim_smithing_template:
+        material: SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 204.52
+        sell: 51.13
+      silence_armor_trim_smithing_template:
+        material: SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.3
+        sell: 48.33
+      snout_armor_trim_smithing_template:
+        material: SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.34
+        sell: 48.34
+      spire_armor_trim_smithing_template:
+        material: SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 194.68
+        sell: 48.67
+      tide_armor_trim_smithing_template:
+        material: TIDE_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 208.38
+        sell: 52.1
+  page3:
+    gui-rows: 3
+    items:
+      vex_armor_trim_smithing_template:
+        material: VEX_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.3
+        sell: 48.33
+      ward_armor_trim_smithing_template:
+        material: WARD_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 193.3
+        sell: 48.33
+      wayfinder_armor_trim_smithing_template:
+        material: WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 204.52
+        sell: 51.13
+      wild_armor_trim_smithing_template:
+        material: WILD_ARMOR_TRIM_SMITHING_TEMPLATE
+        buy: 197.18
+        sell: 49.3

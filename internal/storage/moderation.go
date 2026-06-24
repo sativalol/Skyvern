@@ -1,14 +1,11 @@
 package storage
-
 import (
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
-
 	bolt "go.etcd.io/bbolt"
 )
-
 type Case struct {
 	ID        int       `json:"id"`
 	GuildID   string    `json:"guild_id"`
@@ -18,7 +15,6 @@ type Case struct {
 	Reason    string    `json:"reason"`
 	Timestamp time.Time `json:"timestamp"`
 }
-
 func (d *DB) AddCase(gid string, c Case) (int, error) {
 	var id int
 	err := d.b.Update(func(tx *bolt.Tx) error {
@@ -38,7 +34,6 @@ func (d *DB) AddCase(gid string, c Case) (int, error) {
 	})
 	return id, err
 }
-
 func (d *DB) GetCase(gid string, id int) (Case, error) {
 	var c Case
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -54,7 +49,6 @@ func (d *DB) GetCase(gid string, id int) (Case, error) {
 	})
 	return c, err
 }
-
 func (d *DB) DeleteCase(gid string, id int) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		gbkt := tx.Bucket(bktCases).Bucket([]byte(gid))
@@ -64,7 +58,6 @@ func (d *DB) DeleteCase(gid string, id int) error {
 		return gbkt.Delete([]byte(fmt.Sprintf("%d", id)))
 	})
 }
-
 func (d *DB) DeleteAllCases(gid, uid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		gbkt := tx.Bucket(bktCases).Bucket([]byte(gid))
@@ -81,7 +74,6 @@ func (d *DB) DeleteAllCases(gid, uid string) error {
 		return nil
 	})
 }
-
 func (d *DB) ListCases(gid, uid string) ([]Case, error) {
 	var out []Case
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -99,7 +91,6 @@ func (d *DB) ListCases(gid, uid string) ([]Case, error) {
 	})
 	return out, err
 }
-
 func (d *DB) SaveJailed(gid, uid string, roles []string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		gbkt, err := tx.Bucket(bktJails).CreateBucketIfNotExists([]byte(gid))
@@ -109,7 +100,6 @@ func (d *DB) SaveJailed(gid, uid string, roles []string) error {
 		return putJSON(gbkt, []byte(uid), roles)
 	})
 }
-
 func (d *DB) GetJailed(gid, uid string) ([]string, error) {
 	var roles []string
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -125,7 +115,6 @@ func (d *DB) GetJailed(gid, uid string) ([]string, error) {
 	})
 	return roles, err
 }
-
 func (d *DB) DeleteJailed(gid, uid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		gbkt := tx.Bucket(bktJails).Bucket([]byte(gid))
@@ -135,14 +124,12 @@ func (d *DB) DeleteJailed(gid, uid string) error {
 		return gbkt.Delete([]byte(uid))
 	})
 }
-
 func (d *DB) SaveNicklock(gid, uid, nickname string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		k := []byte(gid + ":" + uid)
 		return tx.Bucket(bktNicklocks).Put(k, []byte(nickname))
 	})
 }
-
 func (d *DB) GetNicklock(gid, uid string) (string, error) {
 	var nickname string
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -156,28 +143,24 @@ func (d *DB) GetNicklock(gid, uid string) (string, error) {
 	})
 	return nickname, err
 }
-
 func (d *DB) DeleteNicklock(gid, uid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		k := []byte(gid + ":" + uid)
 		return tx.Bucket(bktNicklocks).Delete(k)
 	})
 }
-
 type TempRole struct {
 	GuildID   string    `json:"guild_id"`
 	UserID    string    `json:"user_id"`
 	RoleID    string    `json:"role_id"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
-
 func (d *DB) SaveTempRole(tr TempRole) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		k := []byte(tr.GuildID + ":" + tr.UserID + ":" + tr.RoleID)
 		return putJSON(tx.Bucket(bktTempRoles), k, tr)
 	})
 }
-
 func (d *DB) GetExpiredTempRoles() ([]TempRole, error) {
 	var out []TempRole
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -195,25 +178,21 @@ func (d *DB) GetExpiredTempRoles() ([]TempRole, error) {
 	})
 	return out, err
 }
-
 func (d *DB) DeleteTempRole(gid, uid, rid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		k := []byte(gid + ":" + uid + ":" + rid)
 		return tx.Bucket(bktTempRoles).Delete(k)
 	})
 }
-
 type StickyRoleEntry struct {
 	UserID string
 	RoleID string
 }
-
 func (d *DB) SaveStickyRole(gid, uid, rid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket(bktStickyRoles).Put([]byte(gid+":"+uid+":"+rid), []byte("1"))
 	})
 }
-
 func (d *DB) IsStickyRole(gid, uid, rid string) bool {
 	sticky := false
 	_ = d.b.View(func(tx *bolt.Tx) error {
@@ -225,13 +204,11 @@ func (d *DB) IsStickyRole(gid, uid, rid string) bool {
 	})
 	return sticky
 }
-
 func (d *DB) DeleteStickyRole(gid, uid, rid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		return tx.Bucket(bktStickyRoles).Delete([]byte(gid + ":" + uid + ":" + rid))
 	})
 }
-
 func (d *DB) ListStickyRoles(gid string) ([]StickyRoleEntry, error) {
 	var out []StickyRoleEntry
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -250,13 +227,11 @@ func (d *DB) ListStickyRoles(gid string) ([]StickyRoleEntry, error) {
 	})
 	return out, err
 }
-
 func (d *DB) SaveAutoroles(gid string, roles []string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		return putJSON(tx.Bucket(bktAutoroles), []byte(gid), roles)
 	})
 }
-
 func (d *DB) GetAutoroles(gid string) ([]string, error) {
 	var roles []string
 	err := d.b.View(func(tx *bolt.Tx) error {
@@ -268,46 +243,106 @@ func (d *DB) GetAutoroles(gid string) ([]string, error) {
 	})
 	return roles, err
 }
-
-func (d *DB) AddBypass(gid, uid string) error {
+func (d *DB) AddAntinukeAdmin(gid, uid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bktAntinuke).Put([]byte(gid+":"+uid), []byte("1"))
+		_ = tx.Bucket(bktAntinuke).Put([]byte(gid+":"+uid), []byte("1"))
+		return tx.Bucket(bktAntinuke).Put([]byte("adm:"+gid+":"+uid), []byte("1"))
 	})
 }
-
-func (d *DB) HasBypass(gid, uid string) bool {
+func (d *DB) IsAntinukeAdmin(gid, uid string) bool {
 	ok := false
 	_ = d.b.View(func(tx *bolt.Tx) error {
-		if tx.Bucket(bktAntinuke).Get([]byte(gid+":"+uid)) != nil {
+		if tx.Bucket(bktAntinuke).Get([]byte("adm:"+gid+":"+uid)) != nil || tx.Bucket(bktAntinuke).Get([]byte(gid+":"+uid)) != nil {
 			ok = true
 		}
 		return nil
 	})
 	return ok
 }
-
-func (d *DB) DeleteBypass(gid, uid string) error {
+func (d *DB) DeleteAntinukeAdmin(gid, uid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bktAntinuke).Delete([]byte(gid + ":" + uid))
+		_ = tx.Bucket(bktAntinuke).Delete([]byte(gid + ":" + uid))
+		return tx.Bucket(bktAntinuke).Delete([]byte("adm:" + gid + ":" + uid))
 	})
 }
-
-func (d *DB) ListBypasses(gid string) ([]string, error) {
+func (d *DB) ListAntinukeAdmins(gid string) ([]string, error) {
 	var out []string
 	err := d.b.View(func(tx *bolt.Tx) error {
-		prefix := []byte(gid + ":")
 		c := tx.Bucket(bktAntinuke).Cursor()
-		for k, _ := c.Seek(prefix); k != nil && strings.HasPrefix(string(k), string(prefix)); k, _ = c.Next() {
+		prefixNew := []byte("adm:" + gid + ":")
+		for k, _ := c.Seek(prefixNew); k != nil && strings.HasPrefix(string(k), string(prefixNew)); k, _ = c.Next() {
+			parts := strings.Split(string(k), ":")
+			if len(parts) >= 3 {
+				out = append(out, parts[2])
+			}
+		}
+		prefixOld := []byte(gid + ":")
+		for k, _ := c.Seek(prefixOld); k != nil && strings.HasPrefix(string(k), string(prefixOld)); k, _ = c.Next() {
 			parts := strings.Split(string(k), ":")
 			if len(parts) >= 2 {
-				out = append(out, parts[1])
+				found := false
+				for _, exist := range out {
+					if exist == parts[1] {
+						found = true
+						break
+					}
+				}
+				if !found {
+					out = append(out, parts[1])
+				}
 			}
 		}
 		return nil
 	})
 	return out, err
 }
-
+func (d *DB) AddAntinukeWhitelist(gid, uid string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bktAntinuke).Put([]byte("wl:"+gid+":"+uid), []byte("1"))
+	})
+}
+func (d *DB) IsAntinukeWhitelisted(gid, uid string) bool {
+	ok := false
+	_ = d.b.View(func(tx *bolt.Tx) error {
+		if tx.Bucket(bktAntinuke).Get([]byte("wl:"+gid+":"+uid)) != nil {
+			ok = true
+		}
+		return nil
+	})
+	return ok
+}
+func (d *DB) DeleteAntinukeWhitelist(gid, uid string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bktAntinuke).Delete([]byte("wl:" + gid + ":" + uid))
+	})
+}
+func (d *DB) ListAntinukeWhitelists(gid string) ([]string, error) {
+	var out []string
+	err := d.b.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket(bktAntinuke).Cursor()
+		prefix := []byte("wl:" + gid + ":")
+		for k, _ := c.Seek(prefix); k != nil && strings.HasPrefix(string(k), string(prefix)); k, _ = c.Next() {
+			parts := strings.Split(string(k), ":")
+			if len(parts) >= 3 {
+				out = append(out, parts[2])
+			}
+		}
+		return nil
+	})
+	return out, err
+}
+func (d *DB) AddBypass(gid, uid string) error {
+	return d.AddAntinukeAdmin(gid, uid)
+}
+func (d *DB) HasBypass(gid, uid string) bool {
+	return d.IsAntinukeAdmin(gid, uid)
+}
+func (d *DB) DeleteBypass(gid, uid string) error {
+	return d.DeleteAntinukeAdmin(gid, uid)
+}
+func (d *DB) ListBypasses(gid string) ([]string, error) {
+	return d.ListAntinukeAdmins(gid)
+}
 func (d *DB) ResetCases(gid string) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bktCases)
@@ -319,3 +354,83 @@ func (d *DB) ResetCases(gid string) error {
 	})
 }
 
+type QuarantineEntry struct {
+	UserID    string    `json:"uid"`
+	Roles     []string  `json:"roles"`
+	Reason    string    `json:"reason"`
+	Timestamp time.Time `json:"ts"`
+	By        string    `json:"by"`
+}
+
+func (d *DB) SaveQuarantined(gid, uid string, roles []string, reason string, ts time.Time, by string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		gbkt, err := tx.Bucket(bktQuarantine).CreateBucketIfNotExists([]byte(gid))
+		if err != nil {
+			return err
+		}
+		entry := QuarantineEntry{
+			UserID:    uid,
+			Roles:     roles,
+			Reason:    reason,
+			Timestamp: ts,
+			By:        by,
+		}
+		return putJSON(gbkt, []byte(uid), entry)
+	})
+}
+
+func (d *DB) GetQuarantined(gid, uid string) (QuarantineEntry, error) {
+	var entry QuarantineEntry
+	err := d.b.View(func(tx *bolt.Tx) error {
+		gbkt := tx.Bucket(bktQuarantine).Bucket([]byte(gid))
+		if gbkt == nil {
+			return fmt.Errorf("no quarantine record")
+		}
+		v := gbkt.Get([]byte(uid))
+		if v == nil {
+			return fmt.Errorf("user not quarantined")
+		}
+		return json.Unmarshal(v, &entry)
+	})
+	return entry, err
+}
+
+func (d *DB) DeleteQuarantined(gid, uid string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		gbkt := tx.Bucket(bktQuarantine).Bucket([]byte(gid))
+		if gbkt == nil {
+			return nil
+		}
+		return gbkt.Delete([]byte(uid))
+	})
+}
+
+func (d *DB) ListQuarantined(gid string) ([]QuarantineEntry, error) {
+	var out []QuarantineEntry
+	err := d.b.View(func(tx *bolt.Tx) error {
+		gbkt := tx.Bucket(bktQuarantine).Bucket([]byte(gid))
+		if gbkt == nil {
+			return nil
+		}
+		return gbkt.ForEach(func(k, v []byte) error {
+			var entry QuarantineEntry
+			if err := json.Unmarshal(v, &entry); err == nil {
+				out = append(out, entry)
+			}
+			return nil
+		})
+	})
+	return out, err
+}
+
+func (d *DB) IsQuarantined(gid, uid string) bool {
+	ok := false
+	_ = d.b.View(func(tx *bolt.Tx) error {
+		gbkt := tx.Bucket(bktQuarantine).Bucket([]byte(gid))
+		if gbkt != nil && gbkt.Get([]byte(uid)) != nil {
+			ok = true
+		}
+		return nil
+	})
+	return ok
+}

@@ -1,14 +1,11 @@
 package moderation
-
 import (
 	"fmt"
 	"skyvern/internal/manager"
 	"skyvern/internal/moderation"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 func init() {
 	manager.RegisterHelp("thread", []manager.HelpPage{
 		{
@@ -48,7 +45,6 @@ func init() {
 		},
 	})
 }
-
 var Thread = &manager.Command{
 	Trigger:     "thread",
 	Name:        "thread",
@@ -58,17 +54,13 @@ var Thread = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("thread")
 		}
-
 		gid := ctx.GuildID()
 		sub := strings.ToLower(ctx.Args[0])
-
 		switch sub {
 		case "lock", "unlock", "rename", "add", "remove", "watch":
-			// We will check permissions in sub-commands
 		default:
 			return ctx.SendHelp("thread")
 		}
-
 		switch sub {
 		case "watch":
 			if !checkPerm(ctx, discordgo.PermissionManageChannels) {
@@ -86,7 +78,6 @@ var Thread = &manager.Command{
 				}
 				return ctx.Reply(sb.String())
 			}
-
 			target := ctx.ChanID()
 			if len(ctx.Args) > 1 {
 				if ch, err := moderation.ResolveChannel(ctx.Session, gid, ctx.Args[1]); err == nil && ch != nil {
@@ -95,12 +86,10 @@ var Thread = &manager.Command{
 					target = strings.Trim(ctx.Args[1], "<#>")
 				}
 			}
-
 			ch, err := ctx.Session.Channel(target)
 			if err != nil || ch.GuildID != gid {
 				return ctx.Reply("[!] Invalid thread channel.")
 			}
-
 			watched, _ := ctx.DB.IsWatchedThread(gid, target)
 			if watched {
 				_ = ctx.DB.DeleteWatchedThread(gid, target)
@@ -109,7 +98,6 @@ var Thread = &manager.Command{
 				_ = ctx.DB.SaveWatchedThread(gid, target)
 				return ctx.Reply(fmt.Sprintf("[+] Now watching thread <#%s>. If it gets archived, it will be automatically unarchived.", target))
 			}
-
 		case "lock":
 			if !checkPerm(ctx, discordgo.PermissionManageThreads) {
 				return ctx.Reply("[!] You need Manage Threads permission.")
@@ -117,7 +105,6 @@ var Thread = &manager.Command{
 			target := ctx.ChanID()
 			reason := "Thread lock"
 			argIdx := 1
-
 			if len(ctx.Args) > 1 {
 				if ch, err := moderation.ResolveChannel(ctx.Session, gid, ctx.Args[1]); err == nil && ch != nil {
 					target = ch.ID
@@ -127,11 +114,9 @@ var Thread = &manager.Command{
 					argIdx = 2
 				}
 			}
-
 			if len(ctx.Args) > argIdx {
 				reason = strings.Join(ctx.Args[argIdx:], " ")
 			}
-
 			locked := true
 			_, err := ctx.Session.ChannelEditComplex(target, &discordgo.ChannelEdit{
 				Locked: &locked,
@@ -140,7 +125,6 @@ var Thread = &manager.Command{
 				return ctx.Reply(fmt.Sprintf("[!] Failed to lock thread: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Locked thread <#%s>. Reason: %s", target, reason))
-
 		case "unlock":
 			if !checkPerm(ctx, discordgo.PermissionManageThreads) {
 				return ctx.Reply("[!] You need Manage Threads permission.")
@@ -148,7 +132,6 @@ var Thread = &manager.Command{
 			target := ctx.ChanID()
 			reason := "Thread unlock"
 			argIdx := 1
-
 			if len(ctx.Args) > 1 {
 				if ch, err := moderation.ResolveChannel(ctx.Session, gid, ctx.Args[1]); err == nil && ch != nil {
 					target = ch.ID
@@ -158,11 +141,9 @@ var Thread = &manager.Command{
 					argIdx = 2
 				}
 			}
-
 			if len(ctx.Args) > argIdx {
 				reason = strings.Join(ctx.Args[argIdx:], " ")
 			}
-
 			locked := false
 			_, err := ctx.Session.ChannelEditComplex(target, &discordgo.ChannelEdit{
 				Locked: &locked,
@@ -171,7 +152,6 @@ var Thread = &manager.Command{
 				return ctx.Reply(fmt.Sprintf("[!] Failed to unlock thread: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Unlocked thread <#%s>. Reason: %s", target, reason))
-
 		case "rename":
 			if !checkPerm(ctx, discordgo.PermissionManageThreads) {
 				return ctx.Reply("[!] You need Manage Threads permission.")
@@ -179,10 +159,8 @@ var Thread = &manager.Command{
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.thread rename [thread] <new_name>`")
 			}
-
 			target := ctx.ChanID()
 			name := strings.Join(ctx.Args[1:], " ")
-
 			if len(ctx.Args) > 2 {
 				if ch, err := moderation.ResolveChannel(ctx.Session, gid, ctx.Args[1]); err == nil && ch != nil {
 					target = ch.ID
@@ -192,11 +170,9 @@ var Thread = &manager.Command{
 					name = strings.Join(ctx.Args[2:], " ")
 				}
 			}
-
 			if strings.TrimSpace(name) == "" {
 				return ctx.Reply("[!] Name cannot be empty.")
 			}
-
 			_, err := ctx.Session.ChannelEdit(target, &discordgo.ChannelEdit{
 				Name: strings.TrimSpace(name),
 			})
@@ -204,7 +180,6 @@ var Thread = &manager.Command{
 				return ctx.Reply(fmt.Sprintf("[!] Failed to rename thread: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Renamed thread to `%s`.", name))
-
 		case "add":
 			if !checkPerm(ctx, discordgo.PermissionManageThreads) {
 				return ctx.Reply("[!] You need Manage Threads permission.")
@@ -212,16 +187,13 @@ var Thread = &manager.Command{
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.thread add <thread> <member>`")
 			}
-
 			chID := strings.Trim(ctx.Args[1], "<#>")
 			memID := strings.Trim(ctx.Args[2], "<@!?")
-
 			err := ctx.Session.ThreadMemberAdd(chID, memID)
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to add member to thread: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Added <@%s> to thread <#%s>.", memID, chID))
-
 		case "remove":
 			if !checkPerm(ctx, discordgo.PermissionManageThreads) {
 				return ctx.Reply("[!] You need Manage Threads permission.")
@@ -229,17 +201,14 @@ var Thread = &manager.Command{
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.thread remove <thread> <member>`")
 			}
-
 			chID := strings.Trim(ctx.Args[1], "<#>")
 			memID := strings.Trim(ctx.Args[2], "<@!?")
-
 			err := ctx.Session.ThreadMemberRemove(chID, memID)
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to remove member from thread: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Removed <@%s> from thread <#%s>.", memID, chID))
 		}
-
 		return nil
 	},
 }

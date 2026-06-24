@@ -1,17 +1,13 @@
 package utility
-
 import (
 	"fmt"
 	"regexp"
 	"skyvern/internal/manager"
 	"skyvern/internal/storage"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 var rxStickyChan = regexp.MustCompile(`^<#(\d+)>$`)
-
 func init() {
 	manager.RegisterHelp("stickymessage", []manager.HelpPage{
 		{
@@ -36,7 +32,6 @@ func init() {
 		},
 	})
 }
-
 var StickyMessage = &manager.Command{
 	Trigger:     "stickymessage",
 	Aliases:     []string{"sticky"},
@@ -48,14 +43,11 @@ var StickyMessage = &manager.Command{
 		if err != nil || (p&discordgo.PermissionManageGuild) == 0 {
 			return ctx.Reply("[!] You need Manage Guild permission.")
 		}
-
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("stickymessage")
 		}
-
 		sub := strings.ToLower(ctx.Args[0])
 		gid := ctx.GuildID()
-
 		switch sub {
 		case "add":
 			if len(ctx.Args) < 3 {
@@ -70,7 +62,6 @@ var StickyMessage = &manager.Command{
 			if err != nil || ch.GuildID != gid {
 				return ctx.Reply("[!] Invalid text channel.")
 			}
-
 			msg := strings.Join(ctx.Args[2:], " ")
 			sm := storage.StickyMessage{
 				ChannelID: cid,
@@ -78,7 +69,6 @@ var StickyMessage = &manager.Command{
 			}
 			_ = ctx.DB.SaveStickyMessage(gid, cid, sm)
 			return ctx.Reply(fmt.Sprintf("[+] Sticky message successfully configured for <#%s>.", cid))
-
 		case "remove", "delete":
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.stickymessage remove <channel>`")
@@ -88,15 +78,11 @@ var StickyMessage = &manager.Command{
 			if m := rxStickyChan.FindStringSubmatch(chanArg); len(m) > 1 {
 				cid = m[1]
 			}
-
-			// Clean up previous message if we have it
 			if old, err := ctx.DB.GetStickyMessage(gid, cid); err == nil && old.LastMsgID != "" {
 				_ = ctx.Session.ChannelMessageDelete(cid, old.LastMsgID)
 			}
-
 			_ = ctx.DB.DeleteStickyMessage(gid, cid)
 			return ctx.Reply(fmt.Sprintf("[+] Sticky message disabled for <#%s>.", cid))
-
 		case "view":
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.stickymessage view <channel>`")
@@ -106,13 +92,11 @@ var StickyMessage = &manager.Command{
 			if m := rxStickyChan.FindStringSubmatch(chanArg); len(m) > 1 {
 				cid = m[1]
 			}
-
 			sm, err := ctx.DB.GetStickyMessage(gid, cid)
 			if err != nil || sm.Message == "" {
 				return ctx.Reply(fmt.Sprintf("[*] No sticky message configured for <#%s>.", cid))
 			}
 			return ctx.Reply(fmt.Sprintf("Sticky message for <#%s>:\n```\n%s\n```", cid, sm.Message))
-
 		case "list":
 			list, err := ctx.DB.ListStickyMessages(gid)
 			if err != nil || len(list) == 0 {
@@ -128,7 +112,6 @@ var StickyMessage = &manager.Command{
 				sb.WriteString(fmt.Sprintf("- <#%s>: `%s`\n", sm.ChannelID, preview))
 			}
 			return ctx.Reply(sb.String())
-
 		default:
 			return ctx.SendHelp("stickymessage")
 		}

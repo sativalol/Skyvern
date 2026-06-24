@@ -5,6 +5,7 @@ import (
 	"skyvern/internal/commands/general"
 	"skyvern/internal/commands/moderation"
 	"skyvern/internal/commands/music"
+	"skyvern/internal/commands/tickets"
 	"skyvern/internal/commands/utility"
 	"skyvern/internal/manager"
 
@@ -13,6 +14,7 @@ import (
 
 var Registry = []*manager.Command{
 	general.Ping,
+	general.Yo,
 	general.Help,
 	general.Autorole,
 	general.DailyQuestion,
@@ -34,8 +36,13 @@ var Registry = []*manager.Command{
 	general.Birthday,
 	general.BumpReminder,
 	general.ButtonRole,
-	general.ReactRole,
+	general.ReactionRole,
+	general.React,
+	general.Reaction,
+	general.PreviousReact,
+	general.NoSelfReact,
 	utility.Uptime,
+	utility.Backup,
 
 	moderation.Ban,
 	moderation.Unban,
@@ -72,6 +79,9 @@ var Registry = []*manager.Command{
 	moderation.Role,
 	moderation.Antinuke,
 	moderation.Antiraid,
+	moderation.Quarantine,
+	moderation.Release,
+	moderation.Quarantined,
 	moderation.Nuke,
 	moderation.Prefix,
 	moderation.Slowmode,
@@ -87,9 +97,14 @@ var Registry = []*manager.Command{
 	moderation.RecentBan,
 	moderation.Talk,
 	moderation.RevokeFiles,
-	moderation.RestrictCommand,
+	moderation.Restrict,
 	moderation.Topic,
 	moderation.Naughty,
+	moderation.Levels,
+	moderation.SetXP,
+	moderation.RemoveXP,
+	moderation.SetLevel,
+	moderation.Giveaways,
 
 	utility.Invoke,
 	utility.Snipe,
@@ -104,7 +119,6 @@ var Registry = []*manager.Command{
 	utility.Autoreact,
 	utility.Autoresponder,
 	utility.Dig,
-	utility.Embed,
 	utility.Convert,
 	utility.IP,
 	utility.MCServer,
@@ -113,19 +127,42 @@ var Registry = []*manager.Command{
 	utility.Schedule,
 	utility.Screenshot,
 	utility.Starboard,
+	utility.Clownboard,
 	utility.Tag,
 	utility.VoiceMaster,
 	utility.Ticker,
 	general.Vanity,
 	general.Vouch,
+	general.Vouches,
 	general.Welcome,
 	general.Goodbye,
 	utility.ImgOnly,
 	utility.Alias,
 	utility.StickyMessage,
 	utility.ScrapeCmd,
+	utility.CrawlCmd,
 	utility.AskCmd,
+	utility.RedeemCmd,
+	utility.TokensCmd,
+	utility.AIHistoryCmd,
+	utility.OwnerCmd,
+	utility.Obfuscate,
 
+	general.Sticker,
+	general.Emoji,
+	fun.Osu,
+	fun.Telegram,
+	utility.Highlight,
+	utility.InviteInfo,
+	general.Boosters,
+	general.Bots,
+	general.MemberCount,
+	general.ChannelInfo,
+	general.ServerAvatar,
+	general.ServerBanner,
+	general.GuildIcon,
+	general.GuildBanner,
+	general.Splash,
 
 	fun.Define,
 	fun.Urban,
@@ -136,6 +173,7 @@ var Registry = []*manager.Command{
 	fun.Twitch,
 	fun.Youtube,
 	fun.Game,
+	fun.Chess,
 	fun.Github,
 	fun.Cashapp,
 	fun.Tiktok,
@@ -150,6 +188,7 @@ var Registry = []*manager.Command{
 	fun.Compliment,
 	fun.Fact,
 	fun.Cat,
+	fun.Dog,
 	fun.ASCII,
 	fun.Owoify,
 	fun.Piglatin,
@@ -168,9 +207,36 @@ var Registry = []*manager.Command{
 	fun.Juul,
 	fun.Yart,
 	fun.Weed,
-	fun.StockCmd,
 	fun.Rate,
 	fun.Ship,
+
+	utility.EmbedExpansion,
+	utility.CreateEmbedCmd,
+	utility.EditEmbedCmd,
+	utility.EmbedCodeCmd,
+	utility.NamesCmd,
+	utility.ClearNamesCmd,
+	utility.GNamesCmd,
+	utility.InvitesCmd,
+	utility.TopCommandsCmd,
+
+	fun.Uwoify,
+	fun.Freaky,
+	fun.Quickpoll,
+	fun.Poll,
+	fun.Timediff,
+	fun.Fyp,
+	fun.Randomhex,
+	fun.Charinfo,
+	fun.ColorCmd,
+	fun.RPSCmd,
+	fun.ChooseCmd,
+	fun.JumboCmd,
+	fun.WouldyouratherCmd,
+	fun.Makemp3Cmd,
+	fun.Quote,
+	fun.FakeMessage,
+	fun.Impersonate,
 
 	music.Play,
 	music.Stop,
@@ -184,6 +250,10 @@ var Registry = []*manager.Command{
 	music.Loop,
 	music.Shuffle,
 	music.Clear,
+	music.Fastforward,
+	music.Rewind,
+	music.Preset,
+	tickets.Tickets,
 }
 
 func Init(mgr *manager.Manager) {
@@ -213,6 +283,24 @@ func Init(mgr *manager.Manager) {
 	})
 	mgr.RegisterComponentHandler("vm_*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utility.HandleVoiceMasterComponent(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("steal_*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		fun.HandleStealComponent(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("weed_page:*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		fun.HandleWeedComponent(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("giveaway_join_*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		moderation.HandleGiveawayJoin(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("backup_confirm:*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		utility.HandleBackupConfirm(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("backup_cancel:*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		utility.HandleBackupCancel(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("obf_lyrics:*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		utility.HandleObfuscateLyricsComponent(s, i, mgr)
 	})
 }
 

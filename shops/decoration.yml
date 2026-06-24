@@ -1,0 +1,14 @@
+pages:
+  page1:
+    gui-rows: 3
+    items:
+      blue_candle:
+        material: BLUE_CANDLE
+        displayname: '&9&lDecoration'
+        section: decorative
+        slot: 12
+      rose_bush:
+        material: ROSE_BUSH
+        displayname: <#FF4FCB><bold>Dyes
+        section: dyes
+        slot: 16

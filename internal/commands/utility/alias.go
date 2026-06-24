@@ -1,13 +1,10 @@
 package utility
-
 import (
 	"fmt"
 	"skyvern/internal/manager"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 func init() {
 	manager.RegisterHelp("alias", []manager.HelpPage{
 		{
@@ -42,7 +39,6 @@ func init() {
 		},
 	})
 }
-
 var Alias = &manager.Command{
 	Trigger:     "alias",
 	Name:        "alias",
@@ -53,14 +49,11 @@ var Alias = &manager.Command{
 		if err != nil || (p&discordgo.PermissionManageGuild) == 0 {
 			return ctx.Reply("[!] You need Manage Server permission.")
 		}
-
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("alias")
 		}
-
 		sub := strings.ToLower(ctx.Args[0])
 		gid := ctx.GuildID()
-
 		switch sub {
 		case "add":
 			if len(ctx.Args) < 3 {
@@ -68,15 +61,11 @@ var Alias = &manager.Command{
 			}
 			shortcut := strings.ToLower(ctx.Args[1])
 			target := strings.Join(ctx.Args[2:], " ")
-
-			// Prevent mapping shortcut to itself
 			if shortcut == target || strings.HasPrefix(target, shortcut+" ") {
 				return ctx.Reply("[!] An alias cannot point to its own shortcut.")
 			}
-
 			_ = ctx.DB.SaveAlias(gid, shortcut, target)
 			return ctx.Reply(fmt.Sprintf("[+] Custom alias created: `%s` -> `%s`.", shortcut, target))
-
 		case "remove":
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.alias remove <shortcut>`")
@@ -84,7 +73,6 @@ var Alias = &manager.Command{
 			shortcut := strings.ToLower(ctx.Args[1])
 			_ = ctx.DB.DeleteAlias(gid, shortcut)
 			return ctx.Reply(fmt.Sprintf("[+] Alias `%s` removed.", shortcut))
-
 		case "removeall":
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.alias removeall <command>`")
@@ -102,7 +90,6 @@ var Alias = &manager.Command{
 				}
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Removed %d aliases associated with command `%s`.", count, targetCmd))
-
 		case "list":
 			aliases, err := ctx.DB.ListAliases(gid)
 			if err != nil || len(aliases) == 0 {
@@ -114,7 +101,6 @@ var Alias = &manager.Command{
 				sb.WriteString(fmt.Sprintf("- `%s` -> `%s`\n", sc, cmd))
 			}
 			return ctx.Reply(sb.String())
-
 		case "view":
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.alias view <shortcut>`")
@@ -125,11 +111,9 @@ var Alias = &manager.Command{
 				return ctx.Reply(fmt.Sprintf("[!] No alias configured for `%s`.", shortcut))
 			}
 			return ctx.Reply(fmt.Sprintf("[*] Alias `%s` expands to: `%s`.", shortcut, target))
-
 		case "reset":
 			_ = ctx.DB.DeleteAllAliases(gid)
 			return ctx.Reply("[+] All custom aliases cleared.")
-
 		default:
 			return ctx.SendHelp("alias")
 		}

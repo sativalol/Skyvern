@@ -1,12 +1,10 @@
 package utility
-
 import (
 	"fmt"
 	"net"
 	"skyvern/internal/manager"
 	"strings"
 )
-
 var Dig = &manager.Command{
 	Trigger:     "dig",
 	Name:        "dig",
@@ -16,12 +14,9 @@ var Dig = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.Reply("Usage: `.dig <domain>`")
 		}
-
 		domain := ctx.Args[0]
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("**DNS Lookup for %s**\n\n", domain))
-
-		// A / AAAA
 		ips, err := net.LookupIP(domain)
 		if err == nil && len(ips) > 0 {
 			sb.WriteString("__IP Records (A/AAAA)__\n")
@@ -30,8 +25,6 @@ var Dig = &manager.Command{
 			}
 			sb.WriteString("\n")
 		}
-
-		// MX
 		mxs, err := net.LookupMX(domain)
 		if err == nil && len(mxs) > 0 {
 			sb.WriteString("__Mail Exchanger (MX)__\n")
@@ -40,8 +33,6 @@ var Dig = &manager.Command{
 			}
 			sb.WriteString("\n")
 		}
-
-		// TXT
 		txts, err := net.LookupTXT(domain)
 		if err == nil && len(txts) > 0 {
 			sb.WriteString("__TXT Records__\n")
@@ -50,13 +41,10 @@ var Dig = &manager.Command{
 			}
 			sb.WriteString("\n")
 		}
-
-		// CNAME
 		cname, err := net.LookupCNAME(domain)
 		if err == nil && cname != "" && !strings.HasPrefix(cname, domain) {
 			sb.WriteString(fmt.Sprintf("__CNAME Record__\n- %s\n", cname))
 		}
-
 		res := sb.String()
 		if len(res) > 2000 {
 			res = res[:1990] + "..."
@@ -64,7 +52,6 @@ var Dig = &manager.Command{
 		if res == fmt.Sprintf("**DNS Lookup for %s**\n\n", domain) {
 			return ctx.Reply("[!] No DNS records resolved or invalid domain.")
 		}
-
 		return ctx.Reply(res)
 	},
 }

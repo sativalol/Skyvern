@@ -1,0 +1,115 @@
+pages:
+  page1:
+    items:
+      wooden_pickaxe:
+        material: WOODEN_PICKAXE
+        buy: 4.69
+        sell: 1.18
+      stone_pickaxe:
+        material: STONE_PICKAXE
+        buy: 3.36
+        sell: 0.84
+      copper_pickaxe:
+        material: COPPER_PICKAXE
+        buy: 4.15
+        sell: 0.97
+      iron_pickaxe:
+        material: IRON_PICKAXE
+        buy: 18.58
+        sell: 4.65
+      golden_pickaxe:
+        material: GOLDEN_PICKAXE
+        buy: 27.27
+        sell: 6.82
+      diamond_pickaxe:
+        material: DIAMOND_PICKAXE
+        buy: 166.6
+        sell: 41.65
+      netherite_pickaxe:
+        material: NETHERITE_PICKAXE
+        buy: 2660.92
+        sell: 665.23
+      wooden_axe:
+        material: WOODEN_AXE
+        buy: 4.69
+        sell: 1.18
+      stone_axe:
+        material: STONE_AXE
+        buy: 3.36
+        sell: 0.84
+      copper_axe:
+        material: COPPER_AXE
+        buy: 4.15
+        sell: 0.97
+      iron_axe:
+        material: IRON_AXE
+        buy: 18.58
+        sell: 4.65
+      golden_axe:
+        material: GOLDEN_AXE
+        buy: 27.27
+        sell: 6.82
+      diamond_axe:
+        material: DIAMOND_AXE
+        buy: 166.6
+        sell: 41.65
+      netherite_axe:
+        material: NETHERITE_AXE
+        buy: 2660.92
+        sell: 665.23
+      wooden_shovel:
+        material: WOODEN_SHOVEL
+        buy: 2.38
+        sell: 0.6
+      stone_shovel:
+        material: STONE_SHOVEL
+        buy: 1.93
+        sell: 0.49
+      copper_shovel:
+        material: COPPER_SHOVEL
+        buy: 2.17
+        sell: 0.54
+      iron_shovel:
+        material: IRON_SHOVEL
+        buy: 7.01
+        sell: 1.76
+      golden_shovel:
+        material: GOLDEN_SHOVEL
+        buy: 9.9
+        sell: 2.48
+      diamond_shovel:
+        material: DIAMOND_SHOVEL
+        buy: 56.35
+        sell: 14.09
+      netherite_shovel:
+        material: NETHERITE_SHOVEL
+        buy: 2545.16
+        sell: 636.29
+      wooden_hoe:
+        material: WOODEN_HOE
+        buy: 3.54
+        sell: 0.89
+      stone_hoe:
+        material: STONE_HOE
+        buy: 2.65
+        sell: 0.67
+      copper_hoe:
+        material: COPPER_HOE
+        buy: 3.24
+        sell: 0.77
+      iron_hoe:
+        material: IRON_HOE
+        buy: 12.8
+        sell: 3.2
+      golden_hoe:
+        material: GOLDEN_HOE
+        buy: 18.58
+        sell: 4.65
+      diamond_hoe:
+        material: DIAMOND_HOE
+        buy: 111.47
+        sell: 27.87
+      netherite_hoe:
+        material: NETHERITE_HOE
+        buy: 2603.04
+        sell: 650.76

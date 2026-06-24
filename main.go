@@ -1,26 +1,37 @@
 package main
-
 import (
+	"bufio"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"runtime/debug"
+	"skyvern/internal/bootstrap"
 	"skyvern/internal/commands"
 	"skyvern/internal/config"
 	"skyvern/internal/manager"
 	"skyvern/internal/lavalink"
 	"skyvern/internal/plugins"
 	_ "skyvern/internal/plugins/fun"
+	_ "skyvern/internal/plugins/vouch"
+	_ "skyvern/internal/plugins/captcha"
+	_ "skyvern/internal/plugins/moon"
+	_ "skyvern/internal/plugins/economy"
+	_ "skyvern/internal/plugins/customcommands"
 	"skyvern/internal/storage"
 	"strings"
 	"skyvern/pkg/tui"
+	"skyvern/internal/updater"
 	"syscall"
 	"time"
 )
-
 func main() {
-	f := setupLogger()
+	bootstrap.HandleDumpCmds()
+
+	f := bootstrap.SetupLogger()
 	defer f.Close()
 	defer func() {
 		if r := recover(); r != nil {
@@ -31,28 +42,69 @@ func main() {
 			panic(r)
 		}
 	}()
-
 	if b, err := os.ReadFile(config.ResolvePath("ascii")); err == nil {
 		fmt.Print(tui.Shrink(string(b), 2))
 	} else {
 		fmt.Println(tui.Logo)
 	}
-	fmt.Println("  Skyvern | Version 0.1.0-alpha")
+	fmt.Printf("  Skyvern | Version %s\n", config.Version)
+	go func() {
+		if latest, update, err := updater.CheckVersion(config.Version); err == nil && update {
+			fmt.Printf("\n  [!] UPDATE AVAILABLE: Version %s is out. Current version: %s\n", latest, config.Version)
+			fmt.Println("      Download it from: https://esoteric.win/skyvern/releases\n")
+		}
+	}()
 	fmt.Println("  Loading cfgs...")
-
 	db, err := storage.Open(config.ResolvePath("bots.db"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "db init: %v\n", err)
 		os.Exit(1)
 	}
 	defer db.Close()
-
-	if g, err := db.GetGlobal(); err == nil {
+	if savedG, err := db.GetGlobal(); err == nil {
+		config.SetGlobal(savedG)
+	}
+	g := config.GetGlobal()
+	if g.LavalinkPass == "" || g.LavalinkPass == "youshallnotpass" {
+		b := make([]byte, 16)
+		if _, err := rand.Read(b); err == nil {
+			g.LavalinkPass = hex.EncodeToString(b)
+		} else {
+			g.LavalinkPass = "skyvern_rand_pass_fallback_123"
+		}
+		if err := db.SaveGlobal(g); err != nil {
+			fmt.Fprintf(os.Stderr, "[!] Failed to save global config: %v\n", err)
+		}
 		config.SetGlobal(g)
 	}
-
-
-	g := config.GetGlobal()
+	if !g.SetupDone {
+		fmt.Println("\n  [~] Running setup checks...")
+		if _, err := exec.LookPath("java"); err == nil {
+			fmt.Println("      Java: Found")
+		} else {
+			fmt.Println("      Java: Not Found (Lavalink requires Java!)")
+		}
+		if _, err := os.Stat(config.ResolvePath("lavalink/Lavalink.jar")); err == nil {
+			fmt.Println("      Lavalink: Found")
+		} else {
+			fmt.Println("      Lavalink: Not Found (lavalink/Lavalink.jar missing)")
+		}
+		rd := bufio.NewReader(os.Stdin)
+		fmt.Printf("\n  [?] Enable Lavalink auto-start? (y/n) [current: %t]: ", g.AutoStartLavalink)
+		if ans, err := rd.ReadString('\n'); err == nil {
+			ans = strings.ToLower(strings.TrimSpace(ans))
+			if ans == "y" || ans == "yes" {
+				g.AutoStartLavalink = true
+			} else if ans == "n" || ans == "no" {
+				g.AutoStartLavalink = false
+			}
+		}
+		g.SetupDone = true
+		if err := db.SaveGlobal(g); err != nil {
+			fmt.Fprintf(os.Stderr, "[!] Failed to save global config: %v\n", err)
+		}
+		config.SetGlobal(g)
+	}
 	isLocal := g.LavalinkHost == "" || strings.Contains(g.LavalinkHost, "localhost") || strings.Contains(g.LavalinkHost, "127.0.0.1")
 	if g.AutoStartLavalink && isLocal {
 		lavalink.StartServer(config.ResolvePath)
@@ -72,16 +124,14 @@ func main() {
 				}
 			}
 			fmt.Print(".")
-			time.Sleep(1 * time.Second)
+			time.Sleep(250 * time.Millisecond)
 		}
 		fmt.Println(" Done!")
 	}
 	defer lavalink.StopServer()
-
 	mgr := manager.New(db, commands.Registry)
 	defer mgr.Close()
 	commands.Init(mgr)
-
 	for _, p := range plugins.Loaded() {
 		if err := p.Init(db, mgr); err != nil {
 			fmt.Fprintf(os.Stderr, "plugin %s init failed: %v\n", p.Name(), err)
@@ -89,37 +139,44 @@ func main() {
 		}
 		mgr.AddCommands(p.Commands())
 	}
+	headless := false
+	for _, arg := range os.Args {
+		if arg == "--headless" || arg == "-d" || arg == "--daemon" {
+			headless = true
+			break
+		}
+	}
 
 	if list, err := db.ListBots(); err == nil {
 		for _, b := range list {
 			if b.IsEnabled {
-				_ = mgr.Start(b.ClientID)
+				if err := mgr.Start(b.ClientID); err != nil {
+					fmt.Fprintf(os.Stderr, "[!] Failed to start bot %s: %v\n", b.ClientID, err)
+				}
 			}
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "[!] Failed to list bots: %v\n", err)
+	}
+
+	if !headless {
+		if err := tui.Run(db, mgr); err != nil {
+			fmt.Fprintf(os.Stderr, "[!] TUI exited: %v\n", err)
+			fmt.Println("    To run without TUI (headless daemon mode), use: --headless")
+		}
+		if !mgr.HasRunningBots() {
+			return
+		}
+		fmt.Println("\ntui closed but bots are running in background. ctrl+c to exit")
+	} else {
+		fmt.Println("\n[*] Running in headless daemon mode. Press Ctrl+C to exit.")
+		if !mgr.HasRunningBots() {
+			fmt.Println("[!] Warning: No bots are currently enabled. Enable them via TUI first or check bots.db configuration.")
 		}
 	}
 
-	if err := tui.Run(db, mgr); err != nil {
-		fmt.Fprintf(os.Stderr, "tui exited: %v\n", err)
-	}
-
-	if !mgr.HasRunningBots() {
-		return
-	}
-
-	fmt.Println("\ntui closed but bots are running in background. ctrl+c to exit")
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	<-sig
 }
-
-func setupLogger() *os.File {
-	f, err := os.OpenFile(config.ResolvePath("skyvern.log"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return os.Stderr
-	}
-	_, _ = fmt.Fprintf(f, "started %s\n\n", time.Now().Format(time.RFC3339))
-	os.Stderr = f
-	return f
-}
-
-
+

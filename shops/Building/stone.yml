@@ -1,0 +1,377 @@
+pages:
+  page1:
+    items:
+      stone:
+        material: STONE
+        buy: 0.72
+        sell: 0.18
+      stone_stairs:
+        material: STONE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      stone_slab:
+        material: STONE_SLAB
+        buy: 0.38
+        sell: 0.1
+      smooth_stone:
+        material: SMOOTH_STONE
+        buy: 0.75
+        sell: 0.19
+      smooth_stone_slab:
+        material: SMOOTH_STONE_SLAB
+        buy: 0.4
+        sell: 0.1
+      cobblestone:
+        material: COBBLESTONE
+        buy: 0.68
+        sell: 0.17
+      cobblestone_stairs:
+        material: COBBLESTONE_STAIRS
+        buy: 0.72
+        sell: 0.18
+      cobblestone_slab:
+        material: COBBLESTONE_SLAB
+        buy: 0.36
+        sell: 0.09
+      mossy_cobblestone:
+        material: MOSSY_COBBLESTONE
+        buy: 7.57
+        sell: 1.52
+      mossy_cobblestone_stairs:
+        material: MOSSY_COBBLESTONE_STAIRS
+        buy: 7.97
+        sell: 1.62
+      mossy_cobblestone_slab:
+        material: MOSSY_COBBLESTONE_SLAB
+        buy: 3.74
+        sell: 0.56
+      stone_bricks:
+        material: STONE_BRICKS
+        buy: 0.75
+        sell: 0.19
+      stone_brick_stairs:
+        material: STONE_BRICK_STAIRS
+        buy: 0.75
+        sell: 0.19
+      stone_brick_slab:
+        material: STONE_BRICK_SLAB
+        buy: 0.38
+        sell: 0.1
+      mossy_stone_bricks:
+        material: MOSSY_STONE_BRICKS
+        buy: 7.64
+        sell: 1.54
+      mossy_stone_brick_stairs:
+        material: MOSSY_STONE_BRICK_STAIRS
+        buy: 8.05
+        sell: 1.64
+      mossy_stone_brick_slab:
+        material: MOSSY_STONE_BRICK_SLAB
+        buy: 0.4
+        sell: 0.1
+      cracked_stone_bricks:
+        material: CRACKED_STONE_BRICKS
+        buy: 0.79
+        sell: 0.2
+      chiseled_stone_bricks:
+        material: CHISELED_STONE_BRICKS
+        buy: 0.75
+        sell: 0.19
+      andesite:
+        material: ANDESITE
+        buy: 0.72
+        sell: 0.18
+      andesite_stairs:
+        material: ANDESITE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      andesite_slab:
+        material: ANDESITE_SLAB
+        buy: 0.38
+        sell: 0.1
+      polished_andesite:
+        material: POLISHED_ANDESITE
+        buy: 0.75
+        sell: 0.19
+      polished_andesite_stairs:
+        material: POLISHED_ANDESITE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      polished_andesite_slab:
+        material: POLISHED_ANDESITE_SLAB
+        buy: 0.38
+        sell: 0.1
+      diorite:
+        material: DIORITE
+        buy: 0.72
+        sell: 0.18
+      diorite_stairs:
+        material: DIORITE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      diorite_slab:
+        material: DIORITE_SLAB
+        buy: 0.38
+        sell: 0.1
+  page2:
+    items:
+      polished_diorite:
+        material: POLISHED_DIORITE
+        buy: 0.75
+        sell: 0.19
+      polished_diorite_stairs:
+        material: POLISHED_DIORITE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      polished_diorite_slab:
+        material: POLISHED_DIORITE_SLAB
+        buy: 0.38
+        sell: 0.1
+      granite:
+        material: GRANITE
+        buy: 0.72
+        sell: 0.18
+      granite_stairs:
+        material: GRANITE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      granite_slab:
+        material: GRANITE_SLAB
+        buy: 0.38
+        sell: 0.1
+      polished_granite:
+        material: POLISHED_GRANITE
+        buy: 0.75
+        sell: 0.19
+      polished_granite_stairs:
+        material: POLISHED_GRANITE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      polished_granite_slab:
+        material: POLISHED_GRANITE_SLAB
+        buy: 0.38
+        sell: 0.1
+      deepslate:
+        material: DEEPSLATE
+        buy: 0.72
+        sell: 0.18
+      cobbled_deepslate:
+        material: COBBLED_DEEPSLATE
+        buy: 0.68
+        sell: 0.17
+      cobbled_deepslate_stairs:
+        material: COBBLED_DEEPSLATE_STAIRS
+        buy: 0.72
+        sell: 0.18
+      cobbled_deepslate_slab:
+        material: COBBLED_DEEPSLATE_SLAB
+        buy: 0.36
+        sell: 0.09
+      deepslate_bricks:
+        material: DEEPSLATE_BRICKS
+        buy: 0.75
+        sell: 0.19
+      deepslate_brick_stairs:
+        material: DEEPSLATE_BRICK_STAIRS
+        buy: 0.79
+        sell: 0.2
+      deepslate_brick_slab:
+        material: DEEPSLATE_BRICK_SLAB
+        buy: 0.4
+        sell: 0.1
+      deepslate_tiles:
+        material: DEEPSLATE_TILES
+        buy: 0.79
+        sell: 0.2
+      deepslate_tile_stairs:
+        material: DEEPSLATE_TILE_STAIRS
+        buy: 0.83
+        sell: 0.21
+      deepslate_tile_slab:
+        material: DEEPSLATE_TILE_SLAB
+        buy: 0.42
+        sell: 0.11
+      chiseled_deepslate:
+        material: CHISELED_DEEPSLATE
+        buy: 0.75
+        sell: 0.19
+      cracked_deepslate_bricks:
+        material: CRACKED_DEEPSLATE_BRICKS
+        buy: 0.79
+        sell: 0.2
+      cracked_deepslate_tiles:
+        material: CRACKED_DEEPSLATE_TILES
+        buy: 0.83
+        sell: 0.21
+      blackstone:
+        material: BLACKSTONE
+        buy: 0.75
+        sell: 0.19
+      blackstone_stairs:
+        material: BLACKSTONE_STAIRS
+        buy: 0.79
+        sell: 0.2
+      blackstone_slab:
+        material: BLACKSTONE_SLAB
+        buy: 0.4
+        sell: 0.1
+      polished_blackstone:
+        material: POLISHED_BLACKSTONE
+        buy: 0.79
+        sell: 0.2
+      polished_blackstone_stairs:
+        material: POLISHED_BLACKSTONE_STAIRS
+        buy: 0.79
+        sell: 0.2
+      polished_blackstone_slab:
+        material: POLISHED_BLACKSTONE_SLAB
+        buy: 0.4
+        sell: 0.1
+  page3:
+    items:
+      polished_blackstone_bricks:
+        material: POLISHED_BLACKSTONE_BRICKS
+        buy: 0.79
+        sell: 0.2
+      polished_blackstone_brick_stairs:
+        material: POLISHED_BLACKSTONE_BRICK_STAIRS
+        buy: 0.79
+        sell: 0.2
+      polished_blackstone_brick_slab:
+        material: POLISHED_BLACKSTONE_BRICK_SLAB
+        buy: 0.4
+        sell: 0.1
+      cracked_polished_blackstone_bricks:
+        material: CRACKED_POLISHED_BLACKSTONE_BRICKS
+        buy: 0.83
+        sell: 0.21
+      chiseled_polished_blackstone:
+        material: CHISELED_POLISHED_BLACKSTONE
+        buy: 0.79
+        sell: 0.2
+      gilded_blackstone:
+        material: GILDED_BLACKSTONE
+        buy: 17
+        sell: 4.25
+      tuff:
+        material: TUFF
+        buy: 2
+        sell: 0.5
+      tuff_stairs:
+        material: TUFF_STAIRS
+        buy: 2.1
+        sell: 0.53
+      tuff_slab:
+        material: TUFF_SLAB
+        buy: 1.05
+        sell: 0.27
+      tuff_bricks:
+        material: TUFF_BRICKS
+        buy: 2.1
+        sell: 0.53
+      tuff_brick_stairs:
+        material: TUFF_BRICK_STAIRS
+        buy: 2.1
+        sell: 0.53
+      tuff_brick_slab:
+        material: TUFF_BRICK_SLAB
+        buy: 1.05
+        sell: 0.27
+      chiseled_tuff:
+        material: CHISELED_TUFF
+        buy: 2.1
+        sell: 0.53
+      chiseled_tuff_bricks:
+        material: CHISELED_TUFF_BRICKS
+        buy: 2.1
+        sell: 0.53
+      polished_tuff:
+        material: POLISHED_TUFF
+        buy: 2.1
+        sell: 0.53
+      polished_tuff_stairs:
+        material: POLISHED_TUFF_STAIRS
+        buy: 2.1
+        sell: 0.53
+      polished_tuff_slab:
+        material: POLISHED_TUFF_SLAB
+        buy: 1.05
+        sell: 0.27
+      basalt:
+        material: BASALT
+        buy: 1.43
+        sell: 0.92
+      polished_basalt:
+        material: POLISHED_BASALT
+        buy: 3.43
+        sell: 1.42
+      smooth_basalt:
+        material: SMOOTH_BASALT
+        buy: 3.43
+        sell: 1.42
+      nether_bricks:
+        material: NETHER_BRICKS
+        buy: 0.89
+        sell: 0.23
+      nether_brick_stairs:
+        material: NETHER_BRICK_STAIRS
+        buy: 0.93
+        sell: 0.24
+      nether_brick_slab:
+        material: NETHER_BRICK_SLAB
+        buy: 0.47
+        sell: 0.12
+      cracked_nether_bricks:
+        material: CRACKED_NETHER_BRICKS
+        buy: 0.93
+        sell: 0.24
+      chiseled_nether_bricks:
+        material: CHISELED_NETHER_BRICKS
+        buy: 0.49
+        sell: 0.13
+      red_nether_bricks:
+        material: RED_NETHER_BRICKS
+        buy: 8.16
+        sell: 2.04
+      red_nether_brick_stairs:
+        material: RED_NETHER_BRICK_STAIRS
+        buy: 8.56
+        sell: 2.14
+      red_nether_brick_slab:
+        material: RED_NETHER_BRICK_SLAB
+        buy: 4.28
+        sell: 1.07
+  page4:
+    items:
+      end_stone:
+        material: END_STONE
+        buy: 5
+        sell: 1.25
+      end_stone_bricks:
+        material: END_STONE_BRICKS
+        buy: 5.25
+        sell: 1.32
+      end_stone_brick_stairs:
+        material: END_STONE_BRICK_STAIRS
+        buy: 5.25
+        sell: 1.32
+      end_stone_brick_slab:
+        material: END_STONE_BRICK_SLAB
+        buy: 2.63
+        sell: 0.66
+      calcite:
+        material: CALCITE
+        buy: 2
+        sell: 0.5
+      bricks:
+        material: BRICKS
+        buy: 92.61
+        sell: 23.16
+      brick_stairs:
+        material: BRICK_STAIRS
+        buy: 97.25
+        sell: 24.32
+      brick_slab:
+        material: BRICK_SLAB
+        buy: 48.63
+        sell: 12.16

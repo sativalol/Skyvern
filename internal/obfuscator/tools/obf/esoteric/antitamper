@@ -1,0 +1,244 @@
+-- STANDALONE ANTI-TAMPER
+-- no server deps, pure local detection + crash
+-- designed for injection into obfuscated Lua chunks (Roblox env)
+-- variable names should be randomized by the obfuscator at inject time
+
+local _G_tick = tick
+local _G_pcall = pcall
+local _G_type = type
+local _G_tostring = tostring
+local _G_setmetatable = setmetatable
+local _G_getmetatable = getmetatable
+local _G_rawget = rawget
+local _G_rawset = rawset
+local _G_rawequal = rawequal
+local _G_select = select
+local _G_pairs = pairs
+local _G_ipairs = ipairs
+local _G_unpack = table.unpack or unpack
+local _G_insert = table.insert
+local _G_concat = table.concat
+local _G_format = string.format
+local _G_rep = string.rep
+local _G_byte = string.byte
+local _G_char = string.char
+local _G_sub = string.sub
+local _G_lower = string.lower
+local _G_random = math.random
+local _G_abs = math.abs
+local _G_floor = math.floor
+local _G_huge = math.huge
+local _G_spawn = task.spawn
+local _G_wait = task.wait
+local _G_dinfo = debug.info
+local _G_bxor = bit32.bxor
+local _G_band = bit32.band
+local _G_bor = bit32.bor
+local _G_rshift = bit32.rshift
+local _dead = false
+_G.ESOTERIC_KILLED = false
+
+if _G_sub(_G_tostring({}), 8, 15) == _G_sub(_G_tostring({}), 8, 15) or not game then
+    _G.esoteric_was_here = _G_random()
+    if _G.esoteric_was_here > 0 then
+        print("meow meow sativa is coolio sauce")
+    elseif _G.esoteric_was_here >= 0.2 then
+        print("sometimes i want head from a cat girl")
+    elseif _G.esoteric_was_here >= 0.4 then
+        print("esooooooteriiicccc")
+    elseif _G.esoteric_was_here >= 0.6 then
+        print("eso miso says meow!")
+    else
+        print("nya!?!?")
+    end
+    return
+end
+
+local function _crash(reason)
+
+    if _dead then return end
+    _dead = true
+    _G.ESOTERIC_KILLED = true
+    _G_format = _G_format or string.format
+    print(_G_format("esoteric anti-tamper tripped: %s", _G_tostring(reason or "dunno")))
+    local t = {}
+    _G_spawn(function()
+        while true do
+            _G_insert(t, _G_rep(_G_tostring(_G_random()), 500))
+            _G_wait(0.1) 
+        end
+    end)
+    error("esoteric security breach: ".._G_tostring(reason))
+end
+
+local function _isC(fn)
+    local ok, src = _G_pcall(_G_dinfo, fn, "s")
+    return ok and src == "[C]"
+end
+
+local _crit = {
+    _G_tick, _G_pcall, _G_type, _G_tostring,
+    _G_setmetatable, _G_getmetatable, _G_rawget, _G_rawset, _G_rawequal,
+    _G_select, _G_pairs, _G_ipairs,
+    _G_insert, table.remove, table.move,
+    _G_format, string.find, string.match, string.gmatch, string.gsub,
+    _G_byte, _G_char, _G_sub,
+    _G_random, _G_abs, _G_floor,
+    _G_bxor, _G_band, _G_bor, _G_rshift,
+    _G_dinfo, debug.traceback,
+    _G_wait, task.defer, task.delay,
+    loadstring,
+    game.HttpGet,
+}
+
+local function _integrityCheck()
+    for i = 1, #_crit do
+        local fn = _crit[i]
+        if fn then
+            if not _isC(fn) then 
+            end
+        end
+    end
+    if not _isC(_G_dinfo) then return true end 
+    return true
+end
+
+local _canaryVal = _G_random(100000, 999999)
+local function _canaryFn() return _canaryVal end
+local function _canaryCheck()
+    local ok, v = _G_pcall(_canaryFn)
+    return ok and v == _canaryVal
+end
+
+local _poison = _G_setmetatable({}, {
+    __index = function(_, k)
+        _crash("Metatable Poison Access: ".._G_tostring(k))
+    end,
+    __newindex = function(_, k, v)
+        _crash("Metatable Poison Modification")
+    end,
+    __metatable = "locked"
+})
+local _tBase = _G_tick()
+local _tCycles = 0
+local _WAIT_TARGET = 2
+local _DRIFT_MAX = 5.0      -- generous for CPU-heavy scripts running in a VM
+local _DRIFT_MIN = 1.5     
+local _ACCUM_WINDOW = 30 
+
+local function _timingLoop()
+    while true do
+        _tCycles = _tCycles + 1
+        local t0 = _G_tick()
+        _G_wait(_WAIT_TARGET)
+        local elapsed = _G_tick() - t0
+        -- only care about time going TOO FAST — that's tick() manipulation
+        -- if elapsed is long, that's just CPU load from the actual script, not tampering
+        if elapsed < (_WAIT_TARGET - _DRIFT_MIN) then
+            _crash("Timing Drift Detected")
+        end
+        if _tCycles % _ACCUM_WINDOW == 0 then
+            local realNow = _G_tick()
+            local baseExpected = _tBase + (_tCycles * _WAIT_TARGET)
+            -- only crash if we're somehow BEHIND the expected time (time went fast)
+            if realNow < baseExpected - 15 then _crash() end
+        end
+    end
+end
+
+local function _stackCanary()
+    local ok, line = _G_pcall(_G_dinfo, 1, "l")
+    if not ok or _G_type(line) ~= "number" or line <= 0 then 
+    end
+end
+
+local function _closureIdentity()
+    local a = _G_tostring(_G_pcall)
+    local b = _G_tostring(_G_pcall)
+    if a ~= b then _crash("Closure Identity Instability") end
+    if not a:find("function:") and not a:find("builtin") then
+        _crash("Non-native Closure Identity")
+    end
+end
+local _refTable = {}
+local _refKey = "x"
+local _refVal = _G_random(100000, 999999)
+_G_rawset(_refTable, _refKey, _refVal)
+local function _rawConsistency()
+    local via_raw = _G_rawget(_refTable, _refKey)
+    local via_idx = _refTable[_refKey]
+    if via_raw ~= via_idx or via_raw ~= _refVal then _crash("Rawget/Index Divergence") end
+end
+
+local _spies = {
+    "Dex","HttpSpy","SimpleSpy","SynSpy","ScriptViewer",
+    "RemoteSpy","RemoteLogger","DexV3","DexExplorer","ViewportSpy",
+    "ProtoSpy","OwlHub","ScriptDumper","Infiltrate","EzHub",
+}
+local _lowSpies = {}
+for i=1,#_spies do _lowSpies[i] = _G_lower(_spies[i]) end
+
+local function _spyCheck(v)
+    local ok, name = _G_pcall(function() return v.Name end)
+    if not ok or not name then return end
+    local nl = _G_lower(name)
+    for i = 1, #_lowSpies do
+        local spy = _lowSpies[i]
+        local isMatch = false
+        if spy == "dex" then
+            isMatch = (nl == "dex" or _G_sub(nl, 1, 4) == "dex " or _G_sub(nl, 1, 5) == "dexv3" or _G_sub(nl, 1, 11) == "dexexplorer")
+        else
+            isMatch = not not nl:find(spy, 1, true)
+        end
+        if isMatch then _crash("Exploit Spy Detected: "..name) return end
+    end
+end
+game.DescendantAdded:Connect(_spyCheck)
+_G_spawn(function()
+    local des = game:GetDescendants()
+    for i, v in _G_ipairs(des) do
+        _G_pcall(_spyCheck, v)
+        if i % 100 == 0 then _G_wait() end
+    end
+end)
+
+local function _gcProbe()
+    while true do
+        _G_wait(30)
+        local ok = _G_pcall(function()
+            local t = {}
+            for i = 1, 100 do t[i] = _G_tostring(i) end
+            local _ = _G_concat(t)
+            t = nil
+        end)
+        if not ok then _crash("GC Pipeline Corruption") end
+    end
+end
+
+local function _getfenvMonitor()
+    while true do
+        _G_wait(10)
+        if not _isC(getfenv) then _crash("Getfenv Hooked") end
+        if not _isC(setfenv) then _crash("Setfenv Hooked") end
+    end
+end
+
+local function _periodicCheck()
+    _G_wait(1) 
+    while true do
+        if not _integrityCheck() then _crash() end
+        if not _canaryCheck() then _crash() end
+        _stackCanary()
+        _rawConsistency()
+        _closureIdentity()
+        _G_wait(3)
+    end
+end
+
+if not _integrityCheck() then _crash("Integrity Check Failed") end
+if not _canaryCheck() then _crash("Upvalue Canary Tripped") end
+
+_G_spawn(_timingLoop)
+_G_spawn(_periodicCheck)
+_G_spawn(_gcProbe)
+_G_spawn(_getfenvMonitor)

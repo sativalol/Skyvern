@@ -1,0 +1,1409 @@
+pages:
+  page1:
+    items:
+      bamboo_mosaic_slab:
+        material: BAMBOO_MOSAIC_SLAB
+        buy: 0.29
+        sell: 0.08
+      bamboo_mosaic_stairs:
+        material: BAMBOO_MOSAIC_STAIRS
+        buy: 0.79
+        sell: 0.2
+      chiseled_copper:
+        material: CHISELED_COPPER
+        buy: 1.02
+        sell: 0.26
+      exposed_chiseled_copper:
+        material: EXPOSED_CHISELED_COPPER
+        buy: 1.07
+        sell: 0.27
+      oxidized_chiseled_copper:
+        material: OXIDIZED_CHISELED_COPPER
+        buy: 1.18
+        sell: 0.3
+      oxidized_copper:
+        material: OXIDIZED_COPPER
+        buy: 4.47
+        sell: 1.12
+      waxed_cut_copper_slab:
+        material: WAXED_CUT_COPPER_SLAB
+        buy: 0.97
+        sell: 0.25
+      waxed_cut_copper_stairs:
+        material: WAXED_CUT_COPPER_STAIRS
+        buy: 1.94
+        sell: 0.49
+      waxed_exposed_copper:
+        material: WAXED_EXPOSED_COPPER
+        buy: 7.57
+        sell: 1.9
+      waxed_exposed_cut_copper:
+        material: WAXED_EXPOSED_CUT_COPPER
+        buy: 7.94
+        sell: 1.23
+      waxed_exposed_cut_copper_slab:
+        material: WAXED_EXPOSED_CUT_COPPER_SLAB
+        buy: 1
+        sell: 0.25
+      waxed_exposed_cut_copper_stairs:
+        material: WAXED_EXPOSED_CUT_COPPER_STAIRS
+        buy: 1.99
+        sell: 0.5
+      waxed_oxidized_copper:
+        material: WAXED_OXIDIZED_COPPER
+        buy: 8
+        sell: 2
+      waxed_oxidized_cut_copper:
+        material: WAXED_OXIDIZED_CUT_COPPER
+        buy: 8.4
+        sell: 1.7
+      waxed_oxidized_cut_copper_slab:
+        material: WAXED_OXIDIZED_CUT_COPPER_SLAB
+        buy: 1.05
+        sell: 0.27
+      waxed_oxidized_cut_copper_stairs:
+        material: WAXED_OXIDIZED_CUT_COPPER_STAIRS
+        buy: 2.1
+        sell: 0.53
+      waxed_weathered_copper:
+        material: WAXED_WEATHERED_COPPER
+        buy: 7.78
+        sell: 1.95
+      waxed_weathered_cut_copper:
+        material: WAXED_WEATHERED_CUT_COPPER
+        buy: 8.17
+        sell: 1.38
+      waxed_weathered_cut_copper_slab:
+        material: WAXED_WEATHERED_CUT_COPPER_SLAB
+        buy: 1.03
+        sell: 0.26
+      waxed_weathered_cut_copper_stairs:
+        material: WAXED_WEATHERED_CUT_COPPER_STAIRS
+        buy: 2.05
+        sell: 0.52
+      weathered_chiseled_copper:
+        material: WEATHERED_CHISELED_COPPER
+        buy: 1.12
+        sell: 0.28
+      mud_brick_wall:
+        material: MUD_BRICK_WALL
+        buy: 9.48
+        sell: 2.37
+      terracotta:
+        material: TERRACOTTA
+        buy: 22.05
+        sell: 5.52
+      copper_bulb:
+        material: COPPER_BULB
+        buy: 5.28
+        sell: 1.32
+      exposed_copper_bulb:
+        material: EXPOSED_COPPER_BULB
+        buy: 5.43
+        sell: 1.36
+      oxidized_copper_bulb:
+        material: OXIDIZED_COPPER_BULB
+        buy: 5.75
+        sell: 1.44
+      weathered_copper_bulb:
+        material: WEATHERED_COPPER_BULB
+        buy: 5.59
+        sell: 1.4
+      acacia_hanging_sign:
+        material: ACACIA_HANGING_SIGN
+        buy: 3.62
+        sell: 0.91
+      acacia_sign:
+        material: ACACIA_SIGN
+        buy: 2.52
+        sell: 0.63
+      bamboo_hanging_sign:
+        material: BAMBOO_HANGING_SIGN
+        buy: 2.98
+        sell: 0.75
+      bamboo_sign:
+        material: BAMBOO_SIGN
+        buy: 1.25
+        sell: 0.32
+      birch_hanging_sign:
+        material: BIRCH_HANGING_SIGN
+        buy: 3.62
+        sell: 0.91
+      birch_sign:
+        material: BIRCH_SIGN
+        buy: 2.52
+        sell: 0.63
+      cherry_hanging_sign:
+        material: CHERRY_HANGING_SIGN
+        buy: 3.29
+        sell: 0.83
+      cherry_sign:
+        material: CHERRY_SIGN
+        buy: 1.86
+        sell: 0.47
+      crimson_hanging_sign:
+        material: CRIMSON_HANGING_SIGN
+        buy: 3.29
+        sell: 0.83
+      crimson_sign:
+        material: CRIMSON_SIGN
+        buy: 1.86
+        sell: 0.47
+      dark_oak_hanging_sign:
+        material: DARK_OAK_HANGING_SIGN
+        buy: 3.62
+        sell: 0.91
+      dark_oak_sign:
+        material: DARK_OAK_SIGN
+        buy: 2.52
+        sell: 0.63
+      jungle_hanging_sign:
+        material: JUNGLE_HANGING_SIGN
+        buy: 3.62
+        sell: 0.91
+      jungle_sign:
+        material: JUNGLE_SIGN
+        buy: 2.52
+        sell: 0.63
+      mangrove_hanging_sign:
+        material: MANGROVE_HANGING_SIGN
+        buy: 3.29
+        sell: 0.83
+      mangrove_sign:
+        material: MANGROVE_SIGN
+        buy: 1.86
+        sell: 0.47
+      oak_hanging_sign:
+        material: OAK_HANGING_SIGN
+        buy: 3.62
+        sell: 0.91
+      oak_sign:
+        material: OAK_SIGN
+        buy: 2.52
+        sell: 0.63
+  page2:
+    items:
+      spruce_hanging_sign:
+        material: SPRUCE_HANGING_SIGN
+        buy: 3.62
+        sell: 0.91
+      spruce_sign:
+        material: SPRUCE_SIGN
+        buy: 2.52
+        sell: 0.63
+      warped_hanging_sign:
+        material: WARPED_HANGING_SIGN
+        buy: 3.29
+        sell: 0.83
+      warped_sign:
+        material: WARPED_SIGN
+        buy: 1.86
+        sell: 0.47
+      pufferfish_bucket:
+        material: PUFFERFISH_BUCKET
+        buy: 25.77
+        sell: 6.45
+      red_bed:
+        material: RED_BED
+        buy: 96.09
+        sell: 24.03
+      snowball:
+        material: SNOWBALL
+        buy: 3
+        sell: 0.75
+      iron_door:
+        material: IRON_DOOR
+        buy: 5.79
+        sell: 1.45
+      lightning_rod:
+        material: LIGHTNING_ROD
+        buy: 2.9
+        sell: 0.73
+      cherry_button:
+        material: CHERRY_BUTTON
+        buy: 0.83
+        sell: 0.21
+      oak_button:
+        material: OAK_BUTTON
+        buy: 1.16
+        sell: 0.29
+      stone_button:
+        material: STONE_BUTTON
+        buy: 0.75
+        sell: 0.19
+      cherry_pressure_plate:
+        material: CHERRY_PRESSURE_PLATE
+        buy: 1.66
+        sell: 0.42
+      oak_pressure_plate:
+        material: OAK_PRESSURE_PLATE
+        buy: 2.32
+        sell: 0.58
+      stone_pressure_plate:
+        material: STONE_PRESSURE_PLATE
+        buy: 1.5
+        sell: 0.38
+      light_weighted_pressure_plate:
+        material: LIGHT_WEIGHTED_PRESSURE_PLATE
+        buy: 17.37
+        sell: 4.35
+      heavy_weighted_pressure_plate:
+        material: HEAVY_WEIGHTED_PRESSURE_PLATE
+        buy: 11.58
+        sell: 2.9
+      cherry_trapdoor:
+        material: CHERRY_TRAPDOOR
+        buy: 2.49
+        sell: 0.63
+      oak_trapdoor:
+        material: OAK_TRAPDOOR
+        buy: 3.48
+        sell: 0.87
+      iron_trapdoor:
+        material: IRON_TRAPDOOR
+        buy: 23.16
+        sell: 5.79
+      blast_furnace:
+        material: BLAST_FURNACE
+        buy: 37.3
+        sell: 9.33
+      cartography_table:
+        material: CARTOGRAPHY_TABLE
+        buy: 4.86
+        sell: 1.22
+      composter:
+        material: COMPOSTER
+        buy: 4.26
+        sell: 1.07
+      fletching_table:
+        material: FLETCHING_TABLE
+        buy: 8.84
+        sell: 2.21
+      grindstone:
+        material: GRINDSTONE
+        buy: 3.93
+        sell: 0.99
+      lectern:
+        material: LECTERN
+        buy: 127.51
+        sell: 31.88
+      loom:
+        material: LOOM
+        buy: 17.02
+        sell: 4.26
+      smithing_table:
+        material: SMITHING_TABLE
+        buy: 16.21
+        sell: 4.06
+      smoker:
+        material: SMOKER
+        buy: 18.6
+        sell: 4.65
+      stonecutter:
+        material: STONECUTTER
+        buy: 8.04
+        sell: 2.01
+      acacia_button:
+        material: ACACIA_BUTTON
+        buy: 1.16
+        sell: 0.29
+      acacia_door:
+        material: ACACIA_DOOR
+        buy: 2.32
+        sell: 0.58
+      acacia_pressure_plate:
+        material: ACACIA_PRESSURE_PLATE
+        buy: 2.32
+        sell: 0.58
+      acacia_trapdoor:
+        material: ACACIA_TRAPDOOR
+        buy: 3.48
+        sell: 0.87
+      andesite_wall:
+        material: ANDESITE_WALL
+        buy: 0.75
+        sell: 0.19
+      armor_stand:
+        material: ARMOR_STAND
+        buy: 4.05
+        sell: 1.02
+      bamboo_button:
+        material: BAMBOO_BUTTON
+        buy: 0.53
+        sell: 0.14
+      bamboo_door:
+        material: BAMBOO_DOOR
+        buy: 1.05
+        sell: 0.27
+      bamboo_pressure_plate:
+        material: BAMBOO_PRESSURE_PLATE
+        buy: 1.05
+        sell: 0.27
+      bamboo_trapdoor:
+        material: BAMBOO_TRAPDOOR
+        buy: 1.57
+        sell: 0.4
+      birch_button:
+        material: BIRCH_BUTTON
+        buy: 1.16
+        sell: 0.29
+      birch_door:
+        material: BIRCH_DOOR
+        buy: 2.32
+        sell: 0.58
+      birch_pressure_plate:
+        material: BIRCH_PRESSURE_PLATE
+        buy: 2.32
+        sell: 0.58
+      birch_trapdoor:
+        material: BIRCH_TRAPDOOR
+        buy: 3.48
+        sell: 0.87
+      black_banner:
+        material: BLACK_BANNER
+        buy: 185.83
+        sell: 46.46
+  page3:
+    items:
+      black_bed:
+        material: BLACK_BED
+        buy: 96.09
+        sell: 24.03
+      black_carpet:
+        material: BLACK_CARPET
+        buy: 20.58
+        sell: 5.15
+      blackstone_wall:
+        material: BLACKSTONE_WALL
+        buy: 0.79
+        sell: 0.2
+      blue_banner:
+        material: BLUE_BANNER
+        buy: 185.83
+        sell: 46.46
+      blue_bed:
+        material: BLUE_BED
+        buy: 96.09
+        sell: 24.03
+      blue_carpet:
+        material: BLUE_CARPET
+        buy: 20.58
+        sell: 5.15
+      bone_block:
+        material: BONE_BLOCK
+        buy: 19.85
+        sell: 4.97
+      book:
+        material: BOOK
+        buy: 35.62
+        sell: 8.91
+      bowl:
+        material: BOWL
+        buy: 0.87
+        sell: 0.22
+      brick:
+        material: BRICK
+        buy: 22.05
+        sell: 5.52
+      brick_wall:
+        material: BRICK_WALL
+        buy: 97.25
+        sell: 24.32
+      brown_banner:
+        material: BROWN_BANNER
+        buy: 185.83
+        sell: 46.46
+      brown_bed:
+        material: BROWN_BED
+        buy: 96.09
+        sell: 24.03
+      brown_carpet:
+        material: BROWN_CARPET
+        buy: 20.58
+        sell: 5.15
+      brown_mushroom_block:
+        material: BROWN_MUSHROOM_BLOCK
+        buy: 0.06
+        sell: 0.02
+      carved_pumpkin:
+        material: CARVED_PUMPKIN
+        buy: 6
+        sell: 1.5
+      charcoal:
+        material: CHARCOAL
+        buy: 6.3
+        sell: 1.58
+      chest_minecart:
+        material: CHEST_MINECART
+        buy: 40.12
+        sell: 10.03
+      clay_ball:
+        material: CLAY_BALL
+        buy: 5
+        sell: 1.25
+      cobbled_deepslate_wall:
+        material: COBBLED_DEEPSLATE_WALL
+        buy: 0.72
+        sell: 0.18
+      cobblestone_wall:
+        material: COBBLESTONE_WALL
+        buy: 0.72
+        sell: 0.18
+      conduit:
+        material: CONDUIT
+        buy: 2090.82
+        sell: 522.71
+      copper_door:
+        material: COPPER_DOOR
+        buy: 8.11
+        sell: 2.03
+      copper_grate:
+        material: COPPER_GRATE
+        buy: 1.02
+        sell: 0.26
+      copper_trapdoor:
+        material: COPPER_TRAPDOOR
+        buy: 12.16
+        sell: 3.04
+      crafting_table:
+        material: CRAFTING_TABLE
+        buy: 4.64
+        sell: 1.16
+      crimson_button:
+        material: CRIMSON_BUTTON
+        buy: 0.83
+        sell: 0.21
+      crimson_door:
+        material: CRIMSON_DOOR
+        buy: 1.66
+        sell: 0.42
+      crimson_pressure_plate:
+        material: CRIMSON_PRESSURE_PLATE
+        buy: 1.66
+        sell: 0.42
+      crimson_roots:
+        material: CRIMSON_ROOTS
+        buy: 5
+        sell: 1.25
+      crimson_trapdoor:
+        material: CRIMSON_TRAPDOOR
+        buy: 2.49
+        sell: 0.63
+      cut_copper_slab:
+        material: CUT_COPPER_SLAB
+        buy: 0.51
+        sell: 0.13
+      cut_copper_stairs:
+        material: CUT_COPPER_STAIRS
+        buy: 1.02
+        sell: 0.26
+      cut_red_sandstone:
+        material: CUT_RED_SANDSTONE
+        buy: 35.28
+        sell: 8.82
+      cut_red_sandstone_slab:
+        material: CUT_RED_SANDSTONE_SLAB
+        buy: 17.64
+        sell: 4.41
+      cut_sandstone:
+        material: CUT_SANDSTONE
+        buy: 12.6
+        sell: 3.15
+      cut_sandstone_slab:
+        material: CUT_SANDSTONE_SLAB
+        buy: 6.3
+        sell: 1.58
+      cyan_banner:
+        material: CYAN_BANNER
+        buy: 185.83
+        sell: 46.46
+      cyan_bed:
+        material: CYAN_BED
+        buy: 96.09
+        sell: 24.03
+      cyan_carpet:
+        material: CYAN_CARPET
+        buy: 20.58
+        sell: 5.15
+      dark_oak_button:
+        material: DARK_OAK_BUTTON
+        buy: 1.16
+        sell: 0.29
+      dark_oak_door:
+        material: DARK_OAK_DOOR
+        buy: 2.32
+        sell: 0.58
+      dark_oak_pressure_plate:
+        material: DARK_OAK_PRESSURE_PLATE
+        buy: 2.32
+        sell: 0.58
+      dark_oak_trapdoor:
+        material: DARK_OAK_TRAPDOOR
+        buy: 3.48
+        sell: 0.87
+      dead_bush:
+        material: DEAD_BUSH
+        buy: 30
+        sell: 7.5
+  page4:
+    items:
+      deepslate_brick_wall:
+        material: DEEPSLATE_BRICK_WALL
+        buy: 0.79
+        sell: 0.2
+      deepslate_coal_ore:
+        material: DEEPSLATE_COAL_ORE
+        buy: 20
+        sell: 5
+      deepslate_copper_ore:
+        material: DEEPSLATE_COPPER_ORE
+        buy: 15
+        sell: 3.75
+      deepslate_diamond_ore:
+        material: DEEPSLATE_DIAMOND_ORE
+        buy: 200
+        sell: 50
+      deepslate_emerald_ore:
+        material: DEEPSLATE_EMERALD_ORE
+        buy: 150
+        sell: 37.5
+      deepslate_gold_ore:
+        material: DEEPSLATE_GOLD_ORE
+        buy: 30
+        sell: 7.5
+      deepslate_iron_ore:
+        material: DEEPSLATE_IRON_ORE
+        buy: 20
+        sell: 5
+      deepslate_lapis_ore:
+        material: DEEPSLATE_LAPIS_ORE
+        buy: 55
+        sell: 13.75
+      deepslate_redstone_ore:
+        material: DEEPSLATE_REDSTONE_ORE
+        buy: 20
+        sell: 5
+      deepslate_tile_wall:
+        material: DEEPSLATE_TILE_WALL
+        buy: 0.83
+        sell: 0.21
+      diorite_wall:
+        material: DIORITE_WALL
+        buy: 0.75
+        sell: 0.19
+      dragon_head:
+        material: DRAGON_HEAD
+        buy: -1
+        sell: 1250
+      enchanted_golden_apple:
+        material: ENCHANTED_GOLDEN_APPLE
+        buy: -1
+        sell: 2500
+      enchanting_table:
+        material: ENCHANTING_TABLE
+        buy: 278.9
+        sell: 69.73
+      end_stone_brick_wall:
+        material: END_STONE_BRICK_WALL
+        buy: 5.25
+        sell: 1.32
+      exposed_copper:
+        material: EXPOSED_COPPER
+        buy: 4.06
+        sell: 1.02
+      exposed_copper_door:
+        material: EXPOSED_COPPER_DOOR
+        buy: 8.51
+        sell: 2.13
+      exposed_copper_grate:
+        material: EXPOSED_COPPER_GRATE
+        buy: 1.07
+        sell: 0.27
+      exposed_copper_trapdoor:
+        material: EXPOSED_COPPER_TRAPDOOR
+        buy: 12.77
+        sell: 3.2
+      exposed_cut_copper:
+        material: EXPOSED_CUT_COPPER
+        buy: 4.26
+        sell: 1.07
+      exposed_cut_copper_slab:
+        material: EXPOSED_CUT_COPPER_SLAB
+        buy: 0.14
+        sell: 0.04
+      exposed_cut_copper_stairs:
+        material: EXPOSED_CUT_COPPER_STAIRS
+        buy: 0.27
+        sell: 0.07
+      fern:
+        material: FERN
+        buy: 6
+        sell: 1.5
+      fire_charge:
+        material: FIRE_CHARGE
+        buy: 8.19
+        sell: 2.05
+      firework_rocket:
+        material: FIREWORK_ROCKET
+        buy: 5.47
+        sell: 1.37
+      firework_star:
+        material: FIREWORK_STAR
+        buy: 17.38
+        sell: 4.35
+      flint:
+        material: FLINT
+        buy: 2
+        sell: 0.5
+      furnace:
+        material: FURNACE
+        buy: 5.72
+        sell: 1.43
+      furnace_minecart:
+        material: FURNACE_MINECART
+        buy: 36.39
+        sell: 9.1
+      glow_item_frame:
+        material: GLOW_ITEM_FRAME
+        buy: 47.93
+        sell: 11.99
+      gold_nugget:
+        material: GOLD_NUGGET
+        buy: 0.83
+        sell: 0.21
+      granite_wall:
+        material: GRANITE_WALL
+        buy: 0.75
+        sell: 0.19
+      tall_grass:
+        material: TALL_GRASS
+        buy: 6
+        sell: 1.5
+      gray_banner:
+        material: GRAY_BANNER
+        buy: 185.83
+        sell: 46.46
+      gray_bed:
+        material: GRAY_BED
+        buy: 96.09
+        sell: 24.03
+      gray_carpet:
+        material: GRAY_CARPET
+        buy: 20.58
+        sell: 5.15
+      green_banner:
+        material: GREEN_BANNER
+        buy: 185.83
+        sell: 46.46
+      green_bed:
+        material: GREEN_BED
+        buy: 96.09
+        sell: 24.03
+      green_carpet:
+        material: GREEN_CARPET
+        buy: 20.58
+        sell: 5.15
+      hanging_roots:
+        material: HANGING_ROOTS
+        buy: 1
+        sell: 0.25
+      hopper_minecart:
+        material: HOPPER_MINECART
+        buy: 70.99
+        sell: 17.75
+      iron_nugget:
+        material: IRON_NUGGET
+        buy: 0.59
+        sell: 0.15
+      item_frame:
+        material: ITEM_FRAME
+        buy: 40.15
+        sell: 10.04
+      jungle_button:
+        material: JUNGLE_BUTTON
+        buy: 1.16
+        sell: 0.29
+      jungle_door:
+        material: JUNGLE_DOOR
+        buy: 2.32
+        sell: 0.58
+  page5:
+    items:
+      jungle_pressure_plate:
+        material: JUNGLE_PRESSURE_PLATE
+        buy: 2.32
+        sell: 0.58
+      jungle_trapdoor:
+        material: JUNGLE_TRAPDOOR
+        buy: 3.48
+        sell: 0.87
+      ladder:
+        material: LADDER
+        buy: 1.42
+        sell: 0.36
+      large_amethyst_bud:
+        material: LARGE_AMETHYST_BUD
+        buy: 4
+        sell: 1
+      large_fern:
+        material: LARGE_FERN
+        buy: 7
+        sell: 1.75
+      light_blue_banner:
+        material: LIGHT_BLUE_BANNER
+        buy: 185.83
+        sell: 46.46
+      light_blue_bed:
+        material: LIGHT_BLUE_BED
+        buy: 96.09
+        sell: 24.03
+      light_blue_carpet:
+        material: LIGHT_BLUE_CARPET
+        buy: 20.58
+        sell: 5.15
+      light_gray_banner:
+        material: LIGHT_GRAY_BANNER
+        buy: 185.83
+        sell: 46.46
+      light_gray_bed:
+        material: LIGHT_GRAY_BED
+        buy: 96.09
+        sell: 24.03
+      light_gray_carpet:
+        material: LIGHT_GRAY_CARPET
+        buy: 20.58
+        sell: 5.15
+      lime_banner:
+        material: LIME_BANNER
+        buy: 185.83
+        sell: 46.46
+      lime_bed:
+        material: LIME_BED
+        buy: 96.09
+        sell: 24.03
+      lime_carpet:
+        material: LIME_CARPET
+        buy: 20.58
+        sell: 5.15
+      magenta_banner:
+        material: MAGENTA_BANNER
+        buy: 185.83
+        sell: 46.46
+      magenta_bed:
+        material: MAGENTA_BED
+        buy: 96.09
+        sell: 24.03
+      magenta_carpet:
+        material: MAGENTA_CARPET
+        buy: 20.58
+        sell: 5.15
+      medium_amethyst_bud:
+        material: MEDIUM_AMETHYST_BUD
+        buy: 3
+        sell: 0.75
+      moss_carpet:
+        material: MOSS_CARPET
+        buy: 0.7
+        sell: 0.18
+      mossy_cobblestone_wall:
+        material: MOSSY_COBBLESTONE_WALL
+        buy: 7.72
+        sell: 1.52
+      mossy_stone_brick_wall:
+        material: MOSSY_STONE_BRICK_WALL
+        buy: 7.75
+        sell: 1.54
+      mushroom_stem:
+        material: MUSHROOM_STEM
+        buy: 0.4
+        sell: 0.1
+      nether_brick:
+        material: NETHER_BRICK
+        buy: 0.21
+        sell: 0.06
+      nether_brick_fence:
+        material: NETHER_BRICK_FENCE
+        buy: 0.7
+        sell: 0.18
+      nether_brick_wall:
+        material: NETHER_BRICK_WALL
+        buy: 0.93
+        sell: 0.24
+      nether_gold_ore:
+        material: NETHER_GOLD_ORE
+        buy: 25
+        sell: -1
+      nether_sprouts:
+        material: NETHER_SPROUTS
+        buy: 5
+        sell: 1.25
+      nether_wart_block:
+        material: NETHER_WART_BLOCK
+        buy: 28.35
+        sell: 7.09
+      netherite_scrap:
+        material: NETHERITE_SCRAP
+        buy: 555.45
+        sell: 138.87
+      oak_door:
+        material: OAK_DOOR
+        buy: 2.32
+        sell: 0.58
+      ominous_trial_key:
+        material: OMINOUS_TRIAL_KEY
+        buy: 15000
+        sell: 3750
+      orange_banner:
+        material: ORANGE_BANNER
+        buy: 185.83
+        sell: 46.46
+      orange_bed:
+        material: ORANGE_BED
+        buy: 96.09
+        sell: 24.03
+      orange_carpet:
+        material: ORANGE_CARPET
+        buy: 20.58
+        sell: 5.15
+      oxidized_copper_door:
+        material: OXIDIZED_COPPER_DOOR
+        buy: 9.39
+        sell: 2.35
+      oxidized_copper_grate:
+        material: OXIDIZED_COPPER_GRATE
+        buy: 1.18
+        sell: 0.3
+      oxidized_copper_trapdoor:
+        material: OXIDIZED_COPPER_TRAPDOOR
+        buy: 14.08
+        sell: 3.52
+      oxidized_cut_copper:
+        material: OXIDIZED_CUT_COPPER
+        buy: 4.7
+        sell: 1.18
+      oxidized_cut_copper_slab:
+        material: OXIDIZED_CUT_COPPER_SLAB
+        buy: 0.01
+        sell: 0.01
+      oxidized_cut_copper_stairs:
+        material: OXIDIZED_CUT_COPPER_STAIRS
+        buy: 0.02
+        sell: 0.01
+      painting:
+        material: PAINTING
+        buy: 35.74
+        sell: 8.94
+      paper:
+        material: PAPER
+        buy: 0.11
+        sell: 0.03
+      piglin_head:
+        material: PIGLIN_HEAD
+        buy: 600
+        sell: 150
+      pink_banner:
+        material: PINK_BANNER
+        buy: 185.83
+        sell: 46.46
+      pink_bed:
+        material: PINK_BED
+        buy: 96.09
+        sell: 24.03
+  page6:
+    items:
+      pink_carpet:
+        material: PINK_CARPET
+        buy: 20.58
+        sell: 5.15
+      poisonous_potato:
+        material: POISONOUS_POTATO
+        buy: -1
+        sell: 15
+      polished_blackstone_brick_wall:
+        material: POLISHED_BLACKSTONE_BRICK_WALL
+        buy: 0.79
+        sell: 0.2
+      polished_blackstone_button:
+        material: POLISHED_BLACKSTONE_BUTTON
+        buy: 0.83
+        sell: 0.21
+      polished_blackstone_pressure_plate:
+        material: POLISHED_BLACKSTONE_PRESSURE_PLATE
+        buy: 1.66
+        sell: 0.42
+      polished_blackstone_wall:
+        material: POLISHED_BLACKSTONE_WALL
+        buy: 0.79
+        sell: 0.2
+      polished_deepslate:
+        material: POLISHED_DEEPSLATE
+        buy: 0.72
+        sell: 0.18
+      polished_deepslate_slab:
+        material: POLISHED_DEEPSLATE_SLAB
+        buy: 0.38
+        sell: 0.1
+      polished_deepslate_stairs:
+        material: POLISHED_DEEPSLATE_STAIRS
+        buy: 0.75
+        sell: 0.19
+      polished_deepslate_wall:
+        material: POLISHED_DEEPSLATE_WALL
+        buy: 0.75
+        sell: 0.19
+      polished_tuff_wall:
+        material: POLISHED_TUFF_WALL
+        buy: 2.1
+        sell: 0.53
+      popped_chorus_fruit:
+        material: POPPED_CHORUS_FRUIT
+        buy: 3.15
+        sell: 0.79
+      prismarine_crystals:
+        material: PRISMARINE_CRYSTALS
+        buy: 7
+        sell: 1.75
+      prismarine_shard:
+        material: PRISMARINE_SHARD
+        buy: 7
+        sell: 1.75
+      prismarine_wall:
+        material: PRISMARINE_WALL
+        buy: 30.87
+        sell: 7.72
+      pufferfish:
+        material: PUFFERFISH
+        buy: 6
+        sell: 1.5
+      purple_banner:
+        material: PURPLE_BANNER
+        buy: 185.83
+        sell: 46.46
+      purple_bed:
+        material: PURPLE_BED
+        buy: 96.09
+        sell: 24.03
+      purple_carpet:
+        material: PURPLE_CARPET
+        buy: 20.58
+        sell: 5.15
+      raw_copper:
+        material: RAW_COPPER
+        buy: 0.88
+        sell: 0.22
+      raw_copper_block:
+        material: RAW_COPPER_BLOCK
+        buy: 8.27
+        sell: 2.07
+      raw_gold:
+        material: RAW_GOLD
+        buy: 7.88
+        sell: 1.97
+      raw_gold_block:
+        material: RAW_GOLD_BLOCK
+        buy: 74.42
+        sell: 18.61
+      raw_iron:
+        material: RAW_IRON
+        buy: 5.25
+        sell: 1.32
+      raw_iron_block:
+        material: RAW_IRON_BLOCK
+        buy: 49.62
+        sell: 12.41
+      red_banner:
+        material: RED_BANNER
+        buy: 185.83
+        sell: 46.46
+      red_carpet:
+        material: RED_CARPET
+        buy: 20.58
+        sell: 5.15
+      red_mushroom_block:
+        material: RED_MUSHROOM_BLOCK
+        buy: 0.06
+        sell: 0.02
+      red_nether_brick_wall:
+        material: RED_NETHER_BRICK_WALL
+        buy: 8.56
+        sell: 2.14
+      red_sandstone_wall:
+        material: RED_SANDSTONE_WALL
+        buy: 35.28
+        sell: 8.82
+      sandstone_wall:
+        material: SANDSTONE_WALL
+        buy: 12.6
+        sell: 3.15
+      sculk_vein:
+        material: SCULK_VEIN
+        buy: 2
+        sell: 0.5
+      sea_pickle:
+        material: SEA_PICKLE
+        buy: 6
+        sell: 1.5
+      seagrass:
+        material: SEAGRASS
+        buy: 7
+        sell: 1.75
+      shulker_box:
+        material: SHULKER_BOX
+        buy: 24.43
+        sell: 6.11
+      small_amethyst_bud:
+        material: SMALL_AMETHYST_BUD
+        buy: 2
+        sell: 0.5
+      spruce_button:
+        material: SPRUCE_BUTTON
+        buy: 1.16
+        sell: 0.29
+      spruce_door:
+        material: SPRUCE_DOOR
+        buy: 2.32
+        sell: 0.58
+      spruce_pressure_plate:
+        material: SPRUCE_PRESSURE_PLATE
+        buy: 2.32
+        sell: 0.58
+      spruce_trapdoor:
+        material: SPRUCE_TRAPDOOR
+        buy: 3.48
+        sell: 0.87
+      stick:
+        material: STICK
+        buy: 0.58
+        sell: 0.15
+      stone_brick_wall:
+        material: STONE_BRICK_WALL
+        buy: 0.79
+        sell: 0.2
+      stripped_acacia_log:
+        material: STRIPPED_ACACIA_LOG
+        buy: 3.15
+        sell: 0.79
+      stripped_acacia_wood:
+        material: STRIPPED_ACACIA_WOOD
+        buy: 4.41
+        sell: 1.11
+      stripped_birch_log:
+        material: STRIPPED_BIRCH_LOG
+        buy: 3.15
+        sell: 0.79
+  page7:
+    items:
+      stripped_birch_wood:
+        material: STRIPPED_BIRCH_WOOD
+        buy: 4.41
+        sell: 1.11
+      stripped_crimson_hyphae:
+        material: STRIPPED_CRIMSON_HYPHAE
+        buy: 4.41
+        sell: 1.11
+      stripped_crimson_stem:
+        material: STRIPPED_CRIMSON_STEM
+        buy: 3.15
+        sell: 0.79
+      stripped_dark_oak_log:
+        material: STRIPPED_DARK_OAK_LOG
+        buy: 3.15
+        sell: 0.79
+      stripped_dark_oak_wood:
+        material: STRIPPED_DARK_OAK_WOOD
+        buy: 4.41
+        sell: 1.11
+      stripped_jungle_log:
+        material: STRIPPED_JUNGLE_LOG
+        buy: 3.15
+        sell: 0.79
+      stripped_jungle_wood:
+        material: STRIPPED_JUNGLE_WOOD
+        buy: 4.41
+        sell: 1.11
+      stripped_oak_log:
+        material: STRIPPED_OAK_LOG
+        buy: 3.15
+        sell: 0.79
+      stripped_oak_wood:
+        material: STRIPPED_OAK_WOOD
+        buy: 4.41
+        sell: 1.11
+      stripped_spruce_log:
+        material: STRIPPED_SPRUCE_LOG
+        buy: 3.15
+        sell: 0.79
+      stripped_spruce_wood:
+        material: STRIPPED_SPRUCE_WOOD
+        buy: 4.41
+        sell: 1.11
+      stripped_warped_hyphae:
+        material: STRIPPED_WARPED_HYPHAE
+        buy: 4.41
+        sell: 1.11
+      stripped_warped_stem:
+        material: STRIPPED_WARPED_STEM
+        buy: 3.15
+        sell: 0.79
+      tnt_minecart:
+        material: TNT_MINECART
+        buy: 142.3
+        sell: 35.58
+      trapped_chest:
+        material: TRAPPED_CHEST
+        buy: 13.69
+        sell: 3.43
+      trial_key:
+        material: TRIAL_KEY
+        buy: 10000
+        sell: 2500
+      tropical_fish:
+        material: TROPICAL_FISH
+        buy: 6
+        sell: 1.5
+      tuff_brick_wall:
+        material: TUFF_BRICK_WALL
+        buy: 2.1
+        sell: 0.53
+      tuff_wall:
+        material: TUFF_WALL
+        buy: 2.1
+        sell: 0.53
+      vault:
+        material: VAULT
+        buy: 120000
+        sell: 30000
+      warped_button:
+        material: WARPED_BUTTON
+        buy: 0.83
+        sell: 0.21
+      warped_door:
+        material: WARPED_DOOR
+        buy: 1.66
+        sell: 0.42
+      warped_pressure_plate:
+        material: WARPED_PRESSURE_PLATE
+        buy: 0.83
+        sell: 0.21
+      warped_roots:
+        material: WARPED_ROOTS
+        buy: 5
+        sell: 1.25
+      warped_trapdoor:
+        material: WARPED_TRAPDOOR
+        buy: 2.49
+        sell: 0.63
+      warped_wart_block:
+        material: WARPED_WART_BLOCK
+        buy: 27
+        sell: 6.75
+      waxed_chiseled_copper:
+        material: WAXED_CHISELED_COPPER
+        buy: 4.38
+        sell: 1.1
+      waxed_copper_bulb:
+        material: WAXED_COPPER_BULB
+        buy: 8.85
+        sell: 2.22
+      waxed_copper_door:
+        material: WAXED_COPPER_DOOR
+        buy: 11.82
+        sell: 2.96
+      waxed_copper_grate:
+        material: WAXED_COPPER_GRATE
+        buy: 4.38
+        sell: 1.1
+      waxed_copper_trapdoor:
+        material: WAXED_COPPER_TRAPDOOR
+        buy: 16.08
+        sell: 4.02
+      waxed_exposed_chiseled_copper:
+        material: WAXED_EXPOSED_CHISELED_COPPER
+        buy: 4.43
+        sell: 1.11
+      waxed_exposed_copper_bulb:
+        material: WAXED_EXPOSED_COPPER_BULB
+        buy: 9.01
+        sell: 2.26
+      waxed_exposed_copper_door:
+        material: WAXED_EXPOSED_COPPER_DOOR
+        buy: 12.25
+        sell: 3.07
+      waxed_exposed_copper_grate:
+        material: WAXED_EXPOSED_COPPER_GRATE
+        buy: 4.43
+        sell: 1.11
+      waxed_exposed_copper_trapdoor:
+        material: WAXED_EXPOSED_COPPER_TRAPDOOR
+        buy: 16.71
+        sell: 4.18
+      waxed_oxidized_chiseled_copper:
+        material: WAXED_OXIDIZED_CHISELED_COPPER
+        buy: 4.54
+        sell: 1.14
+      waxed_oxidized_copper_bulb:
+        material: WAXED_OXIDIZED_COPPER_BULB
+        buy: 9.35
+        sell: 2.34
+      waxed_oxidized_copper_door:
+        material: WAXED_OXIDIZED_COPPER_DOOR
+        buy: 13.16
+        sell: 3.29
+      waxed_oxidized_copper_grate:
+        material: WAXED_OXIDIZED_COPPER_GRATE
+        buy: 4.54
+        sell: 1.14
+      waxed_oxidized_copper_trapdoor:
+        material: WAXED_OXIDIZED_COPPER_TRAPDOOR
+        buy: 18.09
+        sell: 4.53
+      waxed_weathered_chiseled_copper:
+        material: WAXED_WEATHERED_CHISELED_COPPER
+        buy: 4.49
+        sell: 1.13
+      waxed_weathered_copper_bulb:
+        material: WAXED_WEATHERED_COPPER_BULB
+        buy: 9.17
+        sell: 2.3
+      waxed_weathered_copper_door:
+        material: WAXED_WEATHERED_COPPER_DOOR
+        buy: 12.69
+        sell: 3.18
+  page8:
+    items:
+      waxed_weathered_copper_grate:
+        material: WAXED_WEATHERED_COPPER_GRATE
+        buy: 4.49
+        sell: 1.13
+      waxed_weathered_copper_trapdoor:
+        material: WAXED_WEATHERED_COPPER_TRAPDOOR
+        buy: 17.38
+        sell: 4.35
+      weathered_copper:
+        material: WEATHERED_COPPER
+        buy: 4.26
+        sell: 1.07
+      weathered_copper_door:
+        material: WEATHERED_COPPER_DOOR
+        buy: 8.94
+        sell: 2.24
+      weathered_copper_grate:
+        material: WEATHERED_COPPER_GRATE
+        buy: 1.12
+        sell: 0.28
+      weathered_copper_trapdoor:
+        material: WEATHERED_COPPER_TRAPDOOR
+        buy: 13.41
+        sell: 3.36
+      weathered_cut_copper:
+        material: WEATHERED_CUT_COPPER
+        buy: 4.47
+        sell: 1.12
+      weathered_cut_copper_slab:
+        material: WEATHERED_CUT_COPPER_SLAB
+        buy: 0.04
+        sell: 0.01
+      weathered_cut_copper_stairs:
+        material: WEATHERED_CUT_COPPER_STAIRS
+        buy: 0.07
+        sell: 0.02
+      wet_sponge:
+        material: WET_SPONGE
+        buy: -1
+        sell: 125
+      white_banner:
+        material: WHITE_BANNER
+        buy: 185.83
+        sell: 46.46
+      white_bed:
+        material: WHITE_BED
+        buy: 96.09
+        sell: 24.03
+      white_carpet:
+        material: WHITE_CARPET
+        buy: 20.58
+        sell: 5.15
+      yellow_banner:
+        material: YELLOW_BANNER
+        buy: 185.83
+        sell: 46.46
+      yellow_bed:
+        material: YELLOW_BED
+        buy: 96.09
+        sell: 24.03
+      yellow_carpet:
+        material: YELLOW_CARPET
+        buy: 20.58
+        sell: 5.15
+      acacia_boat:
+        material: ACACIA_BOAT
+        buy: 5.79
+        sell: 1.45
+      acacia_chest_boat:
+        material: ACACIA_CHEST_BOAT
+        buy: 15.81
+        sell: 3.96
+      bamboo_chest_raft:
+        material: BAMBOO_CHEST_RAFT
+        buy: 12.33
+        sell: 3.09
+      bamboo_raft:
+        material: BAMBOO_RAFT
+        buy: 2.61
+        sell: 0.66
+      birch_boat:
+        material: BIRCH_BOAT
+        buy: 5.79
+        sell: 1.45
+      birch_chest_boat:
+        material: BIRCH_CHEST_BOAT
+        buy: 15.81
+        sell: 3.96
+      cherry_boat:
+        material: CHERRY_BOAT
+        buy: 4.14
+        sell: 1.04
+      cherry_chest_boat:
+        material: CHERRY_CHEST_BOAT
+        buy: 14.07
+        sell: 3.52
+      dark_oak_boat:
+        material: DARK_OAK_BOAT
+        buy: 5.79
+        sell: 1.45
+      dark_oak_chest_boat:
+        material: DARK_OAK_CHEST_BOAT
+        buy: 15.81
+        sell: 3.96
+      jungle_boat:
+        material: JUNGLE_BOAT
+        buy: 5.79
+        sell: 1.45
+      jungle_chest_boat:
+        material: JUNGLE_CHEST_BOAT
+        buy: 15.81
+        sell: 3.96
+      mangrove_boat:
+        material: MANGROVE_BOAT
+        buy: 4.14
+        sell: 1.04
+      mangrove_chest_boat:
+        material: MANGROVE_CHEST_BOAT
+        buy: 14.07
+        sell: 3.52
+      oak_boat:
+        material: OAK_BOAT
+        buy: 5.79
+        sell: 1.45
+      oak_chest_boat:
+        material: OAK_CHEST_BOAT
+        buy: 15.81
+        sell: 3.96
+      spruce_boat:
+        material: SPRUCE_BOAT
+        buy: 5.79
+        sell: 1.45
+      spruce_chest_boat:
+        material: SPRUCE_CHEST_BOAT
+        buy: 15.81
+        sell: 3.96

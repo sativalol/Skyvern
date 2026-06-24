@@ -1,5 +1,4 @@
 package moderation
-
 import (
 	"fmt"
 	"regexp"
@@ -11,13 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 var rxCasesRole = regexp.MustCompile(`^<@&(\d+)>$`)
-
-
 var Warn = &manager.Command{
 	Trigger:     "warn",
 	Aliases:     []string{"w"},
@@ -40,9 +35,7 @@ var Warn = &manager.Command{
 		if reason == "" {
 			reason = "No reason provided."
 		}
-
 		moderation.DMUserAction(ctx.Session, ctx.GuildID(), "Warn", m.User.ID, ctx.AuthorID(), reason)
-
 		c := storage.Case{
 			UserID:    m.User.ID,
 			ModID:     ctx.AuthorID(),
@@ -54,12 +47,10 @@ var Warn = &manager.Command{
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to record warning: %v", err))
 		}
-
 		moderation.LogAction(ctx.Session, ctx.DB, ctx.GuildID(), fmt.Sprintf("Warn (Case #%d)", id), ctx.AuthorID(), m.User.ID, reason)
 		return ctx.Reply(fmt.Sprintf("[+] Warned **%s** (Case #%d) | Reason: %s", m.User.Username, id, reason))
 	},
 }
-
 var Unwarn = &manager.Command{
 	Trigger:     "unwarn",
 	Aliases:     []string{"rmwarn"},
@@ -78,23 +69,18 @@ var Unwarn = &manager.Command{
 		if err != nil {
 			return ctx.Reply("[!] Invalid Case ID.")
 		}
-
 		c, err := ctx.DB.GetCase(ctx.GuildID(), id)
 		if err != nil || c.Type != "warn" {
 			return ctx.Reply(fmt.Sprintf("[!] Case #%d not found or is not a warning.", id))
 		}
-
 		moderation.DMUserAction(ctx.Session, ctx.GuildID(), "Unwarn", c.UserID, ctx.AuthorID(), "Warning revoked")
-
 		if err := ctx.DB.DeleteCase(ctx.GuildID(), id); err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to delete case: %v", err))
 		}
-
 		moderation.LogAction(ctx.Session, ctx.DB, ctx.GuildID(), fmt.Sprintf("Unwarn (Case #%d removed)", id), ctx.AuthorID(), c.UserID, "Warning revoked")
 		return ctx.Reply(fmt.Sprintf("[+] Revoked warning Case #%d from <@%s>.", id, c.UserID))
 	},
 }
-
 var Jail = &manager.Command{
 	Trigger:     "jail",
 	Name:        "jail",
@@ -116,7 +102,6 @@ var Jail = &manager.Command{
 		if !checkHierarchy(ctx, m.User.ID) {
 			return ctx.Reply("[!] You cannot moderate this member due to role hierarchy.")
 		}
-
 		roles, err := ctx.Session.GuildRoles(gid)
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to fetch guild roles: %v", err))
@@ -128,7 +113,6 @@ var Jail = &manager.Command{
 				break
 			}
 		}
-
 		if jailRoleID == "" {
 			name := "Jailed"
 			role, err := ctx.Session.GuildRoleCreate(gid, &discordgo.RoleParams{Name: name})
@@ -137,7 +121,6 @@ var Jail = &manager.Command{
 			}
 			jailRoleID = role.ID
 		}
-
 		var oldRoles []string
 		for _, rid := range m.Roles {
 			oldRoles = append(oldRoles, rid)
@@ -145,14 +128,11 @@ var Jail = &manager.Command{
 		}
 		_ = ctx.DB.SaveJailed(gid, m.User.ID, oldRoles)
 		_ = ctx.Session.GuildMemberRoleAdd(gid, m.User.ID, jailRoleID)
-
 		reason := strings.Join(ctx.Args[1:], " ")
 		if reason == "" {
 			reason = "No reason provided."
 		}
-
 		moderation.DMUserAction(ctx.Session, gid, "Jail", m.User.ID, ctx.AuthorID(), reason)
-
 		c := storage.Case{
 			UserID:    m.User.ID,
 			ModID:     ctx.AuthorID(),
@@ -164,12 +144,10 @@ var Jail = &manager.Command{
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Jail succeeded, but failed to log case: %v", err))
 		}
-
 		moderation.LogAction(ctx.Session, ctx.DB, gid, fmt.Sprintf("Jail (Case #%d)", id), ctx.AuthorID(), m.User.ID, reason)
 		return ctx.Reply(fmt.Sprintf("[+] Jailed **%s** (Case #%d) | Reason: %s", m.User.Username, id, reason))
 	},
 }
-
 var Unjail = &manager.Command{
 	Trigger:     "unjail",
 	Name:        "unjail",
@@ -188,7 +166,6 @@ var Unjail = &manager.Command{
 		if err != nil || m == nil {
 			return ctx.Reply("[!] Could not resolve member.")
 		}
-
 		roles, err := ctx.Session.GuildRoles(gid)
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to fetch guild roles: %v", err))
@@ -200,13 +177,10 @@ var Unjail = &manager.Command{
 				break
 			}
 		}
-
 		if jailRoleID != "" {
 			_ = ctx.Session.GuildMemberRoleRemove(gid, m.User.ID, jailRoleID)
 		}
-
 		moderation.DMUserAction(ctx.Session, gid, "Unjail", m.User.ID, ctx.AuthorID(), "Unjailed member")
-
 		oldRoles, err := ctx.DB.GetJailed(gid, m.User.ID)
 		if err == nil {
 			for _, rid := range oldRoles {
@@ -214,12 +188,10 @@ var Unjail = &manager.Command{
 			}
 			_ = ctx.DB.DeleteJailed(gid, m.User.ID)
 		}
-
 		moderation.LogAction(ctx.Session, ctx.DB, gid, "Unjail", ctx.AuthorID(), m.User.ID, "Unjailed member")
 		return ctx.Reply(fmt.Sprintf("[+] Unjailed **%s**.", m.User.Username))
 	},
 }
-
 var Lockdown = &manager.Command{
 	Trigger:     "lockdown",
 	Aliases:     []string{"lock"},
@@ -229,7 +201,6 @@ var Lockdown = &manager.Command{
 	Execute: func(ctx *manager.CommandContext) error {
 		ctx.Cfg.EmbedColor = 0x808080
 		gid := ctx.GuildID()
-
 		if len(ctx.Args) > 0 {
 			sub := strings.ToLower(ctx.Args[0])
 			if sub == "ignore" {
@@ -269,7 +240,6 @@ var Lockdown = &manager.Command{
 				}
 				return nil
 			}
-
 			if sub == "role" {
 				if !checkPerm(ctx, discordgo.PermissionManageServer) {
 					return ctx.Reply("[!] You need Manage Server permission.")
@@ -292,11 +262,9 @@ var Lockdown = &manager.Command{
 				return ctx.Reply(fmt.Sprintf("[+] Role <@&%s> has been locked down in this channel.", rid))
 			}
 		}
-
 		if !checkPerm(ctx, discordgo.PermissionManageChannels) {
 			return ctx.Reply("[!] You need Manage Channels permission.")
 		}
-
 		target := ctx.ChanID()
 		lockAll := false
 		if len(ctx.Args) > 0 {
@@ -310,13 +278,10 @@ var Lockdown = &manager.Command{
 				}
 			}
 		}
-
 		everyoneRoleID := gid
-
 		lockChan := func(chID string) error {
 			return ctx.ChannelPermissionSet(chID, everyoneRoleID, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionSendMessages, "Channel lockdown")
 		}
-
 		if lockAll {
 			chans, err := ctx.Session.GuildChannels(gid)
 			if err != nil {
@@ -334,14 +299,12 @@ var Lockdown = &manager.Command{
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Locked down %d text channels.", lockedCount))
 		}
-
 		if err := lockChan(target); err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to lock channel: %v", err))
 		}
 		return ctx.Reply(fmt.Sprintf("[+] Channel <#%s> locked.", target))
 	},
 }
-
 var Unlock = &manager.Command{
 	Trigger:     "unlock",
 	Name:        "unlock",
@@ -353,7 +316,6 @@ var Unlock = &manager.Command{
 			return ctx.Reply("[!] You need Manage Channels permission.")
 		}
 		gid := ctx.GuildID()
-
 		target := ctx.ChanID()
 		unlockAll := false
 		if len(ctx.Args) > 0 {
@@ -367,13 +329,10 @@ var Unlock = &manager.Command{
 				}
 			}
 		}
-
 		everyoneRoleID := gid
-
 		unlockChan := func(chID string) error {
 			return ctx.ChannelPermissionDelete(chID, everyoneRoleID, "Channel unlock")
 		}
-
 		if unlockAll {
 			chans, err := ctx.Session.GuildChannels(gid)
 			if err != nil {
@@ -391,14 +350,12 @@ var Unlock = &manager.Command{
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Unlocked %d text channels.", unlockedCount))
 		}
-
 		if err := unlockChan(target); err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to unlock channel: %v", err))
 		}
 		return ctx.Reply(fmt.Sprintf("[+] Channel <#%s> unlocked.", target))
 	},
 }
-
 var StripStaff = &manager.Command{
 	Trigger:     "stripstaff",
 	Aliases:     []string{"strip"},
@@ -418,7 +375,6 @@ var StripStaff = &manager.Command{
 		if err != nil || m == nil {
 			return ctx.Reply("[!] Could not resolve member.")
 		}
-
 		roles, err := ctx.Session.GuildRoles(gid)
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to fetch roles: %v", err))
@@ -427,7 +383,6 @@ var StripStaff = &manager.Command{
 		for _, r := range roles {
 			roleMap[r.ID] = r
 		}
-
 		strippedCount := 0
 		for _, rid := range m.Roles {
 			r, ok := roleMap[rid]
@@ -441,19 +396,16 @@ var StripStaff = &manager.Command{
 				discordgo.PermissionManageGuild |
 				discordgo.PermissionManageMessages |
 				discordgo.PermissionManageRoles
-
 			if (r.Permissions & staffPerms) != 0 {
 				if err := ctx.Session.GuildMemberRoleRemove(gid, m.User.ID, rid); err == nil {
 					strippedCount++
 				}
 			}
 		}
-
 		moderation.LogAction(ctx.Session, ctx.DB, gid, "Strip Staff", ctx.AuthorID(), m.User.ID, fmt.Sprintf("Removed %d staff roles", strippedCount))
 		return ctx.Reply(fmt.Sprintf("[+] Stripped %d staff roles from **%s**.", strippedCount, m.User.Username))
 	},
 }
-
 var History = &manager.Command{
 	Trigger:     "history",
 	Aliases:     []string{"cases", "h"},
@@ -465,16 +417,11 @@ var History = &manager.Command{
 		if !checkPerm(ctx, discordgo.PermissionManageMessages) {
 			return ctx.Reply("[!] You need Manage Messages permission.")
 		}
-
 		gid := ctx.GuildID()
-
-		// If no argument, give correct syntax error as shown in screenshot
 		if len(ctx.Args) == 0 {
 			return ctx.Reply("[!] Incorrect syntax. Try checking help for `history`.")
 		}
-
 		sub := strings.ToLower(ctx.Args[0])
-
 		switch sub {
 		case "view":
 			if len(ctx.Args) < 2 {
@@ -493,7 +440,6 @@ var History = &manager.Command{
 				Description: fmt.Sprintf("**User:** <@%s> (`%s`)\n**Moderator:** <@%s> (`%s`)\n**Reason:** %s\n**Date:** %s", c.UserID, c.UserID, c.ModID, c.ModID, c.Reason, c.Timestamp.Format("2006-01-02 15:04:05")),
 			})
 			return ctx.Respond(emb)
-
 		case "remove":
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: history remove <member> <case_id>")
@@ -512,7 +458,6 @@ var History = &manager.Command{
 			}
 			_ = ctx.DB.DeleteCase(gid, cid)
 			return ctx.Reply(fmt.Sprintf("[+] Removed Case #%d from **%s**.", cid, m.User.Username))
-
 		case "removeall":
 			if !checkPerm(ctx, discordgo.PermissionAdministrator) {
 				return ctx.Reply("[!] Only Administrators can purge all history.")
@@ -526,7 +471,6 @@ var History = &manager.Command{
 			}
 			_ = ctx.DB.DeleteAllCases(gid, m.User.ID)
 			return ctx.Reply(fmt.Sprintf("[+] Removed all cases/history for **%s**.", m.User.Username))
-
 		default:
 			m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
 			if err != nil || m == nil {
@@ -536,7 +480,6 @@ var History = &manager.Command{
 			if err != nil || len(list) == 0 {
 				return ctx.Reply(fmt.Sprintf("[+] No moderation history found for **%s**.", m.User.Username))
 			}
-
 			authorName := ctx.AuthorTag()
 			var authorAvatar string
 			if ctx.Interact != nil && ctx.Interact.Member != nil && ctx.Interact.Member.User != nil {
@@ -544,7 +487,6 @@ var History = &manager.Command{
 			} else if ctx.Message != nil && ctx.Message.Author != nil {
 				authorAvatar = ctx.Message.Author.AvatarURL("64")
 			}
-
 			emb, comps := buildHistoryResponse(ctx.Session, m.User.Username, authorName, authorAvatar, list, 1, true)
 			if ctx.Interact != nil {
 				return ctx.Session.InteractionRespond(ctx.Interact, &discordgo.InteractionResponse{
@@ -563,7 +505,6 @@ var History = &manager.Command{
 		}
 	},
 }
-
 var ModStats = &manager.Command{
 	Trigger:     "modstats",
 	Aliases:     []string{"ms"},
@@ -576,7 +517,6 @@ var ModStats = &manager.Command{
 			return ctx.Reply("[!] You need Manage Messages permission.")
 		}
 		gid := ctx.GuildID()
-
 		var targetMember *discordgo.Member
 		var err error
 		if len(ctx.Args) > 0 {
@@ -593,30 +533,24 @@ var ModStats = &manager.Command{
 				targetMember, _ = ctx.Session.GuildMember(gid, ctx.Message.Author.ID)
 			}
 		}
-
 		if targetMember == nil {
 			return ctx.Reply("[!] Could not resolve member.")
 		}
-
 		list, err := ctx.DB.ListCases(gid, "")
 		if err != nil {
 			return ctx.Reply("[+] No cases recorded in this guild.")
 		}
-
 		var w7, k7, b7, u7, t7, j7 int
 		var w14, k14, b14, u14, t14, j14 int
 		var wAll, kAll, bAll, uAll, tAll, jAll int
-
 		now := time.Now()
 		for _, c := range list {
 			if c.UserID != targetMember.User.ID {
 				continue
 			}
-
 			age := now.Sub(c.Timestamp)
 			in7 := age <= 7*24*time.Hour
 			in14 := age <= 14*24*time.Hour
-
 			switch strings.ToLower(c.Type) {
 			case "warn":
 				wAll++
@@ -644,11 +578,9 @@ var ModStats = &manager.Command{
 				if in14 { j14++ }
 			}
 		}
-
 		val7 := fmt.Sprintf("> **Warned:** %d\n> **Kicked:** %d\n> **Banned:** %d\n> **Unbanned:** %d\n> **Timed Out:** %d\n> **Jailed:** %d", w7, k7, b7, u7, t7, j7)
 		val14 := fmt.Sprintf("> **Warned:** %d\n> **Kicked:** %d\n> **Banned:** %d\n> **Unbanned:** %d\n> **Timed Out:** %d\n> **Jailed:** %d", w14, k14, b14, u14, t14, j14)
 		valAll := fmt.Sprintf("> **Warned:** %d\n> **Kicked:** %d\n> **Banned:** %d\n> **Unbanned:** %d\n> **Timed Out:** %d\n> **Jailed:** %d", wAll, kAll, bAll, uAll, tAll, jAll)
-
 		emb := &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
 				Name:    targetMember.User.Username,
@@ -662,11 +594,9 @@ var ModStats = &manager.Command{
 				config.Field("All time", valAll, true),
 			},
 		}
-
 		return ctx.Respond(emb)
 	},
 }
-
 func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAvatar string, list []storage.Case, page int, desc bool) (*discordgo.MessageEmbed, []discordgo.MessageComponent) {
 	sort.Slice(list, func(i, j int) bool {
 		if desc {
@@ -674,7 +604,6 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 		}
 		return list[i].ID < list[j].ID
 	})
-
 	pageSize := 3
 	totalCases := len(list)
 	totalPages := (totalCases + pageSize - 1) / pageSize
@@ -687,14 +616,12 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 	if page > totalPages {
 		page = totalPages
 	}
-
 	start := (page - 1) * pageSize
 	end := start + pageSize
 	if end > totalCases {
 		end = totalCases
 	}
 	pageList := list[start:end]
-
 	var sb strings.Builder
 	for _, c := range pageList {
 		actName := strings.Title(c.Type)
@@ -714,10 +641,8 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 		case "untimeout":
 			actName = "Untimeouted"
 		}
-
 		sb.WriteString(fmt.Sprintf("**Case Log #%d | %s**\n", c.ID, actName))
 		sb.WriteString(fmt.Sprintf("**Punished:** %s\n", c.Timestamp.Format("January 2, 2006 at 3:04 PM")))
-		
 		modName := c.ModID
 		if modUser, err := s.User(c.ModID); err == nil && modUser != nil {
 			modName = modUser.Username
@@ -725,9 +650,7 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 		sb.WriteString(fmt.Sprintf("**Moderator:** %s ( %s )\n", modName, c.ModID))
 		sb.WriteString(fmt.Sprintf("**Reason:** %s\n\n", c.Reason))
 	}
-
 	sb.WriteString(fmt.Sprintf("Page %d/%d (%d punishments, 0 notes)", page, totalPages, totalCases))
-
 	emb := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    authorName,
@@ -737,12 +660,10 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 		Description: sb.String(),
 		Color:       0x808080,
 	}
-
 	sortVal := 0
 	if desc {
 		sortVal = 1
 	}
-
 	prevPage := page - 1
 	if prevPage < 1 {
 		prevPage = totalPages
@@ -751,9 +672,7 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 	if nextPage > totalPages {
 		nextPage = 1
 	}
-
 	targetID := list[0].UserID
-
 	row := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.Button{
@@ -780,23 +699,19 @@ func buildHistoryResponse(s *discordgo.Session, targetName, authorName, authorAv
 			},
 		},
 	}
-
 	return emb, []discordgo.MessageComponent{row}
 }
-
 func HandleHistoryComponent(s *discordgo.Session, i *discordgo.InteractionCreate, mgr *manager.Manager) {
 	id := i.MessageComponentData().CustomID
 	parts := strings.Split(id, "_")
 	if len(parts) < 5 {
 		return
 	}
-
 	action := parts[1]
 	targetID := parts[2]
 	page, _ := strconv.Atoi(parts[3])
 	sortVal, _ := strconv.Atoi(parts[4])
 	desc := sortVal == 1
-
 	if action == "close" {
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseUpdateMessage,
@@ -808,23 +723,18 @@ func HandleHistoryComponent(s *discordgo.Session, i *discordgo.InteractionCreate
 		})
 		return
 	}
-
 	gid := i.GuildID
 	list, err := mgr.DB().ListCases(gid, targetID)
 	if err != nil || len(list) == 0 {
 		return
 	}
-
 	targetName := targetID
 	if targetUser, err := s.User(targetID); err == nil && targetUser != nil {
 		targetName = targetUser.Username
 	}
-
 	authorName := i.Member.User.Username
 	authorAvatar := i.Member.User.AvatarURL("64")
-
 	emb, comps := buildHistoryResponse(s, targetName, authorName, authorAvatar, list, page, desc)
-
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: &discordgo.InteractionResponseData{

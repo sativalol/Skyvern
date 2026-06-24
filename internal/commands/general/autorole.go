@@ -74,18 +74,44 @@ func resolveRole(s *discordgo.Session, gid, query string) string {
 	return ""
 }
 
+func init() {
+	manager.RegisterHelp("autorole", []manager.HelpPage{
+		{
+			Command:     "Autorole Help",
+			Syntax:      ".autorole",
+			Description: "Set up automatic role assign on member join.",
+		},
+		{
+			Command:     "Autorole Add",
+			Syntax:      ".autorole add <role>",
+			Description: "Adds an autorole and assigns it on join to members.",
+		},
+		{
+			Command:     "Autorole List",
+			Syntax:      ".autorole list",
+			Description: "View a list of every auto role.",
+		},
+		{
+			Command:     "Autorole Reset",
+			Syntax:      ".autorole reset",
+			Description: "Clears every autorole for the guild.",
+		},
+		{
+			Command:     "Autorole Remove",
+			Syntax:      ".autorole remove <role>",
+			Description: "Removes an autorole and stops assigning it on join.",
+		},
+	})
+}
+
 var Autorole = &manager.Command{
 	Trigger:     "autorole",
 	Name:        "autorole",
-	Description: "Manage roles given to users automatically upon joining",
+	Description: "Configure roles given to users automatically upon joining",
 	Category:    "general",
 	Execute: func(ctx *manager.CommandContext) error {
-		if !checkPerm(ctx, discordgo.PermissionManageServer) {
-			return ctx.Reply("[!] You need Manage Server permission.")
-		}
-
 		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: .autorole <add/remove/list> [role]")
+			return ctx.SendHelp("autorole")
 		}
 
 		gid := ctx.GuildID()
@@ -113,6 +139,9 @@ var Autorole = &manager.Command{
 			return ctx.Reply(fmt.Sprintf("[+] Added role ID `%s` to autoroles.", rid))
 
 		case "remove":
+			if !checkPerm(ctx, discordgo.PermissionManageRoles) {
+				return ctx.Reply("[!] You need Manage Roles permission.")
+			}
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("[!] Please specify a role to remove.")
 			}
@@ -139,6 +168,9 @@ var Autorole = &manager.Command{
 			return ctx.Reply(fmt.Sprintf("[+] Removed role ID `%s` from autoroles.", rid))
 
 		case "list":
+			if !checkPerm(ctx, discordgo.PermissionManageRoles) {
+				return ctx.Reply("[!] You need Manage Roles permission.")
+			}
 			roles, err := ctx.DB.GetAutoroles(gid)
 			if err != nil || len(roles) == 0 {
 				return ctx.Reply("[*] No autoroles configured for this server.")
@@ -150,8 +182,15 @@ var Autorole = &manager.Command{
 			}
 			return ctx.Reply(sb.String())
 
+		case "reset":
+			if !checkPerm(ctx, discordgo.PermissionManageRoles) {
+				return ctx.Reply("[!] You need Manage Roles permission.")
+			}
+			_ = ctx.DB.SaveAutoroles(gid, nil)
+			return ctx.Reply("[+] All autoroles have been reset.")
+
 		default:
-			return ctx.Reply("Usage: .autorole <add/remove/list> [role]")
+			return ctx.SendHelp("autorole")
 		}
 	},
 }

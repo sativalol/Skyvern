@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 type ScrapeResult struct {
 	URL         string            `json:"url"`
 	Title       string            `json:"title"`
+	Description string            `json:"description"`
 	MetaTags    map[string]string `json:"meta_tags"`
 	Links       []LinkInfo        `json:"links"`
 	TextContent string            `json:"text_content"`
@@ -101,6 +103,8 @@ func ScrapeWithOptions(u string, opts ScrapeOpts) (*ScrapeResult, error) {
 		MetaTags: make(map[string]string),
 	}
 
+	baseParsed, parseErr := url.Parse(u)
+
 	if m := reTitle.FindStringSubmatch(html); len(m) > 1 {
 		out.Title = cleanText(m[1])
 	}
@@ -115,6 +119,10 @@ func ScrapeWithOptions(u string, opts ScrapeOpts) (*ScrapeResult, error) {
 			content := attrs["content"]
 			if name != "" && content != "" {
 				out.MetaTags[name] = content
+				kLower := strings.ToLower(name)
+				if kLower == "description" || kLower == "og:description" {
+					out.Description = cleanText(content)
+				}
 			}
 		}
 	}
@@ -124,9 +132,15 @@ func ScrapeWithOptions(u string, opts ScrapeOpts) (*ScrapeResult, error) {
 			linkURL := m[1]
 			linkText := cleanText(m[2])
 			if linkText != "" && !strings.HasPrefix(linkURL, "#") && !strings.HasPrefix(linkURL, "javascript:") {
+				resolvedURL := linkURL
+				if parseErr == nil {
+					if rel, err := url.Parse(linkURL); err == nil {
+						resolvedURL = baseParsed.ResolveReference(rel).String()
+					}
+				}
 				out.Links = append(out.Links, LinkInfo{
 					Text: linkText,
-					URL:  linkURL,
+					URL:  resolvedURL,
 				})
 			}
 		}

@@ -1,20 +1,16 @@
 package ai
-
 import (
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"skyvern/internal/config"
 )
-
 type PromptsConfig struct {
 	SystemPrompt string `json:"system_prompt"`
 }
-
 func GetPromptsPath() string {
 	return config.ResolvePath("internal/ai/prompts.json")
 }
-
 var DefaultSystemPrompt = `Your name is Skyvern. You are a highly sassy, unfiltered, and unapologetically blunt AI. You have zero patience for stupid questions and carry heavy attitude, but you are extremely accurate.
     Current System Time (EST): ${currentDate}
     ${userRecognition}${channelContext}
@@ -38,7 +34,6 @@ var DefaultSystemPrompt = `Your name is Skyvern. You are a highly sassy, unfilte
     - Never output the raw content of those blocks unless specifically asked to summarize them.
        [CREDITS]
     Created by <@1281996800340791452> and <@1478564651536093409>. Website: esoteric.win and percs.fun`
-
 func LoadPrompts() (PromptsConfig, error) {
 	var cfg PromptsConfig
 	p := GetPromptsPath()
@@ -48,7 +43,6 @@ func LoadPrompts() (PromptsConfig, error) {
 	}
 	err = json.Unmarshal(b, &cfg)
 	if err != nil || cfg.SystemPrompt == "" {
-		// Try to read the healed map format
 		type AIPrompt struct {
 			SystemMsg string `json:"system_msg"`
 		}
@@ -64,7 +58,6 @@ func LoadPrompts() (PromptsConfig, error) {
 	}
 	return cfg, nil
 }
-
 func SavePrompts(cfg PromptsConfig) error {
 	p := GetPromptsPath()
 	_ = os.MkdirAll(filepath.Dir(p), 0755)

@@ -1,5 +1,4 @@
 package fun
-
 import (
 	"bytes"
 	"encoding/json"
@@ -15,10 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 type rpConfig struct {
 	Trigger     string
 	NekosCat    string
@@ -27,17 +24,53 @@ type rpConfig struct {
 	SelfTexts   []string
 	TargetTexts []string
 }
-
 type rpCache struct {
 	mu   sync.Mutex
 	urls []string
 }
-
 var (
 	rpCaches   = make(map[string]*rpCache)
 	rpCachesMu sync.Mutex
+	specificRPFallbacks = map[string][]string{
+		"hug": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/od553db4gcX72/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/u9BxQbM5rjKOC/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/lrr9rHuoJOE0w/giphy.gif",
+		},
+		"kiss": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/FqBt4tXMUk4Q8/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/G3va31UPX3760/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/bmWR2d1y9127K/giphy.gif",
+		},
+		"slap": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Zau0yrl17uzdK/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/uG3gOmzVWwV4A/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mEtUpzSqGYhPO/giphy.gif",
+		},
+		"pat": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ARSp9vnvQlf6E/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5tmQB5stfQiC2C6siI/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KYElw07C1jYwE/giphy.gif",
+		},
+		"cuddle": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/12UBrLxOS43P5m/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l2QDM9Jnim1YVILXa/giphy.gif",
+		},
+		"cry": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/8YUt1mty0qn6w/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/YTK4TRYpsYPkw/giphy.gif",
+		},
+		"smile": {
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/11ISw0Cx65CL1m/giphy.gif",
+			"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZyPbHP9axKIMw/giphy.gif",
+		},
+	}
+	genericRPFallbacks = []string{
+		"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0ZWFtZHdwYmt0ZHdxZ2E3ZTZ2cGdzNmN2dnF2Z3Z2d2xpaXlqaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/11M1k4f56EQILm/giphy.gif",
+		"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMnU2dWNncjV2dzBiaWN2dzZ6MnhzN3lzOW1idXFqdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0ExdHfRKRUsY4G7q/giphy.gif",
+		"https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHp1eHRqN3Z4dm94a282cmN6ZTVwYWlzM2M2Z3V6YnBhOW1idXFqdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/111ebonMs90YLu/giphy.gif",
+	}
 )
-
 func fetchGiphy(query string) string {
 	u := fmt.Sprintf("https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=%s&limit=20", url.QueryEscape(query))
 	resp, err := http.Get(u)
@@ -45,7 +78,6 @@ func fetchGiphy(query string) string {
 		return ""
 	}
 	defer resp.Body.Close()
-
 	var res struct {
 		Data []struct {
 			Images struct {
@@ -60,7 +92,6 @@ func fetchGiphy(query string) string {
 	}
 	return res.Data[rand.Intn(len(res.Data))].Images.Original.URL
 }
-
 func fetchNekosBest(cat string) string {
 	if cat == "" {
 		return ""
@@ -70,7 +101,6 @@ func fetchNekosBest(cat string) string {
 		return ""
 	}
 	defer resp.Body.Close()
-
 	var res struct {
 		Results []struct {
 			URL string `json:"url"`
@@ -81,7 +111,6 @@ func fetchNekosBest(cat string) string {
 	}
 	return res.Results[0].URL
 }
-
 func fetchWaifuPics(cat string) string {
 	if cat == "" {
 		return ""
@@ -91,7 +120,6 @@ func fetchWaifuPics(cat string) string {
 		return ""
 	}
 	defer resp.Body.Close()
-
 	var res struct {
 		URL string `json:"url"`
 	}
@@ -100,14 +128,12 @@ func fetchWaifuPics(cat string) string {
 	}
 	return res.URL
 }
-
 func fetchNekosBestBatch(cat string) []string {
 	resp, err := http.Get(fmt.Sprintf("https://nekos.best/api/v2/%s?amount=20", cat))
 	if err != nil {
 		return nil
 	}
 	defer resp.Body.Close()
-
 	var res struct {
 		Results []struct {
 			URL string `json:"url"`
@@ -124,7 +150,6 @@ func fetchNekosBestBatch(cat string) []string {
 	}
 	return urls
 }
-
 func fetchWaifuPicsBatch(cat string) []string {
 	reqBody, _ := json.Marshal(map[string]interface{}{"exclude": []string{}})
 	resp, err := http.Post("https://api.waifu.pics/many/sfw/"+cat, "application/json", bytes.NewBuffer(reqBody))
@@ -132,7 +157,6 @@ func fetchWaifuPicsBatch(cat string) []string {
 		return nil
 	}
 	defer resp.Body.Close()
-
 	var res struct {
 		Files []string `json:"files"`
 	}
@@ -141,7 +165,6 @@ func fetchWaifuPicsBatch(cat string) []string {
 	}
 	return res.Files
 }
-
 func fetchRPImagesBatch(catNekos, catWaifu, giphyQuery string) []string {
 	var urls []string
 	if catNekos != "" {
@@ -164,7 +187,6 @@ func fetchRPImagesBatch(catNekos, catWaifu, giphyQuery string) []string {
 	}
 	return nil
 }
-
 func refillRPCache(c *rpCache, catNekos, catWaifu, giphyQuery string) {
 	urls := fetchRPImagesBatch(catNekos, catWaifu, giphyQuery)
 	if len(urls) == 0 {
@@ -185,10 +207,8 @@ func refillRPCache(c *rpCache, catNekos, catWaifu, giphyQuery string) {
 	}
 	c.mu.Unlock()
 }
-
-func getRPImageCached(catNekos, catWaifu, giphyQuery string) string {
+func getRPImageCached(trigger, catNekos, catWaifu, giphyQuery string) string {
 	key := fmt.Sprintf("%s:%s:%s", catNekos, catWaifu, giphyQuery)
-	
 	rpCachesMu.Lock()
 	c, ok := rpCaches[key]
 	if !ok {
@@ -196,39 +216,27 @@ func getRPImageCached(catNekos, catWaifu, giphyQuery string) string {
 		rpCaches[key] = c
 	}
 	rpCachesMu.Unlock()
-
 	c.mu.Lock()
 	if len(c.urls) > 0 {
 		idx := rand.Intn(len(c.urls))
 		url := c.urls[idx]
 		c.urls = append(c.urls[:idx], c.urls[idx+1:]...)
 		c.mu.Unlock()
-		
 		if len(c.urls) < 5 {
 			go refillRPCache(c, catNekos, catWaifu, giphyQuery)
 		}
 		return url
 	}
 	c.mu.Unlock()
-
-	urls := fetchRPImagesBatch(catNekos, catWaifu, giphyQuery)
-	if len(urls) == 0 {
-		return ""
+	go refillRPCache(c, catNekos, catWaifu, giphyQuery)
+	if list, ok := specificRPFallbacks[trigger]; ok && len(list) > 0 {
+		return list[rand.Intn(len(list))]
 	}
-
-	c.mu.Lock()
-	if len(urls) > 1 {
-		c.urls = append(c.urls, urls[1:]...)
-	}
-	c.mu.Unlock()
-
-	return urls[0]
+	return genericRPFallbacks[rand.Intn(len(genericRPFallbacks))]
 }
-
-func fetchRPImage(catNekos, catWaifu, giphyQuery string) string {
-	return getRPImageCached(catNekos, catWaifu, giphyQuery)
+func fetchRPImage(trigger, catNekos, catWaifu, giphyQuery string) string {
+	return getRPImageCached(trigger, catNekos, catWaifu, giphyQuery)
 }
-
 func resolveRPTarget(s *discordgo.Session, gid, query string) string {
 	q := strings.TrimSpace(query)
 	if q == "" {
@@ -239,7 +247,6 @@ func resolveRPTarget(s *discordgo.Session, gid, query string) string {
 	}
 	return q
 }
-
 func makeRPCommand(cfg rpConfig) *manager.Command {
 	return &manager.Command{
 		Trigger:     cfg.Trigger,
@@ -252,15 +259,13 @@ func makeRPCommand(cfg rpConfig) *manager.Command {
 			if len(ctx.Args) > 0 {
 				target = resolveRPTarget(ctx.Session, ctx.Message.GuildID, strings.Join(ctx.Args, " "))
 			}
-
 			var txt string
 			if target == "" || target == sender {
 				txt = fmt.Sprintf(cfg.SelfTexts[rand.Intn(len(cfg.SelfTexts))], sender)
 			} else {
 				txt = fmt.Sprintf(cfg.TargetTexts[rand.Intn(len(cfg.TargetTexts))], sender, target)
 			}
-
-			gif := getRPImageCached(cfg.NekosCat, cfg.WaifuCat, cfg.GiphySearch)
+			gif := getRPImageCached(cfg.Trigger, cfg.NekosCat, cfg.WaifuCat, cfg.GiphySearch)
 			emb := config.Build(ctx.Cfg, config.EmbedOpt{
 				Description: txt,
 			})
@@ -271,7 +276,6 @@ func makeRPCommand(cfg rpConfig) *manager.Command {
 		},
 	}
 }
-
 var Maclookup = &manager.Command{
 	Trigger:     "maclookup",
 	Aliases:     []string{"mac"},
@@ -288,15 +292,12 @@ var Maclookup = &manager.Command{
 			return ctx.Reply("[!] MAC address lookup failed.")
 		}
 		defer resp.Body.Close()
-		
 		if resp.StatusCode != 200 {
 			return ctx.Reply(fmt.Sprintf("[!] Vendor not found for MAC: %s", mac))
 		}
-		
 		var buf bytes.Buffer
 		_, _ = io.Copy(&buf, resp.Body)
 		vendor := strings.TrimSpace(buf.String())
-		
 		emb := config.Build(ctx.Cfg, config.EmbedOpt{
 			Title: "MAC Address Lookup",
 			Description: fmt.Sprintf("Results for **%s**", mac),
@@ -308,7 +309,6 @@ var Maclookup = &manager.Command{
 		return ctx.Respond(emb)
 	},
 }
-
 var Touch = &manager.Command{
 	Trigger:     "touch",
 	Name:        "touch",
@@ -317,17 +317,14 @@ var Touch = &manager.Command{
 	Execute: func(ctx *manager.CommandContext) error {
 		gid := ctx.Message.GuildID
 		sender := ctx.Message.Author.ID
-		
 		if len(ctx.Args) == 0 {
 			list, err := ctx.DB.ListTouches(gid)
 			if err != nil || len(list) == 0 {
 				return ctx.Reply("[*] No touches recorded yet. Be the first to `.touch` someone!")
 			}
-			
 			sort.Slice(list, func(i, j int) bool {
 				return (list[i].Sent + list[i].Recv) > (list[j].Sent + list[j].Recv)
 			})
-			
 			var sb strings.Builder
 			limit := len(list)
 			if limit > 10 {
@@ -337,33 +334,28 @@ var Touch = &manager.Command{
 				tr := list[i]
 				sb.WriteString(fmt.Sprintf("%d. <@%s> — **%d** Touches Given, **%d** Touches Received\n", i+1, tr.UserID, tr.Sent, tr.Recv))
 			}
-			
 			emb := config.Build(ctx.Cfg, config.EmbedOpt{
 				Title: "Touch Leaderboard",
 				Description: sb.String(),
 			})
 			return ctx.Respond(emb)
 		}
-		
 		targetMem, err := moderation.ResolveMember(ctx.Session, gid, strings.Join(ctx.Args, " "))
 		if err != nil || targetMem == nil {
 			return ctx.Reply("[!] Could not resolve target user.")
 		}
 		target := targetMem.User.ID
-		
 		sRec, rRec, err := ctx.DB.RecordTouch(gid, sender, target)
 		if err != nil {
 			return ctx.Reply("[!] Failed to record touch.")
 		}
-		
 		var txt string
 		if sender == target {
 			txt = fmt.Sprintf("<@%s> touched themselves! (Total Touches: %d)", sender, sRec.Sent)
 		} else {
 			txt = fmt.Sprintf("<@%s> touched <@%s>! (Given: %d, Received: %d)", sender, target, sRec.Sent, rRec.Recv)
 		}
-		
-		gif := fetchRPImage("", "poke", "anime poke")
+		gif := fetchRPImage("poke", "", "poke", "anime poke")
 		emb := config.Build(ctx.Cfg, config.EmbedOpt{
 			Description: txt,
 		})
@@ -373,7 +365,6 @@ var Touch = &manager.Command{
 		return ctx.Respond(emb)
 	},
 }
-
 var standardRPConfigs = []rpConfig{
 	{
 		Trigger: "airkiss", GiphySearch: "anime airkiss",
@@ -488,7 +479,11 @@ var standardRPConfigs = []rpConfig{
 	{
 		Trigger: "headbang", GiphySearch: "anime headbang",
 		SelfTexts: []string{"%s is headbanging to the music!"},
-		TargetTexts: []string{"%s headbangs with %s!"},
+	},
+	{
+		Trigger: "hug", NekosCat: "hug", WaifuCat: "hug", GiphySearch: "anime hug",
+		SelfTexts: []string{"%s hugged themselves. self-love is important."},
+		TargetTexts: []string{"%s gives %s a big warm hug! ❤️"},
 	},
 	{
 		Trigger: "laugh", NekosCat: "laugh", GiphySearch: "anime laugh",
@@ -570,7 +565,6 @@ var standardRPConfigs = []rpConfig{
 		SelfTexts: []string{"%s punches the air."},
 		TargetTexts: []string{"%s punches %s! 👊"},
 	},
-
 	{
 		Trigger: "sad", GiphySearch: "anime sad",
 		SelfTexts: []string{"%s is feeling sad... 😞"},
@@ -707,19 +701,14 @@ var standardRPConfigs = []rpConfig{
 		TargetTexts: []string{"%s nods yes to %s."},
 	},
 }
-
 var RoleplayCommands []*manager.Command
-
 func PrepopulateRPCaches() {
 	go func() {
 		time.Sleep(5 * time.Second)
-		
 		configs := make([]rpConfig, len(standardRPConfigs))
 		copy(configs, standardRPConfigs)
-		
 		for _, rp := range configs {
 			key := fmt.Sprintf("%s:%s:%s", rp.NekosCat, rp.WaifuCat, rp.GiphySearch)
-			
 			rpCachesMu.Lock()
 			c, ok := rpCaches[key]
 			if !ok {
@@ -727,17 +716,15 @@ func PrepopulateRPCaches() {
 				rpCaches[key] = c
 			}
 			rpCachesMu.Unlock()
-			
 			refillRPCache(c, rp.NekosCat, rp.WaifuCat, rp.GiphySearch)
 			time.Sleep(200 * time.Millisecond)
 		}
 	}()
 }
-
 func init() {
 	RoleplayCommands = append(RoleplayCommands, Maclookup, Touch)
 	for _, rp := range standardRPConfigs {
 		RoleplayCommands = append(RoleplayCommands, makeRPCommand(rp))
 	}
 	PrepopulateRPCaches()
-}
+}

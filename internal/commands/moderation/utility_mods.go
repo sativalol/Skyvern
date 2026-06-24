@@ -2,7 +2,6 @@ package moderation
 
 import (
 	"fmt"
-	"regexp"
 	"skyvern/internal/manager"
 	"sort"
 	"strconv"
@@ -10,12 +9,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-)
-
-var (
-	rxUtilityChan = regexp.MustCompile(`^<#(\d+)>$`)
-	rxUtilityRole = regexp.MustCompile(`^<@&(\d+)>$`)
-	rxUtilityUser = regexp.MustCompile(`^<@!?(\d+)>$`)
 )
 
 func init() {
@@ -59,28 +52,6 @@ func init() {
 			Command:     "Revoke Files",
 			Syntax:      ".revokefiles <on|off> [channel]",
 			Description: "Enable or disable file attachments and embed link permissions for everyone in a channel.",
-		},
-	})
-	manager.RegisterHelp("restrictcommand", []manager.HelpPage{
-		{
-			Command:     "Restrict Command",
-			Syntax:      ".restrictcommand <command> <@role>",
-			Description: "Restrict a bot command usage to a specific role.",
-		},
-		{
-			Command:     "Restrict Command Remove",
-			Syntax:      ".restrictcommand remove <command> <@role>",
-			Description: "Remove role restriction from a command.",
-		},
-		{
-			Command:     "Restrict Command List",
-			Syntax:      ".restrictcommand list",
-			Description: "List all restricted commands.",
-		},
-		{
-			Command:     "Restrict Command Reset",
-			Syntax:      ".restrictcommand reset",
-			Description: "Reset all command restrictions.",
 		},
 	})
 	manager.RegisterHelp("topic", []manager.HelpPage{
@@ -136,29 +107,20 @@ var Drag = &manager.Command{
 			return ctx.SendHelp("drag")
 		}
 		gid := ctx.GuildID()
-		// Last argument is voice channel
-		chanArg := ctx.Args[len(ctx.Args)-1]
-		var channelID string
-		if m := rxUtilityChan.FindStringSubmatch(chanArg); len(m) > 1 {
-			channelID = m[1]
-		} else {
-			channelID = chanArg
+		channelID, err := resolveChannelOrReply(ctx, ctx.Args[len(ctx.Args)-1])
+		if err != nil {
+			return nil
 		}
 
-		ch, err := ctx.Session.Channel(channelID)
-		if err != nil || ch.Type != discordgo.ChannelTypeGuildVoice {
+		ch, _ := ctx.Session.Channel(channelID)
+		if ch.Type != discordgo.ChannelTypeGuildVoice {
 			return ctx.Reply("[!] Target channel must be a valid voice channel.")
 		}
 
 		moved := 0
 		memberArgs := ctx.Args[:len(ctx.Args)-1]
 		for _, arg := range memberArgs {
-			var uid string
-			if m := rxUtilityUser.FindStringSubmatch(arg); len(m) > 1 {
-				uid = m[1]
-			} else {
-				uid = arg
-			}
+			uid := strings.Trim(arg, "<@!>")
 			err := ctx.Session.GuildMemberMove(gid, uid, &channelID)
 			if err == nil {
 				moved++
@@ -250,7 +212,6 @@ var RecentBan = &manager.Command{
 		banned := 0
 		for i := 0; i < count; i++ {
 			m := mList[i]
-			// Avoid banning the author or bot
 			if m.User.ID == ctx.AuthorID() || m.User.Bot {
 				continue
 			}
@@ -275,20 +236,16 @@ var Talk = &manager.Command{
 		if len(ctx.Args) < 2 {
 			return ctx.SendHelp("talk")
 		}
-		gid := ctx.GuildID()
-		cid := strings.Trim(ctx.Args[0], "<#>")
-		roleArg := ctx.Args[1]
-		var rid string
-		if m := rxUtilityRole.FindStringSubmatch(roleArg); len(m) > 1 {
-			rid = m[1]
-		} else {
-			rid = roleArg
+		cid, err := resolveChannelOrReply(ctx, ctx.Args[0])
+		if err != nil {
+			return nil
+		}
+		rid, err := resolveRoleOrReply(ctx, ctx.Args[1])
+		if err != nil {
+			return nil
 		}
 
-		ch, err := ctx.Session.Channel(cid)
-		if err != nil || ch.GuildID != gid {
-			return ctx.Reply("[!] Invalid channel.")
-		}
+		ch, _ := ctx.Session.Channel(cid)
 
 		var currentOverwrite *discordgo.PermissionOverwrite
 		for _, o := range ch.PermissionOverwrites {
@@ -304,14 +261,12 @@ var Talk = &manager.Command{
 		}
 
 		if allowSend {
-			// Change to deny SendMessages
 			err = ctx.ChannelPermissionSet(cid, rid, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionSendMessages, "Talk disabled")
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to deny talk: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Role <@&%s> is now denied from sending messages in <#%s>.", rid, cid))
 		} else {
-			// Change to allow SendMessages
 			err = ctx.ChannelPermissionSet(cid, rid, discordgo.PermissionOverwriteTypeRole, discordgo.PermissionSendMessages, 0, "Talk enabled")
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to allow talk: %v", err))
@@ -340,110 +295,30 @@ var RevokeFiles = &manager.Command{
 
 		gid := ctx.GuildID()
 		cid := ctx.ChanID()
+		var err error
 		if len(ctx.Args) > 1 {
-			cid = strings.Trim(ctx.Args[1], "<#>")
-		}
-
-		ch, err := ctx.Session.Channel(cid)
-		if err != nil || ch.GuildID != gid {
-			return ctx.Reply("[!] Invalid channel.")
+			cid, err = resolveChannelOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
+			}
 		}
 
 		everyoneRoleID := gid
 		const filePerms = discordgo.PermissionAttachFiles | discordgo.PermissionEmbedLinks
 
 		if action == "off" {
-			// Disable files/links
 			err = ctx.ChannelPermissionSet(cid, everyoneRoleID, discordgo.PermissionOverwriteTypeRole, 0, filePerms, "Files revoked")
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to revoke permissions: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] File attachments and embed links revoked for everyone in <#%s>.", cid))
 		} else {
-			// Enable files/links
 			err = ctx.ChannelPermissionSet(cid, everyoneRoleID, discordgo.PermissionOverwriteTypeRole, filePerms, 0, "Files granted")
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to grant permissions: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] File attachments and embed links granted to everyone in <#%s>.", cid))
 		}
-	},
-}
-
-var RestrictCommand = &manager.Command{
-	Trigger:     "restrictcommand",
-	Aliases:     []string{"rc"},
-	Name:        "restrictcommand",
-	Description: "Restrict a command to a specific role",
-	Category:    "moderation",
-	Execute: func(ctx *manager.CommandContext) error {
-		if !checkPerm(ctx, discordgo.PermissionManageServer) {
-			return ctx.Reply("[!] You need Manage Server permission.")
-		}
-		if len(ctx.Args) == 0 {
-			return ctx.SendHelp("restrictcommand")
-		}
-		gid := ctx.GuildID()
-		sub := strings.ToLower(ctx.Args[0])
-
-		if sub == "list" {
-			m, _ := ctx.DB.ListRestrictedCommands(gid)
-			if len(m) == 0 {
-				return ctx.Reply("[*] No restricted commands configured.")
-			}
-			var sb strings.Builder
-			sb.WriteString("Restricted Commands:\n\n")
-			for cmd, roleID := range m {
-				sb.WriteString(fmt.Sprintf("- Command `%s` restricted to <@&%s>\n", cmd, roleID))
-			}
-			return ctx.Reply(sb.String())
-		}
-
-		if sub == "reset" {
-			_ = ctx.DB.DeleteAllRestrictedCommands(gid)
-			return ctx.Reply("[+] All command restrictions successfully reset.")
-		}
-
-		if sub == "remove" {
-			if len(ctx.Args) < 2 {
-				return ctx.Reply("Usage: `.restrictcommand remove <command>`")
-			}
-			cmdName := strings.ToLower(ctx.Args[1])
-			_ = ctx.DB.DeleteRestrictedCommand(gid, cmdName)
-			return ctx.Reply(fmt.Sprintf("[+] Removed restriction from command `%s`.", cmdName))
-		}
-
-		if len(ctx.Args) < 2 {
-			return ctx.Reply("Usage: `.restrictcommand <command> <@role>`")
-		}
-
-		cmdName := strings.ToLower(ctx.Args[0])
-		roleArg := ctx.Args[1]
-		var rid string
-		if m := rxUtilityRole.FindStringSubmatch(roleArg); len(m) > 1 {
-			rid = m[1]
-		} else {
-			rid = roleArg
-		}
-
-		_, err := ctx.Session.State.Role(gid, rid)
-		if err != nil {
-			if roles, err := ctx.Session.GuildRoles(gid); err == nil {
-				found := false
-				for _, r := range roles {
-					if r.ID == rid {
-						found = true
-						break
-					}
-				}
-				if !found {
-					return ctx.Reply("[!] Invalid role specified.")
-				}
-			}
-		}
-
-		_ = ctx.DB.SaveRestrictedCommand(gid, cmdName, rid)
-		return ctx.Reply(fmt.Sprintf("[+] Command `%s` restricted to <@&%s>.", cmdName, rid))
 	},
 }
 
@@ -482,13 +357,12 @@ var Naughty = &manager.Command{
 			return ctx.Reply("[!] You need Manage Channels permission.")
 		}
 		cid := ctx.ChanID()
+		var err error
 		if len(ctx.Args) > 0 {
-			cid = strings.Trim(ctx.Args[0], "<#>")
-		}
-
-		ch, err := ctx.Session.Channel(cid)
-		if err != nil || ch.GuildID != ctx.GuildID() {
-			return ctx.Reply("[!] Invalid channel.")
+			cid, err = resolveChannelOrReply(ctx, ctx.Args[0])
+			if err != nil {
+				return nil
+			}
 		}
 
 		nsfw := true

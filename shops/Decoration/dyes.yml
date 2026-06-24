@@ -1,0 +1,177 @@
+pages:
+  page1:
+    items:
+      white_dye:
+        material: WHITE_DYE
+        buy: 6.52
+        sell: 1.64
+        stack-size: 4
+      light_gray_dye:
+        material: LIGHT_GRAY_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      gray_dye:
+        material: GRAY_DYE
+        buy: 14.48
+        sell: 3.64
+        stack-size: 4
+      black_dye:
+        material: BLACK_DYE
+        buy: 21
+        sell: 5.28
+        stack-size: 4
+      brown_dye:
+        material: BROWN_DYE
+        buy: 25.2
+        sell: 6.32
+        stack-size: 4
+      red_dye:
+        material: RED_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      orange_dye:
+        material: ORANGE_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      yellow_dye:
+        material: YELLOW_DYE
+        buy: 2.8
+        sell: 0.72
+        stack-size: 4
+      lime_dye:
+        material: LIME_DYE
+        buy: 25.2
+        sell: 4.32
+        stack-size: 4
+      green_dye:
+        material: GREEN_DYE
+        buy: 0.44
+        sell: 0.12
+        stack-size: 4
+      cyan_dye:
+        material: CYAN_DYE
+        buy: 2.44
+        sell: 0.64
+        stack-size: 4
+      light_blue_dye:
+        material: LIGHT_BLUE_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      blue_dye:
+        material: BLUE_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      purple_dye:
+        material: PURPLE_DYE
+        buy: 4.44
+        sell: 1.12
+        stack-size: 4
+      magenta_dye:
+        material: MAGENTA_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      pink_dye:
+        material: PINK_DYE
+        buy: 4.2
+        sell: 1.08
+        stack-size: 4
+      ink_sac:
+        material: INK_SAC
+        buy: 5
+        sell: 1.25
+      glow_ink_sac:
+        material: GLOW_INK_SAC
+        buy: 5.5
+        sell: 1.38
+      poppy:
+        material: POPPY
+        buy: 1
+        sell: 0.25
+      dandelion:
+        material: DANDELION
+        buy: 1
+        sell: 0.25
+      allium:
+        material: ALLIUM
+        buy: 1
+        sell: 0.25
+      azure_bluet:
+        material: AZURE_BLUET
+        buy: 1
+        sell: 0.25
+      cornflower:
+        material: CORNFLOWER
+        buy: 1
+        sell: 0.25
+      blue_orchid:
+        material: BLUE_ORCHID
+        buy: 1
+        sell: 0.25
+      lily_of_the_valley:
+        material: LILY_OF_THE_VALLEY
+        buy: 1
+        sell: 0.25
+      oxeye_daisy:
+        material: OXEYE_DAISY
+        buy: 1
+        sell: 0.25
+      orange_tulip:
+        material: ORANGE_TULIP
+        buy: 1
+        sell: 0.25
+      pink_tulip:
+        material: PINK_TULIP
+        buy: 1
+        sell: 0.25
+  page2:
+    items:
+      red_tulip:
+        material: RED_TULIP
+        buy: 1
+        sell: 0.25
+      white_tulip:
+        material: WHITE_TULIP
+        buy: 1
+        sell: 0.25
+      sunflower:
+        material: SUNFLOWER
+        buy: 1
+        sell: 0.25
+      lilac:
+        material: LILAC
+        buy: 1
+        sell: 0.25
+      rose_bush:
+        material: ROSE_BUSH
+        buy: 1
+        sell: 0.25
+      peony:
+        material: PEONY
+        buy: 1
+        sell: 0.25
+      wither_rose:
+        material: WITHER_ROSE
+        buy: 2
+        sell: 0.5
+      torchflower:
+        material: TORCHFLOWER
+        buy: 20.75
+        sell: 5.19
+      pitcher_plant:
+        material: PITCHER_PLANT
+        buy: 20.75
+        sell: 5.19
+      lily_pad:
+        material: LILY_PAD
+        buy: 28
+        sell: 7
+      pink_petals:
+        material: PINK_PETALS
+        buy: 1
+        sell: 0.25

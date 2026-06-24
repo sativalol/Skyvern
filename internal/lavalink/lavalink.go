@@ -1,5 +1,4 @@
 package lavalink
-
 import (
 	"bytes"
 	"context"
@@ -10,18 +9,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"skyvern/internal/config"
 	"strings"
 	"sync"
 	"time"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/gorilla/websocket"
 )
-
 var HTTPClient = &http.Client{
 	Timeout: 5 * time.Second,
 }
-
 type Track struct {
 	Encoded   string `json:"encoded"`
 	Requester string `json:"requester,omitempty"`
@@ -35,41 +32,42 @@ type Track struct {
 		Source     string `json:"sourceName"`
 	} `json:"info"`
 }
-
 type TrackList struct {
 	LoadType string `json:"loadType"`
 	Data     any    `json:"data"`
 }
-
 type PlaylistData struct {
 	Info struct {
 		Name string `json:"name"`
 	} `json:"info"`
 	Tracks []Track `json:"tracks"`
 }
-
 type VoiceState struct {
 	Token     string `json:"token"`
 	Endpoint  string `json:"endpoint"`
 	SessionID string `json:"sessionId"`
 	ChannelID string `json:"channelId"`
 }
-
 type node struct {
 	host string
 	pwd  string
 }
-
 var publicNodes = []node{
 	{"lavalink.jirayu.net:13592", "youshallnotpass"},
-	{"lavalink.triniumhost.com:4333", "free"},
 	{"lavalink.triniumhost.com:2333", "kirito"},
 	{"lavalinkv4.serenetia.com:80", "https://seretia.link/discord"},
 	{"sg1-nodelink.nyxbot.app:3000", "nyxbot.app/support"},
 	{"sg2-nodelink.nyxbot.app:3000", "nyxbot.app/support"},
 	{"n3.nexcloud.in:2026", "nexcloud"},
+	{"lava.g3v.co.uk:9008", "lavalinklol"},
+	{"lavalink.triniumhost.com:4333", "free"},
+	{"lavalink.triniumhost.com:9008", "free"},
+	{"lavalink.triniumhost.com:6000", "trinium"},
+	{"omega.vexanode.cloud:2031", "https://discord.vexanode.cloud"},
+	{"lava2.kasawa.pro:2334", "youshallnotpass"},
+	{"lavav4.minecuta.com:2333", "discord.gg/gKuXdHs"},
+	{"157.254.192.15:2333", "youshallnotpass"},
 }
-
 type Client struct {
 	host         string
 	pwd          string
@@ -87,27 +85,22 @@ type Client struct {
 	logs         []string
 	logsMu       sync.Mutex
 }
-
 type NodeInfo struct {
 	Host   string
 	Active bool
 }
-
 func (c *Client) log(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	ts := time.Now().Format("15:04:05")
 	fullMsg := fmt.Sprintf("[%s] %s", ts, strings.TrimRight(msg, "\n"))
-
 	c.logsMu.Lock()
 	c.logs = append(c.logs, fullMsg)
 	if len(c.logs) > 100 {
 		c.logs = c.logs[1:]
 	}
 	c.logsMu.Unlock()
-
 	_, _ = fmt.Fprintln(os.Stderr, fullMsg)
 }
-
 func (c *Client) GetLogs() []string {
 	c.logsMu.Lock()
 	defer c.logsMu.Unlock()
@@ -115,7 +108,6 @@ func (c *Client) GetLogs() []string {
 	copy(out, c.logs)
 	return out
 }
-
 func (c *Client) GetNodes() []NodeInfo {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -128,8 +120,6 @@ func (c *Client) GetNodes() []NodeInfo {
 	}
 	return out
 }
-
-
 func NewClient(host, pwd, userID string, s *discordgo.Session) *Client {
 	c := &Client{
 		host:      host,
@@ -150,7 +140,6 @@ func NewClient(host, pwd, userID string, s *discordgo.Session) *Client {
 	go c.monitorPreferredNode()
 	return c
 }
-
 func (c *Client) Close() {
 	close(c.closeChan)
 	c.mu.Lock()
@@ -159,7 +148,6 @@ func (c *Client) Close() {
 	}
 	c.mu.Unlock()
 }
-
 func (c *Client) cycleNode(failedHost string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -179,7 +167,6 @@ func (c *Client) cycleNode(failedHost string) {
 	}
 	c.log("Lavalink Connection failed/lost on %s, switching to fallback: %s", failedHost, c.host)
 }
-
 func (c *Client) connect() {
 	for {
 		c.mu.Lock()
@@ -189,15 +176,12 @@ func (c *Client) connect() {
 		preferredPwd := c.nodes[0].pwd
 		currentCurNode := c.curNode
 		c.mu.Unlock()
-
-		// If on fallback node, check if preferred node (index 0) has come online
 		if currentCurNode != 0 {
 			u := url.URL{Scheme: "ws", Host: preferredHost, Path: "/v4/websocket"}
 			headers := http.Header{}
 			headers.Set("Authorization", preferredPwd)
 			headers.Set("User-Id", c.userID)
 			headers.Set("Client-Name", "Skyvern")
-
 			conn, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 			if err == nil {
 				c.mu.Lock()
@@ -208,7 +192,6 @@ func (c *Client) connect() {
 				activePwd = preferredPwd
 				c.ws = conn
 				c.mu.Unlock()
-
 				c.log("Successfully reconnected to preferred Lavalink node: %s", preferredHost)
 				for {
 					_, msg, err := conn.ReadMessage()
@@ -217,11 +200,9 @@ func (c *Client) connect() {
 					}
 					c.handleWSMessage(msg)
 				}
-
 				c.mu.Lock()
 				c.ws = nil
 				c.mu.Unlock()
-
 				select {
 				case <-c.closeChan:
 					return
@@ -231,26 +212,21 @@ func (c *Client) connect() {
 				}
 			}
 		}
-
 		u := url.URL{Scheme: "ws", Host: activeHost, Path: "/v4/websocket"}
 		headers := http.Header{}
 		headers.Set("Authorization", activePwd)
 		headers.Set("User-Id", c.userID)
 		headers.Set("Client-Name", "Skyvern")
-
 		conn, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 		if err != nil {
 			c.cycleNode(activeHost)
 			time.Sleep(2 * time.Second)
 			continue
 		}
-
 		c.log("Connected websocket to Lavalink node: %s", activeHost)
-
 		c.mu.Lock()
 		c.ws = conn
 		c.mu.Unlock()
-
 		for {
 			_, msg, err := conn.ReadMessage()
 			if err != nil {
@@ -258,11 +234,9 @@ func (c *Client) connect() {
 			}
 			c.handleWSMessage(msg)
 		}
-
 		c.mu.Lock()
 		c.ws = nil
 		c.mu.Unlock()
-
 		select {
 		case <-c.closeChan:
 			return
@@ -272,7 +246,6 @@ func (c *Client) connect() {
 		}
 	}
 }
-
 type rawMsg struct {
 	Op        string `json:"op"`
 	SessionID string `json:"sessionId"`
@@ -280,7 +253,6 @@ type rawMsg struct {
 	GuildID   string `json:"guildId"`
 	Reason    string `json:"reason"`
 }
-
 func (c *Client) handleWSMessage(msg []byte) {
 	c.log("[Lavalink WS] %s", string(msg))
 	var m rawMsg
@@ -300,18 +272,17 @@ func (c *Client) handleWSMessage(msg []byte) {
 		if m.Type == "TrackStartEvent" {
 			p.AnnounceStart()
 		} else if m.Type == "TrackEndEvent" {
-			if m.Reason == "finished" || m.Reason == "loadFailed" {
+			reason := strings.ToLower(m.Reason)
+			if reason == "finished" || reason == "loadfailed" || reason == "load_failed" {
 				p.PlayNext()
 			}
 		}
 	}
 }
-
 func (c *Client) LoadTracks(q string) (*TrackList, error) {
 	if !strings.HasPrefix(q, "http://") && !strings.HasPrefix(q, "https://") {
 		q = "ytsearch:" + q
 	}
-
 	var lastErr error
 	c.mu.Lock()
 	limit := len(c.nodes)
@@ -322,20 +293,17 @@ func (c *Client) LoadTracks(q string) (*TrackList, error) {
 	if limit > 6 {
 		limit = 6
 	}
-
 	for i := 0; i < limit; i++ {
 		c.mu.Lock()
 		activeHost := c.host
 		activePwd := c.pwd
 		c.mu.Unlock()
-
 		u := fmt.Sprintf("http://%s/v4/loadtracks?identifier=%s", activeHost, url.QueryEscape(q))
 		req, err := http.NewRequest("GET", u, nil)
 		if err != nil {
 			return nil, err
 		}
 		req.Header.Set("Authorization", activePwd)
-
 		resp, err := HTTPClient.Do(req)
 		if err == nil {
 			if resp.StatusCode == http.StatusOK {
@@ -343,29 +311,29 @@ func (c *Client) LoadTracks(q string) (*TrackList, error) {
 				err = json.NewDecoder(resp.Body).Decode(&res)
 				resp.Body.Close()
 				if err == nil {
-					return &res, nil
+					if res.LoadType == "error" {
+						err = fmt.Errorf("loadType returned error")
+					} else {
+						return &res, nil
+					}
 				}
 			} else {
 				resp.Body.Close()
 				err = fmt.Errorf("status: %d", resp.StatusCode)
 			}
 		}
-
 		lastErr = err
 		c.log("[Lavalink] LoadTracks failed on %s: %v. Retrying on next node...", activeHost, err)
 		c.cycleNode(activeHost)
 		time.Sleep(1 * time.Second)
 	}
-
 	return nil, fmt.Errorf("load tracks failed: %w", lastErr)
 }
-
 func (c *Client) ParseLoadTracks(tl *TrackList) ([]Track, string, error) {
 	b, err := json.Marshal(tl.Data)
 	if err != nil {
 		return nil, "", err
 	}
-
 	switch tl.LoadType {
 	case "track":
 		var t Track
@@ -391,7 +359,6 @@ func (c *Client) ParseLoadTracks(tl *TrackList) ([]Track, string, error) {
 	}
 	return nil, "", fmt.Errorf("unknown loadType: %s", tl.LoadType)
 }
-
 func (c *Client) UpdatePlayer(guildID string, body map[string]any) error {
 	var lastErr error
 	c.mu.Lock()
@@ -403,31 +370,26 @@ func (c *Client) UpdatePlayer(guildID string, body map[string]any) error {
 	if limit > 6 {
 		limit = 6
 	}
-
 	for i := 0; i < limit; i++ {
 		c.mu.Lock()
 		activeHost := c.host
 		activePwd := c.pwd
 		sess := c.sessID
 		c.mu.Unlock()
-
 		if sess == "" {
 			time.Sleep(1 * time.Second)
 			lastErr = fmt.Errorf("no active session")
 			continue
 		}
-
 		u := fmt.Sprintf("http://%s/v4/sessions/%s/players/%s", activeHost, sess, guildID)
 		buf := new(bytes.Buffer)
 		_ = json.NewEncoder(buf).Encode(body)
-
 		req, err := http.NewRequest("PATCH", u, buf)
 		if err != nil {
 			return err
 		}
 		req.Header.Set("Authorization", activePwd)
 		req.Header.Set("Content-Type", "application/json")
-
 		resp, err := HTTPClient.Do(req)
 		if err == nil {
 			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
@@ -437,7 +399,6 @@ func (c *Client) UpdatePlayer(guildID string, body map[string]any) error {
 			resp.Body.Close()
 			err = fmt.Errorf("status: %d", resp.StatusCode)
 		}
-
 		lastErr = err
 		c.log("[Lavalink] UpdatePlayer failed on %s: %v. Retrying on next node...", activeHost, err)
 		c.cycleNode(activeHost)
@@ -445,8 +406,11 @@ func (c *Client) UpdatePlayer(guildID string, body map[string]any) error {
 	}
 	return fmt.Errorf("update player failed: %w", lastErr)
 }
-
 func (c *Client) DestroyPlayer(guildID string) error {
+	c.vStatesMu.Lock()
+	delete(c.vStates, guildID)
+	c.vStatesMu.Unlock()
+
 	var lastErr error
 	c.mu.Lock()
 	limit := len(c.nodes)
@@ -457,30 +421,25 @@ func (c *Client) DestroyPlayer(guildID string) error {
 	if limit > 6 {
 		limit = 6
 	}
-
 	for i := 0; i < limit; i++ {
 		c.mu.Lock()
 		activeHost := c.host
 		activePwd := c.pwd
 		sess := c.sessID
 		c.mu.Unlock()
-
 		if sess == "" {
 			time.Sleep(1 * time.Second)
 			lastErr = fmt.Errorf("no active session")
 			continue
 		}
-
 		u := fmt.Sprintf("http://%s/v4/sessions/%s/players/%s", activeHost, sess, guildID)
 		req, _ := http.NewRequest("DELETE", u, nil)
 		req.Header.Set("Authorization", activePwd)
-
 		resp, err := HTTPClient.Do(req)
 		if err == nil {
 			resp.Body.Close()
 			return nil
 		}
-
 		lastErr = err
 		c.log("[Lavalink] DestroyPlayer failed on %s: %v. Retrying on next node...", activeHost, err)
 		c.cycleNode(activeHost)
@@ -488,7 +447,6 @@ func (c *Client) DestroyPlayer(guildID string) error {
 	}
 	return fmt.Errorf("destroy player failed: %w", lastErr)
 }
-
 func (c *Client) HandleVoiceState(guildID, sessionID, channelID string) {
 	c.log("HandleVoiceState: guildID=%s, sessionID=%s, channelID=%s", guildID, sessionID, channelID)
 	c.vStatesMu.Lock()
@@ -502,13 +460,15 @@ func (c *Client) HandleVoiceState(guildID, sessionID, channelID string) {
 		vs.ChannelID = channelID
 	}
 	ready := vs.Token != "" && vs.Endpoint != "" && vs.SessionID != "" && vs.ChannelID != ""
-	c.vStatesMu.Unlock()
-
+	var tmp VoiceState
 	if ready {
-		c.sendVoiceUpdate(guildID, vs)
+		tmp = *vs
+	}
+	c.vStatesMu.Unlock()
+	if ready {
+		c.sendVoiceUpdate(guildID, &tmp)
 	}
 }
-
 func (c *Client) HandleVoiceServer(guildID, token, endpoint string) {
 	c.log("HandleVoiceServer: guildID=%s, token=..., endpoint=%s", guildID, endpoint)
 	c.vStatesMu.Lock()
@@ -520,13 +480,15 @@ func (c *Client) HandleVoiceServer(guildID, token, endpoint string) {
 	vs.Token = token
 	vs.Endpoint = endpoint
 	ready := vs.Token != "" && vs.Endpoint != "" && vs.SessionID != "" && vs.ChannelID != ""
-	c.vStatesMu.Unlock()
-
+	var tmp VoiceState
 	if ready {
-		c.sendVoiceUpdate(guildID, vs)
+		tmp = *vs
+	}
+	c.vStatesMu.Unlock()
+	if ready {
+		c.sendVoiceUpdate(guildID, &tmp)
 	}
 }
-
 func (c *Client) sendVoiceUpdate(guildID string, vs *VoiceState) {
 	c.log("sendVoiceUpdate: sending voice payload for guildID=%s, token=..., endpoint=%s, session=%s, channel=%s", guildID, vs.Endpoint, vs.SessionID, vs.ChannelID)
 	payload := map[string]any{
@@ -544,7 +506,6 @@ func (c *Client) sendVoiceUpdate(guildID string, vs *VoiceState) {
 		c.log("sendVoiceUpdate succeeded")
 	}
 }
-
 func (c *Client) GetPlayer(guildID string) *Player {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -559,27 +520,26 @@ func (c *Client) GetPlayer(guildID string) *Player {
 	}
 	return p
 }
-
 func (c *Client) RemovePlayer(guildID string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.players, guildID)
 }
-
 func (c *Client) Host() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.host
 }
-
 func (c *Client) Pwd() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.pwd
 }
-
 func (c *Client) SessID() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.sessID
 }
-
 func SendVoiceStateUpdate(s *discordgo.Session, guildID, channelID string, mute, deaf bool) error {
 	var cid *string
 	if channelID != "" {
@@ -599,21 +559,117 @@ func SendVoiceStateUpdate(s *discordgo.Session, guildID, channelID string, mute,
 	payload.D.ChannelID = cid
 	payload.D.SelfMute = mute
 	payload.D.SelfDeaf = deaf
-
 	return s.GatewayWriteStruct(payload)
 }
-
 var lavalinkCmd *exec.Cmd
-
+func writeDefaultConfig(ymlPath string) error {
+	cfg := config.GetGlobal()
+	port := "2333"
+	if cfg.LavalinkHost != "" {
+		parts := strings.Split(cfg.LavalinkHost, ":")
+		if len(parts) > 1 {
+			port = parts[len(parts)-1]
+		}
+	}
+	pass := cfg.LavalinkPass
+	if pass == "" {
+		pass = "youshallnotpass"
+	}
+	content := fmt.Sprintf(`server:
+  port: %s
+  address: 0.0.0.0
+lavalink:
+  plugins:
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
+      repository: "https://maven.lavalink.dev/releases"
+  server:
+    password: "%s"
+    sources:
+      youtube: false
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      mixer: false
+      http: true
+      local: false
+    filters:
+      volume: true
+      equalizer: true
+      karaoke: true
+      timescale: true
+      tremolo: true
+      vibrato: true
+      distortion: true
+      rotation: true
+      channelMix: true
+      lowPass: true
+    bufferDurationMs: 400
+    youtubePlaylistLoadLimit: 6
+    youtubeSearchLimit: 10
+    soundcloudSearchLimit: 10
+    gc-warnings: true
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - WEB
+      - MWEB
+      - TVHTML5EMBEDDED
+      - ANDROID_VR
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+sentry:
+  dsn: ""
+  environment: ""
+logging:
+  file:
+    path: ./logs/lavalink.log
+  level:
+    root: INFO
+    lavalink: INFO
+  request:
+    enabled: true
+    includeHeaders: false
+    includePayload: true
+    includeQueryString: true
+`, port, pass)
+	return os.WriteFile(ymlPath, []byte(content), 0644)
+}
 func StartServer(resolvePath func(string) string) {
 	if lavalinkCmd != nil {
 		return
 	}
 	jarPath := resolvePath("lavalink/Lavalink.jar")
 	if _, err := os.Stat(jarPath); os.IsNotExist(err) {
-		return
+		fmt.Println("[lavalink] Lavalink.jar not found — downloading latest release...")
+		if dlErr := downloadLavalink(jarPath); dlErr != nil {
+			fmt.Printf("[lavalink] auto-download failed: %v\n", dlErr)
+			return
+		}
+		fmt.Println("[lavalink] download complete")
 	}
-	cmd := exec.Command("java", "-jar", "Lavalink.jar")
+	ymlPath := resolvePath("lavalink/application.yml")
+	_ = os.MkdirAll(filepath.Dir(ymlPath), 0755)
+	if err := writeDefaultConfig(ymlPath); err != nil {
+		fmt.Printf("[lavalink] failed to write application.yml: %v\n", err)
+	}
+	cmd := exec.Command("java",
+		"-XX:+TieredCompilation",
+		"-XX:TieredStopAtLevel=1",
+		"-Xverify:none",
+		"-XX:+UseSerialGC",
+		"-Xms32m",
+		"-Xmx256m",
+		"-Djava.awt.headless=true",
+		"-jar", "Lavalink.jar",
+	)
 	cmd.Dir = filepath.Dir(jarPath)
 	logFile, err := os.OpenFile(resolvePath("lavalink.log"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err == nil {
@@ -624,14 +680,81 @@ func StartServer(resolvePath func(string) string) {
 		lavalinkCmd = cmd
 	}
 }
-
+func downloadLavalink(destPath string) error {
+	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		return fmt.Errorf("mkdir: %w", err)
+	}
+	apiURL := "https://api.github.com/repos/lavalink-devs/Lavalink/releases/latest"
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("User-Agent", "skyvern-bot-manager")
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("github api: %w", err)
+	}
+	defer resp.Body.Close()
+	var release struct {
+		Assets []struct {
+			Name               string `json:"name"`
+			BrowserDownloadURL string `json:"browser_download_url"`
+		} `json:"assets"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return fmt.Errorf("parse release: %w", err)
+	}
+	var downloadURL string
+	for _, a := range release.Assets {
+		if strings.EqualFold(a.Name, "Lavalink.jar") {
+			downloadURL = a.BrowserDownloadURL
+			break
+		}
+	}
+	if downloadURL == "" {
+		return fmt.Errorf("no Lavalink.jar in latest release")
+	}
+	fmt.Printf("[lavalink] fetching %s\n", downloadURL)
+	dlResp, err := http.Get(downloadURL)
+	if err != nil {
+		return fmt.Errorf("download: %w", err)
+	}
+	defer dlResp.Body.Close()
+	tmp := destPath + ".tmp"
+	f, err := os.Create(tmp)
+	if err != nil {
+		return fmt.Errorf("create tmp: %w", err)
+	}
+	buf := make([]byte, 32*1024)
+	var written int64
+	for {
+		n, readErr := dlResp.Body.Read(buf)
+		if n > 0 {
+			if _, writeErr := f.Write(buf[:n]); writeErr != nil {
+				f.Close()
+				os.Remove(tmp)
+				return fmt.Errorf("write: %w", writeErr)
+			}
+			written += int64(n)
+			if written%(1024*1024) < int64(n) {
+				fmt.Printf("[lavalink] downloaded %.1f MB...\n", float64(written)/1024/1024)
+			}
+		}
+		if readErr != nil {
+			break
+		}
+	}
+	f.Close()
+	return os.Rename(tmp, destPath)
+}
 func StopServer() {
 	if lavalinkCmd != nil && lavalinkCmd.Process != nil {
 		_ = lavalinkCmd.Process.Kill()
 		lavalinkCmd = nil
 	}
 }
-
 func (c *Client) hasActivePlayers() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -645,11 +768,9 @@ func (c *Client) hasActivePlayers() bool {
 	}
 	return false
 }
-
 func (c *Client) monitorPreferredNode() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
-
 	for {
 		select {
 		case <-c.closeChan:
@@ -659,19 +780,15 @@ func (c *Client) monitorPreferredNode() {
 			currentCurNode := c.curNode
 			preferredHost := c.nodes[0].host
 			c.mu.Unlock()
-
 			if currentCurNode == 0 {
 				continue
 			}
-
 			if c.hasActivePlayers() {
 				continue
 			}
-
 			c.mu.Lock()
 			preferredPwd := c.nodes[0].pwd
 			c.mu.Unlock()
-
 			u := fmt.Sprintf("http://%s/version", preferredHost)
 			req, err := http.NewRequest("GET", u, nil)
 			if err != nil {
@@ -695,4 +812,4 @@ func (c *Client) monitorPreferredNode() {
 			cancel()
 		}
 	}
-}
+}

@@ -3,15 +3,17 @@ server:
   address: 0.0.0.0
 lavalink:
   plugins:
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.1"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
+      repository: "https://maven.lavalink.dev/releases"
   server:
-    password: "youshallnotpass"
+    password: "738f4a9524c183bb80c161d4094e03c3"
     sources:
-      youtube: false # native is broken, use the plugin below
+      youtube: false
       bandcamp: true
       soundcloud: true
       twitch: true
       vimeo: true
+      mixer: false
       http: true
       local: false
     filters:
@@ -26,30 +28,10 @@ lavalink:
       channelMix: true
       lowPass: true
     bufferDurationMs: 400
-    frameBufferDurationMs: 5000
-    opusEncodingQuality: 10
-    resamplingQuality: LOW
-    trackStuckThresholdMs: 10000
-    useSeekGhosting: true
     youtubePlaylistLoadLimit: 6
-    playerUpdateInterval: 5
-    youtubeSearchEnabled: true
-    soundcloudSearchEnabled: true
+    youtubeSearchLimit: 10
+    soundcloudSearchLimit: 10
     gc-warnings: true
-
-metrics:
-  prometheus:
-    enabled: false
-    endpoint: /metrics
-
-logging:
-  file:
-    path: ./logs/
-
-  level:
-    root: INFO
-    lavalink: INFO
-
 plugins:
   youtube:
     enabled: true
@@ -58,8 +40,25 @@ plugins:
     allowDirectPlaylistIds: true
     clients:
       - MUSIC
-      - ANDROID_VR
       - WEB
-      - TV
-    oauth:
-      enabled: false # turn this on if you hit 429 rate limits, and check the logs on startup for authorization link
+      - MWEB
+      - TVHTML5EMBEDDED
+      - ANDROID_VR
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+sentry:
+  dsn: ""
+  environment: ""
+logging:
+  file:
+    path: ./logs/lavalink.log
+  level:
+    root: INFO
+    lavalink: INFO
+  request:
+    enabled: true
+    includeHeaders: false
+    includePayload: true
+    includeQueryString: true

@@ -1,5 +1,4 @@
 package moderation
-
 import (
 	"fmt"
 	"regexp"
@@ -9,12 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 var rxPurgeMsgLink = regexp.MustCompile(`discord(?:app)?\.com/channels/\d+/\d+/(\d+)`)
-
 func init() {
 	manager.RegisterHelp("purge", []manager.HelpPage{
 		{
@@ -44,7 +40,6 @@ func init() {
 		},
 	})
 }
-
 var Purge = &manager.Command{
 	Trigger:     "clear",
 	Aliases:     []string{"purge", "c", "prg"},
@@ -58,38 +53,28 @@ var Purge = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("purge")
 		}
-
 		gid := ctx.GuildID()
 		cid := ctx.ChanID()
-
-		// 1. Detect sub-commands that don't start with amount (e.g. .purge before <link>)
 		firstArg := strings.ToLower(ctx.Args[0])
 		isRangeCmd := firstArg == "before" || firstArg == "after" || firstArg == "upto" || firstArg == "between"
 		isFilterCmd := isFilterKeyword(firstArg)
-
 		amount := 100
 		startIdx := 0
-
 		if !isRangeCmd && !isFilterCmd {
 			if val, err := strconv.Atoi(ctx.Args[0]); err == nil && val > 0 {
 				amount = val
 				startIdx = 1
 			} else {
-				// No valid amount specified, default to 100 messages check
 				amount = 100
 				startIdx = 0
 			}
 		}
-
 		sub := ""
 		if len(ctx.Args) > startIdx {
 			sub = strings.ToLower(ctx.Args[startIdx])
 		}
-
 		var mList []*discordgo.Message
 		var err error
-
-		// Handle Range commands: before, after, upto, between
 		if sub == "before" {
 			if len(ctx.Args) < startIdx+2 {
 				return ctx.Reply("Usage: `.purge before <messagelink>`")
@@ -109,7 +94,6 @@ var Purge = &manager.Command{
 			msgID := resolveMsgID(ctx.Args[startIdx+1])
 			mList, err = ctx.Session.ChannelMessages(cid, amount, "", "", "")
 			if err == nil {
-				// Keep messages up to the msgID (inclusive/exclusive depending on list)
 				var filtered []*discordgo.Message
 				found := false
 				for _, m := range mList {
@@ -129,7 +113,6 @@ var Purge = &manager.Command{
 			}
 			startID := resolveMsgID(ctx.Args[startIdx+1])
 			finishID := resolveMsgID(ctx.Args[startIdx+2])
-
 			mList, err = ctx.Session.ChannelMessages(cid, 100, "", "", "")
 			if err == nil {
 				var filtered []*discordgo.Message
@@ -149,36 +132,26 @@ var Purge = &manager.Command{
 				mList = filtered
 			}
 		} else {
-			// Normal filters or default search
 			mList, err = ctx.Session.ChannelMessages(cid, amount, "", "", "")
 		}
-
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to fetch messages: %v", err))
 		}
-
-		// Filter the messages
 		var delIDs []string
 		now := time.Now()
-
 		var filterArgs []string
 		if len(ctx.Args) > startIdx+1 {
 			filterArgs = ctx.Args[startIdx+1:]
 		}
-
-		// Default search parameters if not a filter keyword
 		isFilter := isFilterKeyword(sub)
 		var filterMember *discordgo.Member
 		searchQuery := ""
-
 		if !isFilter && sub != "" && sub != "before" && sub != "after" && sub != "upto" && sub != "between" {
-			// Check if first arg is a member
 			filterMember, _ = moderation.ResolveMember(ctx.Session, gid, ctx.Args[startIdx])
 			if filterMember == nil {
 				searchQuery = strings.ToLower(strings.Join(ctx.Args[startIdx:], " "))
 			}
 		}
-
 		for _, m := range mList {
 			if len(delIDs) >= amount {
 				break
@@ -186,7 +159,6 @@ var Purge = &manager.Command{
 			if ctx.Message != nil && m.ID == ctx.Message.ID {
 				continue
 			}
-
 			keep := false
 			if isFilter {
 				keep = matchFilter(m, sub, filterArgs)
@@ -195,23 +167,17 @@ var Purge = &manager.Command{
 			} else if searchQuery != "" {
 				keep = strings.Contains(strings.ToLower(m.Content), searchQuery)
 			} else {
-				// No filter, delete everything
 				keep = true
 			}
-
 			if keep {
 				delIDs = append(delIDs, m.ID)
 			}
 		}
-
 		if len(delIDs) == 0 {
 			return ctx.Reply("[+] No matching messages found to clear.")
 		}
-
-		// Split into bulk delete (under 14 days) and single delete (older)
 		var bulk []string
 		var old []string
-
 		for _, id := range delIDs {
 			t, err := sfTime(id)
 			if err == nil && now.Sub(t) < 14*24*time.Hour {
@@ -220,7 +186,6 @@ var Purge = &manager.Command{
 				old = append(old, id)
 			}
 		}
-
 		cnt := 0
 		if len(bulk) > 0 {
 			if err := ctx.BulkDelete(bulk); err == nil {
@@ -237,12 +202,10 @@ var Purge = &manager.Command{
 				}
 			}
 		}
-
 		moderation.LogAction(ctx.Session, ctx.DB, gid, "Bulk Clear", ctx.AuthorID(), cid,
 			fmt.Sprintf("Cleared %d messages in <#%s>.", cnt, cid),
 			config.Field("Filter", sub, true),
 		)
-
 		res, err := ctx.Session.ChannelMessageSendEmbed(cid, config.Wrap(ctx.Cfg, fmt.Sprintf("[+] Cleared %d messages.", cnt)))
 		if err == nil {
 			go func() {
@@ -253,7 +216,6 @@ var Purge = &manager.Command{
 		return nil
 	},
 }
-
 func isFilterKeyword(s string) bool {
 	switch s {
 	case "startswith", "endswith", "contains", "embeds", "files", "images", "bots",
@@ -262,7 +224,6 @@ func isFilterKeyword(s string) bool {
 	}
 	return false
 }
-
 func matchFilter(m *discordgo.Message, sub string, args []string) bool {
 	switch sub {
 	case "startswith":
@@ -328,14 +289,12 @@ func matchFilter(m *discordgo.Message, sub string, args []string) bool {
 	}
 	return false
 }
-
 func resolveMsgID(arg string) string {
 	if m := rxPurgeMsgLink.FindStringSubmatch(arg); len(m) > 1 {
 		return m[1]
 	}
 	return arg
 }
-
 func sfTime(id string) (time.Time, error) {
 	sf, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {

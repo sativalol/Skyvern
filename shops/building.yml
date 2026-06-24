@@ -1,0 +1,24 @@
+pages:
+  page1:
+    gui-rows: 3
+    items:
+      oak_log:
+        material: OAK_LOG
+        section: wood
+        displayname: <#8B5E3C><bold>Woods
+        slot: 11
+      stone_bricks:
+        material: STONE_BRICKS
+        section: stone
+        displayname: <#A0A0A0><bold>Stones
+        slot: 13
+      moss_block:
+        material: MOSS_BLOCK
+        section: natural
+        displayname: '&a&lNatural Blocks'
+        slot: 15
+      glass:
+        material: GLASS
+        section: decorative_blocks
+        displayname: <#00CFFF><bold>Decorative Blocks
+        slot: 17

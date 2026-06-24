@@ -1,14 +1,11 @@
 package moderation
-
 import (
 	"fmt"
 	"skyvern/internal/manager"
 	"skyvern/internal/moderation"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 func init() {
 	manager.RegisterHelp("notes", []manager.HelpPage{
 		{
@@ -33,7 +30,6 @@ func init() {
 		},
 	})
 }
-
 var Notes = &manager.Command{
 	Trigger:     "notes",
 	Aliases:     []string{"note"},
@@ -47,10 +43,8 @@ var Notes = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("notes")
 		}
-
 		gid := ctx.GuildID()
 		sub := strings.ToLower(ctx.Args[0])
-
 		if sub == "add" {
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.notes add <member> <note>`")
@@ -69,7 +63,6 @@ var Notes = &manager.Command{
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Saved note (ID: `%s`) for **%s**.", id, m.User.Username))
 		}
-
 		if sub == "remove" || sub == "delete" {
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.notes remove <member> <id>`")
@@ -85,7 +78,6 @@ var Notes = &manager.Command{
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Deleted note `%s` for **%s**.", noteID, m.User.Username))
 		}
-
 		if sub == "clear" {
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.notes clear <member>`")
@@ -100,8 +92,6 @@ var Notes = &manager.Command{
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Cleared all notes for **%s**.", m.User.Username))
 		}
-
-		// Otherwise, view notes list
 		m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[0])
 		if err != nil || m == nil {
 			return ctx.Reply("[!] Could not resolve member.")
@@ -110,7 +100,6 @@ var Notes = &manager.Command{
 		if err != nil || len(list) == 0 {
 			return ctx.Reply(fmt.Sprintf("[*] No notes recorded for **%s**.", m.User.Username))
 		}
-
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("Notes for **%s** (%d notes):\n\n", m.User.Username, len(list)))
 		for _, note := range list {

@@ -401,7 +401,7 @@ var Fact = &manager.Command{
 
 var Cat = &manager.Command{
 	Trigger:     "cat",
-	Aliases:     []string{"kitty", "meow"},
+	Aliases:     []string{"kitty", "meow", "nya"},
 	Name:        "cat",
 	Description: "Get a random cat image",
 	Category:    "fun",
@@ -423,6 +423,35 @@ var Cat = &manager.Command{
 			Title: "🐱 Meow!",
 		})
 		emb.Image = &discordgo.MessageEmbedImage{URL: data[0].URL}
+		return ctx.Respond(emb)
+	},
+}
+
+var Dog = &manager.Command{
+	Trigger:     "dog",
+	Aliases:     []string{"woof", "bark"},
+	Name:        "dog",
+	Description: "Get a random dog image",
+	Category:    "fun",
+	Execute: func(ctx *manager.CommandContext) error {
+		res, err := http.Get("https://dog.ceo/api/breeds/image/random")
+		if err != nil {
+			return ctx.Reply("[!] Dog API offline.")
+		}
+		defer res.Body.Close()
+
+		var data struct {
+			Message string `json:"message"`
+			Status  string `json:"status"`
+		}
+		if err := json.NewDecoder(res.Body).Decode(&data); err != nil || data.Status != "success" {
+			return ctx.Reply("[!] Error fetching dog image.")
+		}
+
+		emb := config.Build(ctx.Cfg, config.EmbedOpt{
+			Title: "🐶 Woof!",
+		})
+		emb.Image = &discordgo.MessageEmbedImage{URL: data.Message}
 		return ctx.Respond(emb)
 	},
 }

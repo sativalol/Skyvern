@@ -1,16 +1,14 @@
 package utility
-
 import (
 	"fmt"
 	"skyvern/internal/config"
 	"skyvern/internal/manager"
+	"skyvern/internal/moderation"
 	"skyvern/internal/storage"
 	"strconv"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 func init() {
 	manager.RegisterHelp("voicemaster", []manager.HelpPage{
 		{
@@ -25,7 +23,6 @@ func init() {
 		},
 	})
 }
-
 var VoiceMaster = &manager.Command{
 	Trigger:     "voicemaster",
 	Aliases:     []string{"vm", "tempvoice", "tempvc"},
@@ -33,23 +30,59 @@ var VoiceMaster = &manager.Command{
 	Description: "Advanced temporary voice channel management system",
 	Category:    "utility",
 	Execute: func(ctx *manager.CommandContext) error {
-		p, err := ctx.Session.UserChannelPermissions(ctx.AuthorID(), ctx.ChanID())
-		if err != nil || (p&discordgo.PermissionManageChannels) == 0 {
-			return ctx.Reply("[!] You need Manage Channels permission to configure Voice Master.")
-		}
-
+		uid := ctx.AuthorID()
+		gid := ctx.GuildID()
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("voicemaster")
 		}
-
 		sub := strings.ToLower(ctx.Args[0])
-		gid := ctx.GuildID()
-
 		cfg, err := ctx.DB.GetTempVoiceCfg(gid)
 		if err != nil {
 			cfg = storage.TempVoiceCfg{Enabled: false}
 		}
-
+		isConfigSub := false
+		for _, cSub := range []string{"setup", "interface", "panel", "sendinterface", "category", "default", "reset", "join"} {
+			if sub == cSub {
+				isConfigSub = true
+				break
+			}
+		}
+		if isConfigSub {
+			p, err := ctx.Session.UserChannelPermissions(uid, ctx.ChanID())
+			if err != nil || (p&discordgo.PermissionManageChannels) == 0 {
+				return ctx.Reply("[!] You need Manage Channels permission to configure Voice Master.")
+			}
+		}
+		var activeVC *discordgo.Channel
+		var ownerID string
+		if !isConfigSub {
+			g, err := ctx.Session.State.Guild(gid)
+			if err != nil {
+				g, err = ctx.Session.Guild(gid)
+			}
+			if err == nil {
+				for _, vs := range g.VoiceStates {
+					if vs.UserID == uid {
+						if oID, err := ctx.DB.GetTempVoiceChan(vs.ChannelID); err == nil && oID != "" {
+							ownerID = oID
+							activeVC, _ = ctx.Session.State.Channel(vs.ChannelID)
+							if activeVC == nil {
+								activeVC, _ = ctx.Session.Channel(vs.ChannelID)
+							}
+						}
+						break
+					}
+				}
+			}
+		}
+		if !isConfigSub && sub != "claim" {
+			if activeVC == nil {
+				return ctx.Reply("[!] You must be in a Voice Master voice channel to use this command.")
+			}
+			if ownerID != uid {
+				return ctx.Reply("[!] You do not own this voice channel.")
+			}
+		}
 		switch sub {
 		case "setup":
 			cat, err := ctx.Session.GuildChannelCreateComplex(gid, discordgo.GuildChannelCreateData{
@@ -59,7 +92,6 @@ var VoiceMaster = &manager.Command{
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to create category: %v", err))
 			}
-
 			hub, err := ctx.Session.GuildChannelCreateComplex(gid, discordgo.GuildChannelCreateData{
 				Name:     "Join to create",
 				Type:     discordgo.ChannelTypeGuildVoice,
@@ -75,7 +107,6 @@ var VoiceMaster = &manager.Command{
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to create hub voice channel: %v", err))
 			}
-
 			interfaceChan, err := ctx.Session.GuildChannelCreateComplex(gid, discordgo.GuildChannelCreateData{
 				Name:     "voice-master-interface",
 				Type:     discordgo.ChannelTypeGuildText,
@@ -84,12 +115,10 @@ var VoiceMaster = &manager.Command{
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to create interface channel: %v", err))
 			}
-
 			cfg.ParentChannelID = hub.ID
 			cfg.CategoryID = cat.ID
 			cfg.InterfaceChanID = interfaceChan.ID
 			cfg.Enabled = true
-
 			emb, comps := buildInterfaceUI(ctx.Session, gid)
 			res, err := ctx.Session.ChannelMessageSendComplex(interfaceChan.ID, &discordgo.MessageSend{
 				Embeds:     []*discordgo.MessageEmbed{emb},
@@ -98,16 +127,13 @@ var VoiceMaster = &manager.Command{
 			if err == nil && res != nil {
 				cfg.InterfaceMsgID = res.ID
 			}
-
 			_ = ctx.DB.SaveTempVoiceCfg(gid, cfg)
 			return ctx.Reply(fmt.Sprintf("[+] Voice Master setup completed! Hub: <#%s>, Interface: <#%s>.", hub.ID, interfaceChan.ID))
-
-		case "interface", "panel":
+		case "interface", "panel", "sendinterface":
 			chanID := ctx.ChanID()
 			if len(ctx.Args) > 1 {
 				chanID = strings.Trim(ctx.Args[1], "<#>")
 			}
-
 			emb, comps := buildInterfaceUI(ctx.Session, gid)
 			res, err := ctx.Session.ChannelMessageSendComplex(chanID, &discordgo.MessageSend{
 				Embeds:     []*discordgo.MessageEmbed{emb},
@@ -116,39 +142,267 @@ var VoiceMaster = &manager.Command{
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to send interface panel: %v", err))
 			}
-
 			cfg.InterfaceChanID = chanID
 			if res != nil {
 				cfg.InterfaceMsgID = res.ID
 			}
 			_ = ctx.DB.SaveTempVoiceCfg(gid, cfg)
 			return ctx.Reply(fmt.Sprintf("[+] Sent control panel to <#%s>.", chanID))
-
-		default:
-			return ctx.SendHelp("voicemaster")
+		case "category":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify category ID.")
+			}
+			catID := strings.Trim(ctx.Args[1], "<#>")
+			if len(ctx.Args) >= 3 && strings.ToLower(ctx.Args[1]) == "private" {
+				catID = strings.Trim(ctx.Args[2], "<#>")
+				cfg.PrivateCategoryID = catID
+				_ = ctx.DB.SaveTempVoiceCfg(gid, cfg)
+				return ctx.Reply(fmt.Sprintf("[+] Private category redirected to <#%s>.", catID))
+			}
+			cfg.CategoryID = catID
+			_ = ctx.DB.SaveTempVoiceCfg(gid, cfg)
+			return ctx.Reply(fmt.Sprintf("[+] Category redirected to <#%s>.", catID))
+		case "default":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("Usage: `.voicemaster default <interface/role/bitrate/name/region> <value>`")
+			}
+			opt := strings.ToLower(ctx.Args[1])
+			if len(ctx.Args) < 3 {
+				return ctx.Reply("[!] Specify value.")
+			}
+			val := strings.Join(ctx.Args[2:], " ")
+			switch opt {
+			case "interface":
+				cfg.DefaultInterface = strings.ToLower(val) == "on" || strings.ToLower(val) == "true"
+			case "role":
+				cfg.DefaultRoleID = strings.Trim(val, "<@&>")
+			case "bitrate":
+				b, _ := strconv.Atoi(val)
+				cfg.DefaultBitrate = b
+			case "name":
+				cfg.DefaultName = val
+			case "region":
+				cfg.DefaultRegion = val
+			}
+			_ = ctx.DB.SaveTempVoiceCfg(gid, cfg)
+			return ctx.Reply(fmt.Sprintf("[+] Default `%s` set to `%s`.", opt, val))
+		case "reset":
+			_ = ctx.DB.SaveTempVoiceCfg(gid, storage.TempVoiceCfg{Enabled: false})
+			return ctx.Reply("[+] Voice Master configuration reset.")
+		case "join":
+			if len(ctx.Args) < 3 || strings.ToLower(ctx.Args[1]) != "role" {
+				return ctx.Reply("Usage: `.voicemaster join role <role>`")
+			}
+			roleID := strings.Trim(ctx.Args[2], "<@&>")
+			cfg.JoinRoleID = roleID
+			_ = ctx.DB.SaveTempVoiceCfg(gid, cfg)
+			return ctx.Reply(fmt.Sprintf("[+] Role given on join set to <@&%s>.", roleID))
+		case "lock":
+			_ = ctx.Session.ChannelPermissionSet(activeVC.ID, gid, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionVoiceConnect)
+			return ctx.Reply("[+] Voice channel locked.")
+		case "unlock":
+			_ = ctx.Session.ChannelPermissionSet(activeVC.ID, gid, discordgo.PermissionOverwriteTypeRole, discordgo.PermissionVoiceConnect, 0)
+			return ctx.Reply("[+] Voice channel unlocked.")
+		case "ghost", "hide":
+			_ = ctx.Session.ChannelPermissionSet(activeVC.ID, gid, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionViewChannel)
+			return ctx.Reply("[+] Voice channel hidden.")
+		case "unghost", "reveal", "show":
+			_ = ctx.Session.ChannelPermissionSet(activeVC.ID, gid, discordgo.PermissionOverwriteTypeRole, discordgo.PermissionViewChannel, 0)
+			return ctx.Reply("[+] Voice channel revealed.")
+		case "claim":
+			g, err := ctx.Session.State.Guild(gid)
+			if err != nil {
+				g, err = ctx.Session.Guild(gid)
+			}
+			if err != nil {
+				return ctx.Reply("[!] Error reading guild state.")
+			}
+			var userVCID string
+			for _, vs := range g.VoiceStates {
+				if vs.UserID == uid {
+					userVCID = vs.ChannelID
+					break
+				}
+			}
+			if userVCID == "" {
+				return ctx.Reply("[!] You must be in the temporary room to claim it.")
+			}
+			currOwner, err := ctx.DB.GetTempVoiceChan(userVCID)
+			if err != nil || currOwner == "" {
+				return ctx.Reply("[!] Not a temporary Voice Master room.")
+			}
+			ownerPresent := false
+			for _, vs := range g.VoiceStates {
+				if vs.UserID == currOwner && vs.ChannelID == userVCID {
+					ownerPresent = true
+					break
+				}
+			}
+			if ownerPresent {
+				return ctx.Reply("[!] Room owner is still in the voice channel.")
+			}
+			_ = ctx.DB.SaveTempVoiceChan(userVCID, uid)
+			return ctx.Reply("[+] You have successfully claimed ownership of this voice channel!")
+		case "limit":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify member limit.")
+			}
+			lim, _ := strconv.Atoi(ctx.Args[1])
+			if lim < 0 || lim > 99 {
+				return ctx.Reply("[!] Limit must be between 0 and 99.")
+			}
+			_, _ = ctx.Session.ChannelEdit(activeVC.ID, &discordgo.ChannelEdit{UserLimit: lim})
+			return ctx.Reply(fmt.Sprintf("[+] Set member limit to %d.", lim))
+		case "name", "rename":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify new channel name.")
+			}
+			newName := strings.Join(ctx.Args[1:], " ")
+			_, _ = ctx.Session.ChannelEdit(activeVC.ID, &discordgo.ChannelEdit{Name: newName})
+			return ctx.Reply(fmt.Sprintf("[+] Channel renamed to `%s`.", newName))
+		case "bitrate":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify bitrate.")
+			}
+			br, _ := strconv.Atoi(ctx.Args[1])
+			if br < 8000 || br > 384000 {
+				return ctx.Reply("[!] Bitrate must be between 8000 and 384000.")
+			}
+			_, _ = ctx.Session.ChannelEdit(activeVC.ID, &discordgo.ChannelEdit{Bitrate: br})
+			return ctx.Reply(fmt.Sprintf("[+] Bitrate set to %d.", br))
+		case "permit":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify member or role to permit.")
+			}
+			target := ctx.Args[1]
+			targetID := strings.Trim(target, "<@&!>")
+			targetType := discordgo.PermissionOverwriteTypeRole
+			if strings.HasPrefix(target, "<@") && !strings.HasPrefix(target, "<@&") {
+				targetType = discordgo.PermissionOverwriteTypeMember
+			}
+			_ = ctx.Session.ChannelPermissionSet(activeVC.ID, targetID, targetType, discordgo.PermissionVoiceConnect, 0)
+			return ctx.Reply(fmt.Sprintf("[+] Permitted %s to join.", target))
+		case "reject":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify member or role to reject.")
+			}
+			target := ctx.Args[1]
+			targetID := strings.Trim(target, "<@&!>")
+			targetType := discordgo.PermissionOverwriteTypeRole
+			if strings.HasPrefix(target, "<@") && !strings.HasPrefix(target, "<@&") {
+				targetType = discordgo.PermissionOverwriteTypeMember
+			}
+			_ = ctx.Session.ChannelPermissionSet(activeVC.ID, targetID, targetType, 0, discordgo.PermissionVoiceConnect)
+			if targetType == discordgo.PermissionOverwriteTypeMember {
+				_ = ctx.Session.GuildMemberMove(gid, targetID, nil)
+			} else {
+				g, err := ctx.Session.State.Guild(gid)
+				if err == nil {
+					for _, vs := range g.VoiceStates {
+						if vs.ChannelID == activeVC.ID {
+							mem, err := ctx.Session.State.Member(gid, vs.UserID)
+							if err == nil {
+								for _, rID := range mem.Roles {
+									if rID == targetID {
+										_ = ctx.Session.GuildMemberMove(gid, vs.UserID, nil)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			return ctx.Reply(fmt.Sprintf("[+] Rejected %s from joining.", target))
+		case "transfer":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify new owner.")
+			}
+			m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[1])
+			if err != nil || m == nil {
+				return ctx.Reply("[!] Member not found.")
+			}
+			target := m.User.ID
+			_ = ctx.DB.SaveTempVoiceChan(activeVC.ID, target)
+			return ctx.Reply(fmt.Sprintf("[+] Channel ownership transferred to <@%s>.", target))
+		case "status":
+			if len(ctx.Args) < 2 {
+				return ctx.Reply("[!] Specify channel status.")
+			}
+			status := strings.Join(ctx.Args[1:], " ")
+			_, err := ctx.Session.ChannelEdit(activeVC.ID, &discordgo.ChannelEdit{Topic: status})
+			if err != nil {
+				return ctx.Reply(fmt.Sprintf("[!] Failed to set status: %v", err))
+			}
+			return ctx.Reply(fmt.Sprintf("[+] Set channel status to `%s`.", status))
+		case "configuration":
+			g, err := ctx.Session.State.Guild(gid)
+			if err != nil {
+				g, _ = ctx.Session.Guild(gid)
+			}
+			membersCount := 0
+			if g != nil {
+				for _, vs := range g.VoiceStates {
+					if vs.ChannelID == activeVC.ID {
+						membersCount++
+					}
+				}
+			}
+			isLocked := false
+			isHidden := false
+			for _, o := range activeVC.PermissionOverwrites {
+				if o.ID == gid && o.Type == discordgo.PermissionOverwriteTypeRole {
+					if (o.Deny & discordgo.PermissionVoiceConnect) != 0 {
+						isLocked = true
+					}
+					if (o.Deny & discordgo.PermissionViewChannel) != 0 {
+						isHidden = true
+					}
+				}
+			}
+			statusStr := "🔓 Unlocked"
+			if isLocked {
+				statusStr = "🔒 Locked"
+			}
+			visibilityStr := "👁️ Visible"
+			if isHidden {
+				visibilityStr = "👻 Hidden"
+			}
+			limitStr := "Unlimited"
+			if activeVC.UserLimit > 0 {
+				limitStr = strconv.Itoa(activeVC.UserLimit)
+			}
+			emb := &discordgo.MessageEmbed{
+				Color: 0x808080,
+				Title: "🎤 Voice Room Configuration",
+				Fields: []*discordgo.MessageEmbedField{
+					{Name: "Owner", Value: fmt.Sprintf("<@%s>", ownerID), Inline: true},
+					{Name: "Channel", Value: activeVC.Name, Inline: true},
+					{Name: "Limit", Value: limitStr, Inline: true},
+					{Name: "Members", Value: strconv.Itoa(membersCount), Inline: true},
+					{Name: "Status", Value: statusStr, Inline: true},
+					{Name: "Visibility", Value: visibilityStr, Inline: true},
+				},
+			}
+			return ctx.Respond(emb)
 		}
+		return nil
 	},
 }
-
 func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed, []discordgo.MessageComponent) {
 	emojiServerID := config.GetGlobal().EmojiServerID
 	if emojiServerID == "" {
 		emojiServerID = "1411452931915645032"
 	}
-
 	var homeEmojis []*discordgo.Emoji
 	if ems, err := s.GuildEmojis(emojiServerID); err == nil {
 		homeEmojis = ems
 	}
-
 	var localEmojis []*discordgo.Emoji
 	if ems, err := s.GuildEmojis(gid); err == nil {
 		localEmojis = ems
 	}
-
 	getEmoji := func(name, fallback string) *discordgo.ComponentEmoji {
 		normalizedName := strings.ReplaceAll(name, "-", "_")
-
 		for _, e := range homeEmojis {
 			if e.Name == normalizedName {
 				return &discordgo.ComponentEmoji{
@@ -157,7 +411,6 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 				}
 			}
 		}
-
 		for _, e := range localEmojis {
 			if e.Name == normalizedName {
 				return &discordgo.ComponentEmoji{
@@ -166,7 +419,6 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 				}
 			}
 		}
-
 		for _, gState := range s.State.Guilds {
 			for _, e := range gState.Emojis {
 				if e.Name == normalizedName {
@@ -177,10 +429,8 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 				}
 			}
 		}
-
 		return &discordgo.ComponentEmoji{Name: fallback}
 	}
-
 	emojiLock := getEmoji("vm_lock", "🔒")
 	emojiUnlock := getEmoji("vm_unlock", "🔓")
 	emojiGhost := getEmoji("vm_ghost", "👻")
@@ -192,7 +442,6 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 	emojiDisconnect := getEmoji("vm_disconnect", "👋")
 	emojiActivity := getEmoji("vm_activity", "🎮")
 	emojiClaim := getEmoji("vm_claim", "👑")
-
 	emb := &discordgo.MessageEmbed{
 		Color:       0x808080,
 		Title:       "Voice Master",
@@ -235,7 +484,6 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 			Text: "Esoterica Voice • Click a button to execute the action",
 		},
 	}
-
 	row1 := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.Button{CustomID: "vm_lock", Label: "Lock", Style: discordgo.SecondaryButton, Emoji: emojiLock},
@@ -244,7 +492,6 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 			discordgo.Button{CustomID: "vm_reveal", Label: "Show", Style: discordgo.SecondaryButton, Emoji: emojiReveal},
 		},
 	}
-
 	row2 := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.Button{CustomID: "vm_rename", Label: "Rename", Style: discordgo.SecondaryButton, Emoji: emojiRename},
@@ -253,7 +500,6 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 			discordgo.Button{CustomID: "vm_info", Label: "Info", Style: discordgo.SecondaryButton, Emoji: emojiInfo},
 		},
 	}
-
 	row3 := discordgo.ActionsRow{
 		Components: []discordgo.MessageComponent{
 			discordgo.Button{CustomID: "vm_disconnect", Label: "Kick", Style: discordgo.SecondaryButton, Emoji: emojiDisconnect},
@@ -261,17 +507,14 @@ func buildInterfaceUI(s *discordgo.Session, gid string) (*discordgo.MessageEmbed
 			discordgo.Button{CustomID: "vm_claim", Label: "Claim Room", Style: discordgo.SecondaryButton, Emoji: emojiClaim},
 		},
 	}
-
 	return emb, []discordgo.MessageComponent{row1, row2, row3}
 }
-
 func formatEmbedEmoji(emoji *discordgo.ComponentEmoji) string {
 	if emoji.ID != "" {
 		return fmt.Sprintf("<:%s:%s>", emoji.Name, emoji.ID)
 	}
 	return emoji.Name
 }
-
 func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCreate, mgr *manager.Manager) {
 	var customID string
 	if i.Type == discordgo.InteractionMessageComponent {
@@ -279,15 +522,12 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 	} else if i.Type == discordgo.InteractionModalSubmit {
 		customID = i.ModalSubmitData().CustomID
 	}
-
 	if customID == "" {
 		return
 	}
-
 	db := mgr.DB()
 	uid := i.Member.User.ID
 	gid := i.GuildID
-
 	if customID == "vm_claim" {
 		var voiceChanID string
 		g, err := s.State.Guild(gid)
@@ -299,7 +539,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				}
 			}
 		}
-
 		if voiceChanID == "" {
 			_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -310,7 +549,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			})
 			return
 		}
-
 		owner, err := db.GetTempVoiceChan(voiceChanID)
 		if err != nil {
 			_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -322,7 +560,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			})
 			return
 		}
-
 		ownerInChannel := false
 		for _, vs := range g.VoiceStates {
 			if vs.UserID == owner && vs.ChannelID == voiceChanID {
@@ -330,7 +567,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				break
 			}
 		}
-
 		if ownerInChannel {
 			_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -341,7 +577,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			})
 			return
 		}
-
 		_ = db.SaveTempVoiceChan(voiceChanID, uid)
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -352,7 +587,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		})
 		return
 	}
-
 	if strings.HasPrefix(customID, "vm_rename_modal_") {
 		voiceChanID := strings.TrimPrefix(customID, "vm_rename_modal_")
 		var newName string
@@ -366,7 +600,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				}
 			}
 		}
-
 		if newName == "" {
 			_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -377,7 +610,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			})
 			return
 		}
-
 		_, _ = s.ChannelEdit(voiceChanID, &discordgo.ChannelEdit{Name: newName})
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -388,17 +620,14 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		})
 		return
 	}
-
 	if strings.HasPrefix(customID, "vm_disconnect_select_") {
 		targetID := i.MessageComponentData().Values[0]
 		_ = s.GuildMemberMove(gid, targetID, nil)
-
 		targetName := targetID
 		tUser, err := s.User(targetID)
 		if err == nil && tUser != nil {
 			targetName = tUser.Username
 		}
-
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -408,7 +637,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		})
 		return
 	}
-
 	var voiceChanID string
 	g, err := s.State.Guild(gid)
 	if err == nil {
@@ -419,7 +647,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			}
 		}
 	}
-
 	if voiceChanID == "" {
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -430,7 +657,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		})
 		return
 	}
-
 	owner, err := db.GetTempVoiceChan(voiceChanID)
 	if err != nil || owner != uid {
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -442,35 +668,27 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		})
 		return
 	}
-
 	ch, err := s.State.Channel(voiceChanID)
 	if err != nil {
 		ch, _ = s.Channel(voiceChanID)
 	}
-
 	if ch == nil {
 		return
 	}
-
 	var content string
-
 	switch customID {
 	case "vm_lock":
 		_ = s.ChannelPermissionSet(voiceChanID, gid, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionVoiceConnect)
 		content = "[+] Room locked."
-
 	case "vm_unlock":
 		_ = s.ChannelPermissionSet(voiceChanID, gid, discordgo.PermissionOverwriteTypeRole, discordgo.PermissionVoiceConnect, 0)
 		content = "[+] Room unlocked."
-
 	case "vm_ghost":
 		_ = s.ChannelPermissionSet(voiceChanID, gid, discordgo.PermissionOverwriteTypeRole, 0, discordgo.PermissionViewChannel)
 		content = "[+] Room hidden."
-
 	case "vm_reveal":
 		_ = s.ChannelPermissionSet(voiceChanID, gid, discordgo.PermissionOverwriteTypeRole, discordgo.PermissionViewChannel, 0)
 		content = "[+] Room revealed."
-
 	case "vm_rename":
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseModal,
@@ -494,7 +712,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			},
 		})
 		return
-
 	case "vm_limit_inc":
 		newLimit := ch.UserLimit + 1
 		if newLimit > 99 {
@@ -502,7 +719,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		}
 		_, _ = s.ChannelEdit(voiceChanID, &discordgo.ChannelEdit{UserLimit: newLimit})
 		content = fmt.Sprintf("[+] Limit increased to %d.", newLimit)
-
 	case "vm_limit_dec":
 		newLimit := ch.UserLimit - 1
 		if newLimit < 0 {
@@ -510,7 +726,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		}
 		_, _ = s.ChannelEdit(voiceChanID, &discordgo.ChannelEdit{UserLimit: newLimit})
 		content = fmt.Sprintf("[+] Limit decreased to %d.", newLimit)
-
 	case "vm_info":
 		membersCount := 0
 		for _, vs := range g.VoiceStates {
@@ -518,7 +733,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				membersCount++
 			}
 		}
-
 		isLocked := false
 		isHidden := false
 		for _, o := range ch.PermissionOverwrites {
@@ -531,7 +745,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				}
 			}
 		}
-
 		statusStr := "🔓 Unlocked"
 		if isLocked {
 			statusStr = "🔒 Locked"
@@ -544,7 +757,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 		if ch.UserLimit > 0 {
 			limitStr = strconv.Itoa(ch.UserLimit)
 		}
-
 		emb := &discordgo.MessageEmbed{
 			Color: 0x808080,
 			Title: "🎤 Voice Room Information",
@@ -560,7 +772,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				Text: "Esoterica Voice Master • Room Details",
 			},
 		}
-
 		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -569,7 +780,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			},
 		})
 		return
-
 	case "vm_disconnect":
 		var options []discordgo.SelectMenuOption
 		for _, vs := range g.VoiceStates {
@@ -586,7 +796,6 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 				}
 			}
 		}
-
 		if len(options) == 0 {
 			content = "[!] No other members in room."
 		} else {
@@ -609,14 +818,11 @@ func HandleVoiceMasterComponent(s *discordgo.Session, i *discordgo.InteractionCr
 			})
 			return
 		}
-
 	case "vm_activity":
 		content = "Start activities directly from the Discord Activity button in your voice channel."
-
 	default:
 		content = "[!] Unknown action."
 	}
-
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{

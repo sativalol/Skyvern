@@ -14,6 +14,54 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+func init() {
+	manager.RegisterHelp("play", []manager.HelpPage{
+		{
+			Command:     "Play Track",
+			Syntax:      ".play <url_or_search_query>",
+			Description: "Play a song from YouTube, Spotify, or SoundCloud, or search for it.",
+		},
+		{
+			Command:     "Play Next",
+			Syntax:      ".play next <url_or_search_query>",
+			Description: "Queue a track to play immediately after the current song finishes.",
+		},
+	})
+	manager.RegisterHelp("fastforward", []manager.HelpPage{
+		{
+			Command:     "Fastforward",
+			Syntax:      ".fastforward <seconds>",
+			Description: "Fastforward the current song by a specified relative offset (in seconds or timestamp format).",
+		},
+	})
+	manager.RegisterHelp("rewind", []manager.HelpPage{
+		{
+			Command:     "Rewind",
+			Syntax:      ".rewind <seconds>",
+			Description: "Rewind the current song by a specified relative offset (in seconds or timestamp format).",
+		},
+	})
+	manager.RegisterHelp("preset", []manager.HelpPage{
+		{
+			Command:     "Preset Active",
+			Syntax:      ".preset active",
+			Description: "View the currently running equalizer or filter preset.",
+		},
+		{
+			Command:     "Preset Configure",
+			Syntax:      ".preset <name> [on/off]",
+			Description: "Configure an audio equalizer filter (vaporwave, nightcore, boost, flat, chipmunk, piano, metal, vibrato, 8d, soft).",
+		},
+	})
+	manager.RegisterHelp("seek", []manager.HelpPage{
+		{
+			Command:     "Seek",
+			Syntax:      ".seek <timestamp/seconds>",
+			Description: "Seek to a timestamp (e.g. 1:30 or 90) in the current song.",
+		},
+	})
+}
+
 var Play = &manager.Command{
 	Trigger:     "play",
 	Aliases:     []string{"p"},
@@ -22,7 +70,7 @@ var Play = &manager.Command{
 	Category:    "music",
 	Execute: func(ctx *manager.CommandContext) error {
 		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: `.play <url_or_search_query>`")
+			return ctx.SendHelp("play")
 		}
 
 		l := ctx.Mgr.GetLavalink(ctx.ClientID)
@@ -35,12 +83,21 @@ var Play = &manager.Command{
 			return ctx.Reply("[!] You must be in a voice channel to play music.")
 		}
 
-		err := lavalink.SendVoiceStateUpdate(ctx.Session, ctx.Message.GuildID, vcID, false, true)
+		err := lavalink.SendVoiceStateUpdate(ctx.Session, ctx.Message.GuildID, vcID, false, false)
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to join voice channel: %v", err))
 		}
 
-		q := strings.Join(ctx.Args, " ")
+		playNext := false
+		args := ctx.Args
+		if len(args) > 1 && strings.ToLower(args[0]) == "next" {
+			playNext = true
+			args = args[1:]
+		} else if len(args) == 1 && strings.ToLower(args[0]) == "next" {
+			return ctx.Reply("Usage: `.play next <url_or_search_query>`")
+		}
+
+		q := strings.Join(args, " ")
 		tl, err := l.LoadTracks(q)
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to load tracks: %v", err))
@@ -55,7 +112,11 @@ var Play = &manager.Command{
 			tracks[i].Requester = ctx.Message.Author.ID
 		}
 		p := l.GetPlayer(ctx.Message.GuildID)
-		p.Add(tracks, ctx.Message.ChannelID)
+		if playNext {
+			p.AddNext(tracks, ctx.Message.ChannelID)
+		} else {
+			p.Add(tracks, ctx.Message.ChannelID)
+		}
 
 		if playlistName != "" {
 			return ctx.Reply(fmt.Sprintf("[+] Loaded playlist **%s** with %d tracks.", playlistName, len(tracks)))
@@ -69,7 +130,7 @@ var Play = &manager.Command{
 
 var Stop = &manager.Command{
 	Trigger:     "stop",
-	Aliases:     []string{"dc", "leave"},
+	Aliases:     []string{"dc", "leave", "disconnect"},
 	Name:        "stop",
 	Description: "Stop music playback, clear queue, and leave voice channel",
 	Category:    "music",
@@ -153,6 +214,49 @@ var Queue = &manager.Command{
 			return nil
 		}
 		p := l.GetPlayer(ctx.Message.GuildID)
+
+		if len(ctx.Args) > 0 {
+			sub := strings.ToLower(ctx.Args[0])
+			switch sub {
+			case "remove":
+				if len(ctx.Args) < 2 {
+					return ctx.Reply("Usage: `.queue remove <position>`")
+				}
+				pos, err := strconv.Atoi(ctx.Args[1])
+				if err != nil || pos <= 0 {
+					return ctx.Reply("[!] Invalid position. It must be a positive number.")
+				}
+				track, err := p.RemovePosition(pos)
+				if err != nil {
+					return ctx.Reply(fmt.Sprintf("[!] Failed to remove track: %v", err))
+				}
+				return ctx.Reply(fmt.Sprintf("[+] Removed **%s** from the queue.", track.Info.Title))
+
+			case "shuffle":
+				p.Shuffle()
+				return ctx.Reply("[+] Shuffled the queue.")
+
+			case "empty", "clear":
+				p.Clear()
+				return ctx.Reply("[+] Cleared the queue.")
+
+			case "move":
+				if len(ctx.Args) < 3 {
+					return ctx.Reply("Usage: `.queue move <position> <new_position>`")
+				}
+				from, err1 := strconv.Atoi(ctx.Args[1])
+				to, err2 := strconv.Atoi(ctx.Args[2])
+				if err1 != nil || err2 != nil || from <= 0 || to <= 0 {
+					return ctx.Reply("[!] Invalid positions. They must be positive numbers.")
+				}
+				err := p.MovePosition(from, to)
+				if err != nil {
+					return ctx.Reply(fmt.Sprintf("[!] Failed to move track: %v", err))
+				}
+				return ctx.Reply(fmt.Sprintf("[+] Moved track from position %d to %d.", from, to))
+			}
+		}
+
 		q, cur := p.GetQueue()
 		if len(q) == 0 {
 			return ctx.Reply("[*] Queue is empty.")
@@ -275,13 +379,12 @@ var Volume = &manager.Command{
 
 var Seek = &manager.Command{
 	Trigger:     "seek",
-	Aliases:     []string{"ff", "fastforward"},
 	Name:        "seek",
 	Description: "Seek to a timestamp (e.g. 1:30 or 90)",
 	Category:    "music",
 	Execute: func(ctx *manager.CommandContext) error {
 		if len(ctx.Args) == 0 {
-			return ctx.Reply("Usage: `.seek <1:30|90>`")
+			return ctx.SendHelp("seek")
 		}
 		l := ctx.Mgr.GetLavalink(ctx.ClientID)
 		if l == nil {
@@ -290,28 +393,152 @@ var Seek = &manager.Command{
 		p := l.GetPlayer(ctx.Message.GuildID)
 
 		input := ctx.Args[0]
-		var ms int64
-		if strings.Contains(input, ":") {
-			parts := strings.Split(input, ":")
-			if len(parts) == 2 {
-				m, _ := strconv.Atoi(parts[0])
-				s, _ := strconv.Atoi(parts[1])
-				ms = int64(m*60+s) * 1000
-			} else if len(parts) == 3 {
-				h, _ := strconv.Atoi(parts[0])
-				m, _ := strconv.Atoi(parts[1])
-				s, _ := strconv.Atoi(parts[2])
-				ms = int64(h*3600+m*60+s) * 1000
-			}
-		} else {
-			s, _ := strconv.Atoi(input)
-			ms = int64(s) * 1000
-		}
+		ms := parseDurationToMs(input)
 
 		if err := p.Seek(ms); err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Seek failed: %v", err))
 		}
 		return ctx.Reply(fmt.Sprintf("[+] Seeked to **%s**.", formatDur(ms)))
+	},
+}
+
+var Fastforward = &manager.Command{
+	Trigger:     "fastforward",
+	Aliases:     []string{"ff"},
+	Name:        "fastforward",
+	Description: "Fastforward the current song by a specified duration",
+	Category:    "music",
+	Execute: func(ctx *manager.CommandContext) error {
+		if len(ctx.Args) == 0 {
+			return ctx.SendHelp("fastforward")
+		}
+		l := ctx.Mgr.GetLavalink(ctx.ClientID)
+		if l == nil {
+			return nil
+		}
+		p := l.GetPlayer(ctx.Message.GuildID)
+
+		playerInfo, err := getLavalinkPlayer(l, ctx.Message.GuildID)
+		if err != nil {
+			return ctx.Reply(fmt.Sprintf("[!] Could not get current playback position: %v", err))
+		}
+
+		offset := parseDurationToMs(ctx.Args[0])
+		if offset <= 0 {
+			return ctx.Reply("[!] Invalid duration.")
+		}
+
+		newPos := playerInfo.Position + offset
+		if err := p.Seek(newPos); err != nil {
+			return ctx.Reply(fmt.Sprintf("[!] Fastforward failed: %v", err))
+		}
+		return ctx.Reply(fmt.Sprintf("[+] Fastforwarded to **%s**.", formatDur(newPos)))
+	},
+}
+
+var Rewind = &manager.Command{
+	Trigger:     "rewind",
+	Aliases:     []string{"rw"},
+	Name:        "rewind",
+	Description: "Rewind the current song by a specified duration",
+	Category:    "music",
+	Execute: func(ctx *manager.CommandContext) error {
+		if len(ctx.Args) == 0 {
+			return ctx.SendHelp("rewind")
+		}
+		l := ctx.Mgr.GetLavalink(ctx.ClientID)
+		if l == nil {
+			return nil
+		}
+		p := l.GetPlayer(ctx.Message.GuildID)
+
+		playerInfo, err := getLavalinkPlayer(l, ctx.Message.GuildID)
+		if err != nil {
+			return ctx.Reply(fmt.Sprintf("[!] Could not get current playback position: %v", err))
+		}
+
+		offset := parseDurationToMs(ctx.Args[0])
+		if offset <= 0 {
+			return ctx.Reply("[!] Invalid duration.")
+		}
+
+		newPos := playerInfo.Position - offset
+		if newPos < 0 {
+			newPos = 0
+		}
+
+		if err := p.Seek(newPos); err != nil {
+			return ctx.Reply(fmt.Sprintf("[!] Rewind failed: %v", err))
+		}
+		return ctx.Reply(fmt.Sprintf("[+] Rewound to **%s**.", formatDur(newPos)))
+	},
+}
+
+var Preset = &manager.Command{
+	Trigger:     "preset",
+	Name:        "preset",
+	Description: "Manage audio equalizers and presets",
+	Category:    "music",
+	Execute: func(ctx *manager.CommandContext) error {
+		l := ctx.Mgr.GetLavalink(ctx.ClientID)
+		if l == nil {
+			return nil
+		}
+		p := l.GetPlayer(ctx.Message.GuildID)
+
+		validPresets := map[string]bool{
+			"vaporwave": true,
+			"karaoke":   true,
+			"nightcore": true,
+			"boost":     true,
+			"flat":      true,
+			"chipmunk":  true,
+			"piano":     true,
+			"metal":     true,
+			"vibrato":   true,
+			"8d":        true,
+			"soft":      true,
+		}
+
+		if len(ctx.Args) == 0 {
+			var sb strings.Builder
+			sb.WriteString("Available presets:\n")
+			for preset := range validPresets {
+				status := "off"
+				if p.Preset() == preset {
+					status = "on"
+				}
+				sb.WriteString(fmt.Sprintf("- **%s** (currently %s)\n", preset, status))
+			}
+			sb.WriteString("\nUse `.preset <name> <on/off>` to configure.")
+			return ctx.Reply(sb.String())
+		}
+
+		sub := strings.ToLower(ctx.Args[0])
+		if sub == "active" {
+			return ctx.Reply(fmt.Sprintf("[*] Current active preset: **%s**", p.Preset()))
+		}
+
+		if !validPresets[sub] {
+			return ctx.Reply("[!] Invalid preset name. Use `.preset` to view all available presets.")
+		}
+
+		setting := true
+		if len(ctx.Args) > 1 {
+			val := strings.ToLower(ctx.Args[1])
+			if val == "off" || val == "disable" || val == "false" {
+				setting = false
+			}
+		}
+
+		if err := p.SetPreset(sub, setting); err != nil {
+			return ctx.Reply(fmt.Sprintf("[!] Failed to set preset: %v", err))
+		}
+
+		if setting {
+			return ctx.Reply(fmt.Sprintf("[+] Preset **%s** turned ON.", sub))
+		}
+		return ctx.Reply(fmt.Sprintf("[+] Preset **%s** turned OFF.", sub))
 	},
 }
 
@@ -386,16 +613,16 @@ var Clear = &manager.Command{
 }
 
 func findUserVC(s *discordgo.Session, gid, uid string) string {
-	g, err := s.State.Guild(gid)
-	if err != nil {
-		g, err = s.Guild(gid)
-		if err != nil {
-			return ""
-		}
+	vs, err := s.State.VoiceState(gid, uid)
+	if err == nil && vs != nil {
+		return vs.ChannelID
 	}
-	for _, vs := range g.VoiceStates {
-		if vs.UserID == uid {
-			return vs.ChannelID
+	g, err := s.State.Guild(gid)
+	if err == nil {
+		for _, v := range g.VoiceStates {
+			if v.UserID == uid {
+				return v.ChannelID
+			}
 		}
 	}
 	return ""
@@ -410,6 +637,24 @@ func formatDur(ms int64) string {
 		return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 	}
 	return fmt.Sprintf("%02d:%02d", m, s)
+}
+
+func parseDurationToMs(input string) int64 {
+	if strings.Contains(input, ":") {
+		parts := strings.Split(input, ":")
+		if len(parts) == 2 {
+			m, _ := strconv.Atoi(parts[0])
+			s, _ := strconv.Atoi(parts[1])
+			return int64(m*60+s) * 1000
+		} else if len(parts) == 3 {
+			h, _ := strconv.Atoi(parts[0])
+			m, _ := strconv.Atoi(parts[1])
+			s, _ := strconv.Atoi(parts[2])
+			return int64(h*3600+m*60+s) * 1000
+		}
+	}
+	s, _ := strconv.Atoi(input)
+	return int64(s) * 1000
 }
 
 func makeProgressBar(current, total int64, width int) string {

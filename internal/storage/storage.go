@@ -74,6 +74,36 @@ var (
 	bktLockdownIgnores   = []byte("LockdownIgnores")
 	bktRestrictedCmds    = []byte("RestrictedCmds")
 	bktWatchedThreads    = []byte("WatchedThreads")
+	bktHighlights        = []byte("Highlights")
+	bktHighlightIgnores  = []byte("HighlightIgnores")
+	bktEmojiStats        = []byte("EmojiStats")
+	bktSavedEmbeds       = []byte("SavedEmbeds")
+	bktNameHistory       = []byte("NameHistory")
+	bktAFKMentions       = []byte("AFKMentions")
+	bktTicketProfiles    = []byte("TicketProfiles")
+	bktTicketPanels      = []byte("TicketPanels")
+	bktTicketOptions     = []byte("TicketOptions")
+	bktTicketStaffProfiles = []byte("TicketStaffProfiles")
+	bktTicketChannels    = []byte("TicketChannels")
+	bktTicketStats       = []byte("TicketStats")
+	bktTicketReasons     = []byte("TicketReasons")
+	bktReactionTriggers  = []byte("ReactionTriggers")
+	bktPrevReactTriggers = []byte("PrevReactTriggers")
+	bktMsgAutoReacts     = []byte("MsgAutoReacts")
+	bktNoSelfReact       = []byte("NoSelfReact")
+	bktLevelsCfg         = []byte("LevelsCfg")
+	bktLevelsXP          = []byte("LevelsXP")
+	bktLevelsRoles       = []byte("LevelsRoles")
+	bktGiveaways         = []byte("Giveaways")
+	bktRestoreRoles      = []byte("RestoreRoles")
+	bktClownboardCfg     = []byte("ClownboardCfg")
+	bktClownboardMsg     = []byte("ClownboardMsg")
+	bktAITokens          = []byte("AITokens")
+	bktBackups           = []byte("Backups")
+	bktAIConvos          = []byte("AIConvos")
+	bktQuarantine        = []byte("Quarantine")
+	bktJournal           = []byte("Journal")
+	bktCustomCmds        = []byte("CustomCommands")
 
 	keyGlobal = []byte("cfg")
 )
@@ -90,11 +120,13 @@ type DB struct {
 }
 
 func Open(path string) (*DB, error) {
+	if err := InitCrypto(); err != nil {
+		return nil, fmt.Errorf("crypto init: %w", err)
+	}
 	opts := &bolt.Options{
-		Timeout:         1 * time.Second,
-		NoSync:          true,
-		FreelistType:    bolt.FreelistMapType,
-		InitialMmapSize: 1 << 30, // 1GB
+		Timeout:      1 * time.Second,
+		NoSync:       true,
+		FreelistType: bolt.FreelistMapType,
 	}
 	b, err := bolt.Open(path, 0600, opts)
 	if err != nil {
@@ -118,7 +150,15 @@ func Open(path string) (*DB, error) {
 			bktGuildSettings, bktAliases, bktWelcomeMsgs, bktGoodbyeMsgs,
 			bktStickyMsgs, bktImgOnlyChans, bktBoostMsgs, bktBoosterShares,
 			bktBoosterFilters, bktNotes, bktLockdownIgnores, bktRestrictedCmds,
-			bktWatchedThreads,
+			bktWatchedThreads, bktHighlights, bktHighlightIgnores, bktEmojiStats,
+			bktSavedEmbeds, bktNameHistory, bktAFKMentions,
+			bktTicketProfiles, bktTicketPanels, bktTicketOptions,
+			bktTicketStaffProfiles, bktTicketChannels, bktTicketStats,
+			bktTicketReasons, bktReactionTriggers, bktPrevReactTriggers,
+			bktMsgAutoReacts, bktNoSelfReact,
+			bktLevelsCfg, bktLevelsXP, bktLevelsRoles, bktGiveaways, bktRestoreRoles,
+			bktClownboardCfg, bktClownboardMsg,
+			bktAITokens, bktBackups, bktAIConvos, bktQuarantine, bktJournal, bktCustomCmds,
 		} {
 			if _, err := tx.CreateBucketIfNotExists(name); err != nil {
 				return err
@@ -271,3 +311,9 @@ func (d *DB) View(fn func(tx *bolt.Tx) error) error {
 	return d.b.View(fn)
 }
 
+type CmdRestriction struct {
+	RoleID         string   `json:"role_id,omitempty"`
+	ServerDisabled bool     `json:"server_disabled,omitempty"`
+	WhitelistChans []string `json:"whitelist_chans,omitempty"`
+	BlacklistChans []string `json:"blacklist_chans,omitempty"`
+}

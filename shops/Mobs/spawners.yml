@@ -1,0 +1,200 @@
+pages:
+  page1:
+    items:
+      allay_spawner:
+        material: SPAWNER
+        spawnertype: ALLAY
+        buy: 225000
+        sell: -1
+      axolotl_spawner:
+        material: SPAWNER
+        spawnertype: AXOLOTL
+        buy: 150000
+        sell: -1
+      bat_spawner:
+        material: SPAWNER
+        spawnertype: BAT
+        buy: 10000
+        sell: -1
+      blaze_spawner:
+        material: SPAWNER
+        spawnertype: BLAZE
+        buy: 125000
+        sell: -1
+      bogged_spawner:
+        material: SPAWNER
+        spawnertype: BOGGED
+        buy: 100000
+        sell: -1
+      breeze_spawner:
+        material: SPAWNER
+        spawnertype: BREEZE
+        buy: 100000
+        sell: -1
+      camel_spawner:
+        material: SPAWNER
+        spawnertype: CAMEL
+        buy: 50000
+        sell: -1
+      cat_spawner:
+        material: SPAWNER
+        spawnertype: CAT
+        buy: 25000
+        sell: -1
+      cave_spider_spawner:
+        material: SPAWNER
+        spawnertype: CAVE_SPIDER
+        buy: 50000
+        sell: -1
+      chicken_spawner:
+        material: SPAWNER
+        spawnertype: CHICKEN
+        buy: 15000
+        sell: -1
+      cod_spawner:
+        material: SPAWNER
+        spawnertype: COD
+        buy: 10000
+        sell: -1
+      cow_spawner:
+        material: SPAWNER
+        spawnertype: COW
+        buy: 100000
+        sell: -1
+      creeper_spawner:
+        material: SPAWNER
+        spawnertype: CREEPER
+        buy: 150000
+        sell: -1
+      enderman_spawner:
+        material: SPAWNER
+        spawnertype: ENDERMAN
+        buy: 175000
+        sell: -1
+      frog_spawner:
+        material: SPAWNER
+        spawnertype: FROG
+        buy: 395000
+        sell: -1
+      glow_squid_spawner:
+        material: SPAWNER
+        spawnertype: GLOW_SQUID
+        buy: 100000
+        sell: -1
+      goat_spawner:
+        material: SPAWNER
+        spawnertype: GOAT
+        buy: 120000
+        sell: -1
+      horse_spawner:
+        material: SPAWNER
+        spawnertype: HORSE
+        buy: 65000
+        sell: -1
+      husk_spawner:
+        material: SPAWNER
+        spawnertype: HUSK
+        buy: 125000
+        sell: -1
+      iron_golem_spawner:
+        material: SPAWNER
+        spawnertype: IRON_GOLEM
+        buy: 1000000
+        sell: -1
+      magma_cube_spawner:
+        material: SPAWNER
+        spawnertype: MAGMA_CUBE
+        buy: 500000
+        sell: -1
+      mushroom_cow_spawner:
+        material: SPAWNER
+        spawnertype: MUSHROOM_COW
+        buy: 125000
+        sell: -1
+      panda_spawner:
+        material: SPAWNER
+        spawnertype: PANDA
+        buy: 50000
+        sell: -1
+      parrot_spawner:
+        material: SPAWNER
+        spawnertype: PARROT
+        buy: 30000
+        sell: -1
+      phantom_spawner:
+        material: SPAWNER
+        spawnertype: PHANTOM
+        buy: 250000
+        sell: -1
+      piglin_brute_spawner:
+        material: SPAWNER
+        spawnertype: PIGLIN_BRUTE
+        buy: 2000000
+        sell: -1
+      rabbit_spawner:
+        material: SPAWNER
+        spawnertype: RABBIT
+        buy: 45000
+        sell: -1
+      sheep_spawner:
+        material: SPAWNER
+        spawnertype: SHEEP
+        buy: 45000
+        sell: -1
+  page2:
+    items:
+      shulker_spawner:
+        material: SPAWNER
+        spawnertype: SHULKER
+        buy: 500000
+        sell: -1
+      skeleton_spawner:
+        material: SPAWNER
+        spawnertype: SKELETON
+        buy: 125000
+        sell: -1
+      slime_spawner:
+        material: SPAWNER
+        spawnertype: SLIME
+        buy: 550000
+        sell: -1
+      sniffer_spawner:
+        material: SPAWNER
+        spawnertype: SNIFFER
+        buy: 45000
+        sell: -1
+      spider_spawner:
+        material: SPAWNER
+        spawnertype: SPIDER
+        buy: 45000
+        sell: -1
+      squid_spawner:
+        material: SPAWNER
+        spawnertype: SQUID
+        buy: 100000
+        sell: -1
+      strider_spawner:
+        material: SPAWNER
+        spawnertype: STRIDER
+        buy: 45000
+        sell: -1
+      witch_spawner:
+        material: SPAWNER
+        spawnertype: WITCH
+        buy: 500000
+        sell: -1
+      wolf_spawner:
+        material: SPAWNER
+        spawnertype: WOLF
+        buy: 250000
+        sell: -1
+      zombie_spawner:
+        material: SPAWNER
+        spawnertype: ZOMBIE
+        buy: 120000
+        sell: -1
+      zombified_piglin_spawner:
+        material: SPAWNER
+        spawnertype: ZOMBIFIED_PIGLIN
+        buy: 120000
+        sell: -1

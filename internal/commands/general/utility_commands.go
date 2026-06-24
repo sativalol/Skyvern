@@ -1,5 +1,4 @@
 package general
-
 import (
 	"encoding/json"
 	"fmt"
@@ -11,11 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
-// FirstMessage
 var FirstMessage = &manager.Command{
 	Trigger:     "firstmessage",
 	Aliases:     []string{"fm", "oldest"},
@@ -36,8 +32,6 @@ var FirstMessage = &manager.Command{
 		return ctx.Respond(emb)
 	},
 }
-
-// InRole Pagination component
 func HandleInRoleComponent(s *discordgo.Session, i *discordgo.InteractionCreate, mgr *manager.Manager) {
 	parts := strings.Split(i.MessageComponentData().CustomID, ":")
 	if len(parts) < 3 {
@@ -45,13 +39,11 @@ func HandleInRoleComponent(s *discordgo.Session, i *discordgo.InteractionCreate,
 	}
 	rid := parts[1]
 	page, _ := strconv.Atoi(parts[2])
-
 	gid := i.GuildID
 	members, err := s.GuildMembers(gid, "", 1000)
 	if err != nil {
 		return
 	}
-
 	var inRoleUsers []string
 	for _, m := range members {
 		for _, r := range m.Roles {
@@ -61,7 +53,6 @@ func HandleInRoleComponent(s *discordgo.Session, i *discordgo.InteractionCreate,
 			}
 		}
 	}
-
 	pages := (len(inRoleUsers) + 9) / 10
 	if pages == 0 {
 		pages = 1
@@ -72,22 +63,17 @@ func HandleInRoleComponent(s *discordgo.Session, i *discordgo.InteractionCreate,
 	if page > pages {
 		page = pages
 	}
-
 	start := (page - 1) * 10
 	end := start + 10
 	if end > len(inRoleUsers) {
 		end = len(inRoleUsers)
 	}
-
 	slice := inRoleUsers[start:end]
-
 	resCfg, _ := mgr.ResolvedCfgFor(s.State.User.ID)
-
 	emb := config.Build(resCfg, config.EmbedOpt{
 		Title:       "Users in Role",
 		Description: fmt.Sprintf("Showing page **%d** of **%d**:\n\n%s", page, pages, strings.Join(slice, "\n")),
 	})
-
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: &discordgo.InteractionResponseData{
@@ -113,9 +99,9 @@ func HandleInRoleComponent(s *discordgo.Session, i *discordgo.InteractionCreate,
 		},
 	})
 }
-
 var InRole = &manager.Command{
 	Trigger:     "inrole",
+	Aliases:     []string{"members", "member"},
 	Name:        "inrole",
 	Description: "List users who have a specific role with pagination",
 	Category:    "general",
@@ -123,19 +109,16 @@ var InRole = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.Reply("Usage: .inrole <role>")
 		}
-
 		gid := ctx.GuildID()
 		roleArg := strings.Join(ctx.Args, " ")
 		rid := resolveRole(ctx.Session, gid, roleArg)
 		if rid == "" {
 			return ctx.Reply("[!] Could not resolve role.")
 		}
-
 		members, err := ctx.Session.GuildMembers(gid, "", 1000)
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Failed to fetch members: %v", err))
 		}
-
 		var inRoleUsers []string
 		for _, m := range members {
 			for _, r := range m.Roles {
@@ -145,39 +128,31 @@ var InRole = &manager.Command{
 				}
 			}
 		}
-
 		if len(inRoleUsers) == 0 {
 			return ctx.Reply("[*] No users currently have this role.")
 		}
-
 		pages := (len(inRoleUsers) + 9) / 10
 		end := 10
 		if end > len(inRoleUsers) {
 			end = len(inRoleUsers)
 		}
-
 		emb := config.Build(ctx.Cfg, config.EmbedOpt{
 			Title:       "Users in Role",
 			Description: fmt.Sprintf("Showing page **1** of **%d**:\n\n%s", pages, strings.Join(inRoleUsers[0:end], "\n")),
 		})
-
 		return ctx.Respond(emb)
 	},
 }
-
-// Math Engine
 type parser struct {
 	expr string
 	pos  int
 }
-
 func (p *parser) peek() byte {
 	if p.pos >= len(p.expr) {
 		return 0
 	}
 	return p.expr[p.pos]
 }
-
 func (p *parser) next() byte {
 	b := p.peek()
 	if b != 0 {
@@ -185,13 +160,11 @@ func (p *parser) next() byte {
 	}
 	return b
 }
-
 func (p *parser) consumeSpace() {
 	for p.peek() == ' ' {
 		p.pos++
 	}
 }
-
 func (p *parser) parseExpression() (float64, error) {
 	val, err := p.parseTerm()
 	if err != nil {
@@ -217,7 +190,6 @@ func (p *parser) parseExpression() (float64, error) {
 	}
 	return val, nil
 }
-
 func (p *parser) parseTerm() (float64, error) {
 	val, err := p.parsePower()
 	if err != nil {
@@ -246,7 +218,6 @@ func (p *parser) parseTerm() (float64, error) {
 	}
 	return val, nil
 }
-
 func (p *parser) parsePower() (float64, error) {
 	val, err := p.parseFactor()
 	if err != nil {
@@ -263,7 +234,6 @@ func (p *parser) parsePower() (float64, error) {
 	}
 	return val, nil
 }
-
 func (p *parser) parseFactor() (float64, error) {
 	p.consumeSpace()
 	b := p.peek()
@@ -288,7 +258,6 @@ func (p *parser) parseFactor() (float64, error) {
 		}
 		return val, nil
 	}
-
 	start := p.pos
 	for {
 		c := p.peek()
@@ -331,7 +300,6 @@ func (p *parser) parseFactor() (float64, error) {
 			return 0, fmt.Errorf("unknown function %q", name)
 		}
 	}
-
 	startNum := p.pos
 	hasDot := false
 	for {
@@ -357,7 +325,6 @@ func (p *parser) parseFactor() (float64, error) {
 	}
 	return num, nil
 }
-
 var Math = &manager.Command{
 	Trigger:     "math",
 	Aliases:     []string{"calc"},
@@ -368,19 +335,15 @@ var Math = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.Reply("Usage: .math <expression> (e.g. .math 2 * (10 / 5) ^ 3)")
 		}
-
 		expr := strings.Join(ctx.Args, "")
 		p := &parser{expr: expr}
 		res, err := p.parseExpression()
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] Calculation Error: %v", err))
 		}
-
 		return ctx.Reply(fmt.Sprintf("[*] **Expression:** `%s` \n[+] **Result:** `%g` / `%f`", expr, res, res))
 	},
 }
-
-// Messages
 var Messages = &manager.Command{
 	Trigger:     "messages",
 	Aliases:     []string{"msgs", "msg"},
@@ -409,7 +372,6 @@ var Messages = &manager.Command{
 				return ctx.Reply(sb.String())
 			}
 		}
-
 		target := ctx.AuthorID()
 		if len(ctx.Args) > 0 {
 			usr, err := resolveUser(ctx.Session, ctx.GuildID(), ctx.Args[0])
@@ -421,8 +383,6 @@ var Messages = &manager.Command{
 		return ctx.Reply(fmt.Sprintf("<@%s> has sent **%d** messages in this server.", target, count))
 	},
 }
-
-// Whoisweb
 func isIP(query string) bool {
 	for _, c := range query {
 		if (c >= '0' && c <= '9') || c == '.' || c == ':' {
@@ -432,7 +392,6 @@ func isIP(query string) bool {
 	}
 	return true
 }
-
 var WhoisWeb = &manager.Command{
 	Trigger:     "whoisweb",
 	Name:        "whoisweb",
@@ -442,34 +401,27 @@ var WhoisWeb = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.Reply("Usage: .whoisweb <domain/ip>")
 		}
-
 		query := ctx.Args[0]
 		url := "https://rdap.org/domain/" + query
 		if isIP(query) {
 			url = "https://rdap.org/ip/" + query
 		}
-
 		resp, err := http.Get(url) // #nosec G107
 		if err != nil {
 			return ctx.Reply(fmt.Sprintf("[!] WHOIS lookup failed: %v", err))
 		}
 		defer resp.Body.Close()
-
 		if resp.StatusCode == 404 {
 			return ctx.Reply("[!] Domain or IP address not found in RDAP registry.")
 		}
-
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return ctx.Reply("[!] Failed to read WHOIS response.")
 		}
-
 		var data map[string]any
 		_ = json.Unmarshal(body, &data)
-
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("WHOIS Web Data for **%s**:\n\n", query))
-
 		if ldh, ok := data["ldhName"].(string); ok {
 			sb.WriteString(fmt.Sprintf("- **Name:** %s\n", ldh))
 		}
@@ -493,7 +445,6 @@ var WhoisWeb = &manager.Command{
 				}
 			}
 		}
-
 		return ctx.Reply(sb.String())
 	},
 }

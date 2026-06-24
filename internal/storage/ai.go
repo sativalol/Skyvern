@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -120,6 +122,37 @@ func (d *DB) ListAIPrompts() ([]AIPrompt, error) {
 			}
 			return nil
 		})
+	})
+	return list, err
+}
+
+type AIConvo struct {
+	ID        string    `json:"id"`
+	UID       string    `json:"uid"`
+	Prompt    string    `json:"prompt"`
+	Response  string    `json:"response"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+func (d *DB) SaveAIConvo(ac AIConvo) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		return putJSON(tx.Bucket(bktAIConvos), []byte(ac.UID+":"+ac.ID), ac)
+	})
+}
+
+func (d *DB) ListAIConvos(uid string) ([]AIConvo, error) {
+	var list []AIConvo
+	err := d.b.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(bktAIConvos)
+		c := bkt.Cursor()
+		prefix := []byte(uid + ":")
+		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+			var ac AIConvo
+			if err := json.Unmarshal(v, &ac); err == nil {
+				list = append(list, ac)
+			}
+		}
+		return nil
 	})
 	return list, err
 }

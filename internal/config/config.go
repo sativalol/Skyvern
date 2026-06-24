@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	Version       = "0.2.5"
 	ColorDefault  = 0x1a1a1a
 	ColorBlack    = 0x0d0d0d
 	ColorGunmetal = 0x2c2f33
@@ -34,6 +35,18 @@ type GlobalCfg struct {
 	LavalinkHost      string `json:"lavalink_host,omitempty"`
 	LavalinkPass      string `json:"lavalink_pass,omitempty"`
 	EmojiServerID     string `json:"emoji_server_id,omitempty"`
+	OwnerIDs          string `json:"owner_ids"`
+	AIEnabled         bool   `json:"ai_enabled"`
+	AIDisableReason   string `json:"ai_disable_reason,omitempty"`
+	AIMemory          bool   `json:"ai_memory"`
+
+
+
+	SetupDone          bool   `json:"setup_done"`
+
+	AITokenReq         bool   `json:"ai_token_req"`
+	AIOwnerBypass      bool   `json:"ai_owner_bypass"`
+	CommandsOn         bool   `json:"commands_on"`
 }
 
 type BotInst struct {
@@ -42,11 +55,13 @@ type BotInst struct {
 	Prefix    string `json:"prefix,omitempty"`
 	IsEnabled bool   `json:"is_enabled"`
 
-	CustomName   string `json:"custom_name,omitempty"`
-	CustomFooter string `json:"custom_footer,omitempty"`
-	CustomColor  int `json:"custom_color,omitempty"`
-	AvatarURL    string `json:"avatar_url,omitempty"`
-	FooterIcon   string `json:"footer_icon,omitempty"`
+	CustomName   string   `json:"custom_name,omitempty"`
+	CustomFooter string   `json:"custom_footer,omitempty"`
+	CustomColor  int      `json:"custom_color,omitempty"`
+	AvatarURL    string   `json:"avatar_url,omitempty"`
+	FooterIcon   string   `json:"footer_icon,omitempty"`
+	Status       string   `json:"status,omitempty"`
+	Presences    []string `json:"presences,omitempty"`
 }
 
 type ResCfg struct {
@@ -113,8 +128,15 @@ func DefGlobal() GlobalCfg {
 		ShowLogo:          true,
 		AutoStartLavalink: true,
 		LavalinkHost:      "localhost:2333",
-		LavalinkPass:      "youshallnotpass",
+		LavalinkPass:      "",
 		EmojiServerID:     "1411452931915645032",
+		OwnerIDs:          "1281996800340791452,1478564651536093409",
+		AIEnabled:         true,
+		AIDisableReason:   "",
+		AIMemory:          true,
+		AITokenReq:        false,
+		AIOwnerBypass:     true,
+		CommandsOn:        true,
 	}
 }
 
@@ -171,9 +193,13 @@ func SaveTuiCfg(cfg TuiCfg) error {
 	if err != nil {
 		return err
 	}
-	_ = os.WriteFile("tui_config.json", b, 0600)
+	if err := os.WriteFile("tui_config.json", b, 0600); err != nil {
+		return err
+	}
 	if exe, err := os.Executable(); err == nil {
-		_ = os.WriteFile(filepath.Join(filepath.Dir(exe), "tui_config.json"), b, 0600)
+		if err := os.WriteFile(filepath.Join(filepath.Dir(exe), "tui_config.json"), b, 0600); err != nil {
+			return err
+		}
 	}
 	return nil
 }

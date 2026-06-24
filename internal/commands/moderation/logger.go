@@ -6,8 +6,6 @@ import (
 	"skyvern/internal/manager"
 	"skyvern/internal/storage"
 	"strings"
-
-	"github.com/bwmarrin/discordgo"
 )
 
 var rxHexColor = regexp.MustCompile(`^#?[0-9A-Fa-f]{6}$`)
@@ -44,10 +42,6 @@ var Log = &manager.Command{
 	Description: "Configure audit logging",
 	Category:    "moderation",
 	Execute: func(ctx *manager.CommandContext) error {
-		if !checkPerm(ctx, discordgo.PermissionManageGuild) {
-			return ctx.Reply("[!] Manage Guild permission required.")
-		}
-
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("log")
 		}
@@ -76,7 +70,7 @@ var Log = &manager.Command{
 
 func handleAdd(ctx *manager.CommandContext) error {
 	if len(ctx.Args) < 3 {
-		return ctx.Reply("[!] Usage: .log add <#channel> <event>")
+		return ctx.Reply(fmt.Sprintf("%s Usage: .log add <#channel> <event>", ctx.WarningEmoji()))
 	}
 
 	cid := ""
@@ -88,12 +82,12 @@ func handleAdd(ctx *manager.CommandContext) error {
 
 	ch, err := ctx.Session.Channel(cid)
 	if err != nil || ch.GuildID != ctx.GuildID() {
-		return ctx.Reply("[!] Invalid channel.")
+		return ctx.Reply(fmt.Sprintf("%s Invalid channel.", ctx.ErrorEmoji()))
 	}
 
 	event := strings.ToLower(ctx.Args[2])
 	if !isValidCategory(event) {
-		return ctx.Reply(fmt.Sprintf("[!] Invalid event. Valid choices: %s, all", strings.Join(categories, ", ")))
+		return ctx.Reply(fmt.Sprintf("%s Invalid event. Valid choices: %s, all", ctx.ErrorEmoji(), strings.Join(categories, ", ")))
 	}
 
 	var cats []string
@@ -111,12 +105,12 @@ func handleAdd(ctx *manager.CommandContext) error {
 		})
 	}
 
-	return ctx.Reply(fmt.Sprintf("[+] Logging **%s** in %s.", event, ch.Mention()))
+	return ctx.Reply(fmt.Sprintf("%s Logging **%s** in %s.", ctx.SuccessEmoji(), event, ch.Mention()))
 }
 
 func handleRemove(ctx *manager.CommandContext) error {
 	if len(ctx.Args) < 3 {
-		return ctx.Reply("[!] Usage: .log remove <#channel> <event>")
+		return ctx.Reply(fmt.Sprintf("%s Usage: .log remove <#channel> <event>", ctx.WarningEmoji()))
 	}
 
 	cid := ""
@@ -128,12 +122,12 @@ func handleRemove(ctx *manager.CommandContext) error {
 
 	ch, err := ctx.Session.Channel(cid)
 	if err != nil || ch.GuildID != ctx.GuildID() {
-		return ctx.Reply("[!] Invalid channel.")
+		return ctx.Reply(fmt.Sprintf("%s Invalid channel.", ctx.ErrorEmoji()))
 	}
 
 	event := strings.ToLower(ctx.Args[2])
 	if !isValidCategory(event) {
-		return ctx.Reply(fmt.Sprintf("[!] Invalid event. Valid choices: %s, all", strings.Join(categories, ", ")))
+		return ctx.Reply(fmt.Sprintf("%s Invalid event. Valid choices: %s, all", ctx.ErrorEmoji(), strings.Join(categories, ", ")))
 	}
 
 	if event == "all" {
@@ -142,12 +136,12 @@ func handleRemove(ctx *manager.CommandContext) error {
 		_ = ctx.DB.DeleteLoggerSub(ctx.GuildID(), ch.ID, event)
 	}
 
-	return ctx.Reply(fmt.Sprintf("[+] Stopped logging **%s** in %s.", event, ch.Mention()))
+	return ctx.Reply(fmt.Sprintf("%s Stopped logging **%s** in %s.", ctx.SuccessEmoji(), event, ch.Mention()))
 }
 
 func handleColor(ctx *manager.CommandContext) error {
 	if len(ctx.Args) < 4 {
-		return ctx.Reply("[!] Usage: .log color <#channel> <event> <hex>")
+		return ctx.Reply(fmt.Sprintf("%s Usage: .log color <#channel> <event> <hex>", ctx.WarningEmoji()))
 	}
 
 	cid := ""
@@ -159,17 +153,17 @@ func handleColor(ctx *manager.CommandContext) error {
 
 	ch, err := ctx.Session.Channel(cid)
 	if err != nil || ch.GuildID != ctx.GuildID() {
-		return ctx.Reply("[!] Invalid channel.")
+		return ctx.Reply(fmt.Sprintf("%s Invalid channel.", ctx.ErrorEmoji()))
 	}
 
 	event := strings.ToLower(ctx.Args[2])
 	if !isValidCategory(event) || event == "all" {
-		return ctx.Reply(fmt.Sprintf("[!] Invalid event. Valid choices: %s", strings.Join(categories, ", ")))
+		return ctx.Reply(fmt.Sprintf("%s Invalid event. Valid choices: %s", ctx.ErrorEmoji(), strings.Join(categories, ", ")))
 	}
 
 	color := ctx.Args[3]
 	if !rxHexColor.MatchString(color) {
-		return ctx.Reply("[!] Invalid hex color code.")
+		return ctx.Reply(fmt.Sprintf("%s Invalid hex color code.", ctx.ErrorEmoji()))
 	}
 	if !strings.HasPrefix(color, "#") {
 		color = "#" + color
@@ -177,7 +171,7 @@ func handleColor(ctx *manager.CommandContext) error {
 
 	subs, err := ctx.DB.GetChannelLoggerSubs(ctx.GuildID(), ch.ID)
 	if err != nil {
-		return ctx.Reply("[!] Database error.")
+		return ctx.Reply(fmt.Sprintf("%s Database error.", ctx.ErrorEmoji()))
 	}
 
 	var targetSub *storage.LoggerSub
@@ -189,18 +183,18 @@ func handleColor(ctx *manager.CommandContext) error {
 	}
 
 	if targetSub == nil {
-		return ctx.Reply(fmt.Sprintf("[!] Event **%s** is not active in %s.", event, ch.Mention()))
+		return ctx.Reply(fmt.Sprintf("%s Event **%s** is not active in %s.", ctx.ErrorEmoji(), event, ch.Mention()))
 	}
 
 	targetSub.EmbedColor = color
 	_ = ctx.DB.SaveLoggerSub(*targetSub)
 
-	return ctx.Reply(fmt.Sprintf("[+] Color override set for **%s** to `%s` in %s.", event, color, ch.Mention()))
+	return ctx.Reply(fmt.Sprintf("%s Color override set for **%s** to `%s` in %s.", ctx.SuccessEmoji(), event, color, ch.Mention()))
 }
 
 func handleColorList(ctx *manager.CommandContext) error {
 	if len(ctx.Args) < 3 {
-		return ctx.Reply("[!] Usage: .log color list <#channel>")
+		return ctx.Reply(fmt.Sprintf("%s Usage: .log color list <#channel>", ctx.WarningEmoji()))
 	}
 
 	cid := ""
@@ -212,12 +206,12 @@ func handleColorList(ctx *manager.CommandContext) error {
 
 	ch, err := ctx.Session.Channel(cid)
 	if err != nil || ch.GuildID != ctx.GuildID() {
-		return ctx.Reply("[!] Invalid channel.")
+		return ctx.Reply(fmt.Sprintf("%s Invalid channel.", ctx.ErrorEmoji()))
 	}
 
 	subs, err := ctx.DB.GetChannelLoggerSubs(ctx.GuildID(), ch.ID)
 	if err != nil {
-		return ctx.Reply("[!] Database error.")
+		return ctx.Reply(fmt.Sprintf("%s Database error.", ctx.ErrorEmoji()))
 	}
 
 	var lines []string
@@ -228,15 +222,15 @@ func handleColorList(ctx *manager.CommandContext) error {
 	}
 
 	if len(lines) == 0 {
-		return ctx.Reply(fmt.Sprintf("[*] No custom display colors in %s.", ch.Mention()))
+		return ctx.Reply(fmt.Sprintf("%s No custom display colors in %s.", ctx.WarningEmoji(), ch.Mention()))
 	}
 
-	return ctx.Reply(fmt.Sprintf("[*] Custom colors in %s:\n\n%s", ch.Mention(), strings.Join(lines, "\n")))
+	return ctx.Reply(fmt.Sprintf("%s Custom colors in %s:\n\n%s", ctx.SuccessEmoji(), ch.Mention(), strings.Join(lines, "\n")))
 }
 
 func handleIgnore(ctx *manager.CommandContext) error {
 	if len(ctx.Args) < 2 {
-		return ctx.Reply("[!] Usage: .log ignore <@member|#channel>")
+		return ctx.Reply(fmt.Sprintf("%s Usage: .log ignore <@member|#channel>", ctx.WarningEmoji()))
 	}
 
 	target := ctx.Args[1]
@@ -259,12 +253,12 @@ func handleIgnore(ctx *manager.CommandContext) error {
 	}
 
 	if targetID == "" || targetType == "" {
-		return ctx.Reply("[!] Could not resolve member or channel.")
+		return ctx.Reply(fmt.Sprintf("%s Could not resolve member or channel.", ctx.ErrorEmoji()))
 	}
 
 	if ctx.DB.IsLoggerIgnored(ctx.GuildID(), targetID) {
 		_ = ctx.DB.DeleteLoggerIgnore(ctx.GuildID(), targetID)
-		return ctx.Reply(fmt.Sprintf("[+] Removed exclusion for target `%s`.", targetID))
+		return ctx.Reply(fmt.Sprintf("%s Removed exclusion for target `%s`.", ctx.SuccessEmoji(), targetID))
 	}
 
 	_ = ctx.DB.SaveLoggerIgnore(storage.LoggerIgnore{
@@ -273,17 +267,17 @@ func handleIgnore(ctx *manager.CommandContext) error {
 		TargetType: targetType,
 	})
 
-	return ctx.Reply(fmt.Sprintf("[+] Excluded target `%s` (%s) from audit logging.", targetID, targetType))
+	return ctx.Reply(fmt.Sprintf("%s Excluded target `%s` (%s) from audit logging.", ctx.SuccessEmoji(), targetID, targetType))
 }
 
 func handleIgnoreList(ctx *manager.CommandContext) error {
 	ignores, err := ctx.DB.GetLoggerIgnores(ctx.GuildID())
 	if err != nil {
-		return ctx.Reply("[!] Database error.")
+		return ctx.Reply(fmt.Sprintf("%s Database error.", ctx.ErrorEmoji()))
 	}
 
 	if len(ignores) == 0 {
-		return ctx.Reply("[*] No entities are excluded from logging.")
+		return ctx.Reply(fmt.Sprintf("%s No entities are excluded from logging.", ctx.WarningEmoji()))
 	}
 
 	var lines []string
@@ -297,5 +291,5 @@ func handleIgnoreList(ctx *manager.CommandContext) error {
 		lines = append(lines, fmt.Sprintf("%s (%s)", mention, ig.TargetType))
 	}
 
-	return ctx.Reply(fmt.Sprintf("[*] Excluded from logs:\n\n%s", strings.Join(lines, "\n")))
+	return ctx.Reply(fmt.Sprintf("%s Excluded from logs:\n\n%s", ctx.SuccessEmoji(), strings.Join(lines, "\n")))
 }

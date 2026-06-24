@@ -1,13 +1,10 @@
 package utility
-
 import (
 	"fmt"
 	"skyvern/internal/manager"
 	"strings"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 func init() {
 	manager.RegisterHelp("invoke", []manager.HelpPage{
 		{
@@ -27,31 +24,25 @@ func init() {
 		},
 	})
 }
-
 var Invoke = &manager.Command{
 	Trigger:     "invoke",
 	Name:        "invoke",
 	Description: "Manage custom dynamic commands",
 	Category:    "utility",
 	Execute: func(ctx *manager.CommandContext) error {
-		// Require manage guild permissions to define invokes
 		if ctx.Message != nil {
 			p, err := ctx.Session.UserChannelPermissions(ctx.AuthorID(), ctx.ChanID())
 			if err != nil || (p&discordgo.PermissionManageGuild) == 0 {
 				return ctx.Reply("[!] You need Manage Guild permission to manage custom invokes.")
 			}
 		}
-
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("invoke")
 		}
-
 		gid := ctx.GuildID()
 		sub := strings.ToLower(ctx.Args[0])
-
 		switch sub {
 		case "list":
-			// fetch all custom invokes configured for the guild
 			invokes, err := ctx.DB.ListInvokes(gid)
 			if err != nil || len(invokes) == 0 {
 				return ctx.Reply("[+] No custom invokes configured in this guild.")
@@ -62,7 +53,6 @@ var Invoke = &manager.Command{
 				sb.WriteString(fmt.Sprintf("`%s` -> `%s`\n", k, v))
 			}
 			return ctx.Reply(sb.String())
-
 		case "remove":
 			if len(ctx.Args) < 2 {
 				return ctx.SendHelp("invoke")
@@ -70,7 +60,6 @@ var Invoke = &manager.Command{
 			trigger := strings.ToLower(ctx.Args[1])
 			_ = ctx.DB.DeleteInvoke(gid, trigger)
 			return ctx.Reply(fmt.Sprintf("[+] Custom invoke `%s` removed.", trigger))
-
 		default:
 			if len(ctx.Args) < 2 {
 				return ctx.SendHelp("invoke")

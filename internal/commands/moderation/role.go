@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"regexp"
 	"skyvern/internal/manager"
-	"skyvern/internal/moderation"
 	"strconv"
 	"strings"
 	"sync"
@@ -133,13 +132,19 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.role add <member> <role>`")
 			}
-			m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[1])
-			if err != nil || m == nil {
-				return ctx.Reply("[!] Could not resolve member.")
+			m, err := resolveMemberOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
 			}
-			rid := resolveRole(ctx.Session, gid, ctx.Args[2])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[2])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
+			}
+			if !ctx.CheckHierarchy(m.User.ID) {
+				return ctx.Reply("[!] You cannot modify this member due to role hierarchy.")
 			}
 			err = ctx.Session.GuildMemberRoleAdd(gid, m.User.ID, rid)
 			if err != nil {
@@ -151,13 +156,19 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.role remove <member> <role>`")
 			}
-			m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[1])
-			if err != nil || m == nil {
-				return ctx.Reply("[!] Could not resolve member.")
+			m, err := resolveMemberOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
 			}
-			rid := resolveRole(ctx.Session, gid, ctx.Args[2])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[2])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
+			}
+			if !ctx.CheckHierarchy(m.User.ID) {
+				return ctx.Reply("[!] You cannot modify this member due to role hierarchy.")
 			}
 			err = ctx.Session.GuildMemberRoleRemove(gid, m.User.ID, rid)
 			if err != nil {
@@ -196,11 +207,14 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.role delete <role>`")
 			}
-			rid := resolveRole(ctx.Session, gid, ctx.Args[1])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
 			}
-			err := ctx.Session.GuildRoleDelete(gid, rid)
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
+			}
+			err = ctx.Session.GuildRoleDelete(gid, rid)
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to delete role: %v", err))
 			}
@@ -210,12 +224,15 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 3 {
 				return ctx.Reply("Usage: `.role edit <role> <new_name>`")
 			}
-			rid := resolveRole(ctx.Session, gid, ctx.Args[1])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 			}
 			name := strings.Join(ctx.Args[2:], " ")
-			_, err := ctx.Session.GuildRoleEdit(gid, rid, &discordgo.RoleParams{Name: name})
+			_, err = ctx.Session.GuildRoleEdit(gid, rid, &discordgo.RoleParams{Name: name})
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to edit role name: %v", err))
 			}
@@ -225,9 +242,12 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.role hoist <role>`")
 			}
-			rid := resolveRole(ctx.Session, gid, ctx.Args[1])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 			}
 			r, err := ctx.Session.State.Role(gid, rid)
 			if err != nil {
@@ -244,9 +264,12 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.role mentionable <role>`")
 			}
-			rid := resolveRole(ctx.Session, gid, ctx.Args[1])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 			}
 			r, err := ctx.Session.State.Role(gid, rid)
 			if err != nil {
@@ -269,9 +292,12 @@ var Role = &manager.Command{
 				}
 				c1 := ctx.Args[2]
 				c2 := ctx.Args[3]
-				rid := resolveRole(ctx.Session, gid, ctx.Args[4])
-				if rid == "" {
-					return ctx.Reply("[!] Could not resolve role.")
+				rid, err := resolveRoleOrReply(ctx, ctx.Args[4])
+				if err != nil {
+					return nil
+				}
+				if !ctx.CanManageRole(rid) {
+					return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 				}
 				b64, err := generateGradientPNG(c1, c2)
 				if err != nil {
@@ -292,9 +318,12 @@ var Role = &manager.Command{
 				return ctx.Reply("[!] Invalid hex color.")
 			}
 			colorInt := int(colorVal)
-			rid := resolveRole(ctx.Session, gid, ctx.Args[2])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[2])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 			}
 			_, err = ctx.Session.GuildRoleEdit(gid, rid, &discordgo.RoleParams{Color: &colorInt})
 			if err != nil {
@@ -307,9 +336,12 @@ var Role = &manager.Command{
 				return ctx.Reply("Usage: `.role icon <url> <role>`")
 			}
 			url := ctx.Args[1]
-			rid := resolveRole(ctx.Session, gid, ctx.Args[2])
-			if rid == "" {
-				return ctx.Reply("[!] Could not resolve role.")
+			rid, err := resolveRoleOrReply(ctx, ctx.Args[2])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CanManageRole(rid) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 			}
 			resp, err := http.Get(url)
 			if err != nil {
@@ -341,11 +373,10 @@ var Role = &manager.Command{
 				return ctx.Reply("[!] Invalid hex color.")
 			}
 			colorInt := int(colorVal)
-			m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[2])
-			if err != nil || m == nil {
-				return ctx.Reply("[!] Could not resolve member.")
+			m, err := resolveMemberOrReply(ctx, ctx.Args[2])
+			if err != nil {
+				return nil
 			}
-			// Find highest role that is editable
 			roles, err := ctx.Session.GuildRoles(gid)
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to fetch guild roles: %v", err))
@@ -367,6 +398,9 @@ var Role = &manager.Command{
 			if highestRole == nil {
 				return ctx.Reply("[!] Member has no roles.")
 			}
+			if !ctx.CanManageRole(highestRole.ID) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
+			}
 			_, err = ctx.Session.GuildRoleEdit(gid, highestRole.ID, &discordgo.RoleParams{Color: &colorInt})
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to change highest role color: %v", err))
@@ -377,9 +411,12 @@ var Role = &manager.Command{
 			if len(ctx.Args) < 2 {
 				return ctx.Reply("Usage: `.role restore <member>`")
 			}
-			m, err := moderation.ResolveMember(ctx.Session, gid, ctx.Args[1])
-			if err != nil || m == nil {
-				return ctx.Reply("[!] Could not resolve member.")
+			m, err := resolveMemberOrReply(ctx, ctx.Args[1])
+			if err != nil {
+				return nil
+			}
+			if !ctx.CheckHierarchy(m.User.ID) {
+				return ctx.Reply("[!] You cannot modify this member due to role hierarchy.")
 			}
 			oldRoles, err := ctx.DB.GetJailed(gid, m.User.ID)
 			if err != nil || len(oldRoles) == 0 {
@@ -409,11 +446,15 @@ var Role = &manager.Command{
 					isRemove = true
 					argIdx = 2
 				}
-				sourceRole := resolveRole(ctx.Session, gid, ctx.Args[argIdx])
-				targetRoles = append(targetRoles, resolveRole(ctx.Session, gid, ctx.Args[argIdx+1]))
-				if sourceRole == "" || targetRoles[0] == "" {
-					return ctx.Reply("[!] Could not resolve roles.")
+				sourceRole, err := resolveRoleOrReply(ctx, ctx.Args[argIdx])
+				if err != nil {
+					return nil
 				}
+				tr, err := resolveRoleOrReply(ctx, ctx.Args[argIdx+1])
+				if err != nil {
+					return nil
+				}
+				targetRoles = append(targetRoles, tr)
 				roleToAdd = sourceRole
 			} else {
 				if len(ctx.Args) < 2 {
@@ -423,11 +464,15 @@ var Role = &manager.Command{
 					isRemove = true
 					argIdx = 2
 				}
-				rid := resolveRole(ctx.Session, gid, ctx.Args[argIdx])
-				if rid == "" {
-					return ctx.Reply("[!] Could not resolve role.")
+				rid, err := resolveRoleOrReply(ctx, ctx.Args[argIdx])
+				if err != nil {
+					return nil
 				}
 				roleToAdd = rid
+			}
+
+			if !ctx.CanManageRole(roleToAdd) {
+				return ctx.Reply("[!] You cannot manage this role due to hierarchy.")
 			}
 
 			roleTasksMu.Lock()
@@ -483,6 +528,10 @@ var Role = &manager.Command{
 						_, _ = ctx.Session.ChannelMessageSend(ctx.ChanID(), fmt.Sprintf("[-] Bulk role update cancelled. Updated %d members.", modified))
 						return
 					default:
+					}
+
+					if !ctx.CheckHierarchy(m.User.ID) {
+						continue
 					}
 
 					hasRole := false

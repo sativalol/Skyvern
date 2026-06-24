@@ -1,0 +1,14 @@
+pages:
+  page1:
+    gui-rows: 3
+    items:
+      wheat:
+        material: WHEAT
+        displayname: '&a&lFarming'
+        section: crops
+        slot: 12
+      cooked_beef:
+        material: COOKED_BEEF
+        displayname: '&6&lFood'
+        section: food
+        slot: 16

@@ -154,10 +154,18 @@ var Translate = &manager.Command{
 		if len(ctx.Args) < 2 {
 			return ctx.SendHelp("translate")
 		}
-		lang := ctx.Args[0]
-		query := strings.Join(ctx.Args[1:], " ")
+		var toLang, fromLang, query string
+		if len(ctx.Args) >= 3 {
+			toLang = ctx.Args[0]
+			fromLang = ctx.Args[1]
+			query = strings.Join(ctx.Args[2:], " ")
+		} else {
+			toLang = ctx.Args[0]
+			fromLang = "auto"
+			query = ctx.Args[1]
+		}
 
-		apiURL := fmt.Sprintf("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=%s&dt=t&q=%s", lang, url.QueryEscape(query))
+		apiURL := fmt.Sprintf("https://translate.googleapis.com/translate_a/single?client=gtx&sl=%s&tl=%s&dt=t&q=%s", fromLang, toLang, url.QueryEscape(query))
 		res, err := http.Get(apiURL)
 		if err != nil {
 			return ctx.Reply("[!] Translation service offline.")
@@ -184,7 +192,7 @@ var Translate = &manager.Command{
 			}
 		}
 
-		return ctx.Reply(fmt.Sprintf("[*] **Translation (%s):** %s", lang, strings.Join(parts, "")))
+		return ctx.Reply(fmt.Sprintf("[*] **Translation (%s -> %s):** %s", fromLang, toLang, strings.Join(parts, "")))
 	},
 }
 
@@ -197,8 +205,22 @@ var TTS = &manager.Command{
 		if len(ctx.Args) == 0 {
 			return ctx.SendHelp("tts")
 		}
-		query := strings.Join(ctx.Args, " ")
-		apiURL := fmt.Sprintf("https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=%s", url.QueryEscape(query))
+		var speaker, query string
+		if len(ctx.Args) >= 2 {
+			first := ctx.Args[0]
+			if len(first) >= 2 && len(first) <= 5 {
+				speaker = first
+				query = strings.Join(ctx.Args[1:], " ")
+			} else {
+				speaker = "en"
+				query = strings.Join(ctx.Args, " ")
+			}
+		} else {
+			speaker = "en"
+			query = ctx.Args[0]
+		}
+
+		apiURL := fmt.Sprintf("https://translate.google.com/translate_tts?ie=UTF-8&tl=%s&client=tw-ob&q=%s", speaker, url.QueryEscape(query))
 		res, err := http.Get(apiURL)
 		if err != nil {
 			return ctx.Reply("[!] TTS service offline.")

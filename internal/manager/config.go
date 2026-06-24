@@ -1,18 +1,14 @@
 package manager
-
 import (
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
 	"time"
-
 	"skyvern/internal/storage"
-
 	"github.com/bwmarrin/discordgo"
 	bolt "go.etcd.io/bbolt"
 )
-
 type PalantirLog struct {
 	Timestamp time.Time `json:"timestamp"`
 	GuildID   string    `json:"guild_id"`
@@ -22,7 +18,6 @@ type PalantirLog struct {
 	UserID    string    `json:"user_id"`
 	ChannelID string    `json:"channel_id"`
 }
-
 func (m *Manager) checkAntispam(s *discordgo.Session, msg *discordgo.MessageCreate) bool {
 	if msg.GuildID == "" || msg.Author == nil {
 		return false
@@ -86,7 +81,6 @@ func (m *Manager) checkAntispam(s *discordgo.Session, msg *discordgo.MessageCrea
 	}
 	return false
 }
-
 func (m *Manager) checkFilter(s *discordgo.Session, msg *discordgo.MessageCreate) bool {
 	if msg.GuildID == "" || msg.Author == nil {
 		return false
@@ -142,7 +136,6 @@ func (m *Manager) checkFilter(s *discordgo.Session, msg *discordgo.MessageCreate
 	}
 	return false
 }
-
 func (m *Manager) GetPrefix(gid string) (string, error) {
 	m.configMu.RLock()
 	p, ok := m.prefixCache[gid]
@@ -158,7 +151,6 @@ func (m *Manager) GetPrefix(gid string) (string, error) {
 	}
 	return p, err
 }
-
 func (m *Manager) SavePrefix(gid, prefix string) error {
 	err := m.db.SavePrefix(gid, prefix)
 	if err == nil {
@@ -168,7 +160,6 @@ func (m *Manager) SavePrefix(gid, prefix string) error {
 	}
 	return err
 }
-
 func (m *Manager) DeletePrefix(gid string) error {
 	err := m.db.DeletePrefix(gid)
 	if err == nil {
@@ -178,7 +169,6 @@ func (m *Manager) DeletePrefix(gid string) error {
 	}
 	return err
 }
-
 func (m *Manager) GetAntispamCfg(gid string) (storage.AntispamCfg, error) {
 	m.configMu.RLock()
 	cfg, ok := m.antispamCache[gid]
@@ -194,7 +184,6 @@ func (m *Manager) GetAntispamCfg(gid string) (storage.AntispamCfg, error) {
 	}
 	return cfg, err
 }
-
 func (m *Manager) SaveAntispamCfg(gid string, cfg storage.AntispamCfg) error {
 	err := m.db.SaveAntispamCfg(gid, cfg)
 	if err == nil {
@@ -204,7 +193,6 @@ func (m *Manager) SaveAntispamCfg(gid string, cfg storage.AntispamCfg) error {
 	}
 	return err
 }
-
 func (m *Manager) GetFilterCfg(gid string) (storage.FilterCfg, error) {
 	m.configMu.RLock()
 	cfg, ok := m.filterCache[gid]
@@ -220,7 +208,6 @@ func (m *Manager) GetFilterCfg(gid string) (storage.FilterCfg, error) {
 	}
 	return cfg, err
 }
-
 func (m *Manager) SaveFilterCfg(gid string, cfg storage.FilterCfg) error {
 	err := m.db.SaveFilterCfg(gid, cfg)
 	if err == nil {
@@ -233,7 +220,6 @@ func (m *Manager) SaveFilterCfg(gid string, cfg storage.FilterCfg) error {
 	}
 	return err
 }
-
 func (m *Manager) getCompiledRegexes(gid string) []*regexp.Regexp {
 	m.configMu.RLock()
 	regexes, ok := m.regexCache[gid]
@@ -241,12 +227,10 @@ func (m *Manager) getCompiledRegexes(gid string) []*regexp.Regexp {
 	if ok {
 		return regexes
 	}
-
 	cfg, err := m.GetFilterCfg(gid)
 	if err != nil || !cfg.Enabled || len(cfg.Regexes) == 0 {
 		return nil
 	}
-
 	var compiled []*regexp.Regexp
 	for _, rxStr := range cfg.Regexes {
 		if rxStr != "" {
@@ -255,17 +239,14 @@ func (m *Manager) getCompiledRegexes(gid string) []*regexp.Regexp {
 			}
 		}
 	}
-
 	m.configMu.Lock()
 	if m.regexCache == nil {
 		m.regexCache = make(map[string][]*regexp.Regexp)
 	}
 	m.regexCache[gid] = compiled
 	m.configMu.Unlock()
-
 	return compiled
 }
-
 func (m *Manager) GetAntilinkCfg(gid string) (storage.AntilinkCfg, error) {
 	m.configMu.RLock()
 	cfg, ok := m.antilinkCache[gid]
@@ -281,7 +262,6 @@ func (m *Manager) GetAntilinkCfg(gid string) (storage.AntilinkCfg, error) {
 	}
 	return cfg, err
 }
-
 func (m *Manager) SaveAntilinkCfg(gid string, cfg storage.AntilinkCfg) error {
 	err := m.db.SaveAntilinkCfg(gid, cfg)
 	if err == nil {
@@ -291,7 +271,6 @@ func (m *Manager) SaveAntilinkCfg(gid string, cfg storage.AntilinkCfg) error {
 	}
 	return err
 }
-
 func (m *Manager) GetPalantirCfg() (storage.PalantirCfg, error) {
 	m.configMu.RLock()
 	cfg := m.palantirCache
@@ -309,7 +288,6 @@ func (m *Manager) GetPalantirCfg() (storage.PalantirCfg, error) {
 	}
 	return cfg, err
 }
-
 func (m *Manager) SavePalantirCfg(cfg storage.PalantirCfg) error {
 	err := m.db.SavePalantirCfg(cfg)
 	if err == nil {
@@ -320,7 +298,6 @@ func (m *Manager) SavePalantirCfg(cfg storage.PalantirCfg) error {
 	}
 	return err
 }
-
 func (m *Manager) palantirWriterLoop() {
 	m.palantirWG.Add(1)
 	defer m.palantirWG.Done()
@@ -364,7 +341,6 @@ func (m *Manager) palantirWriterLoop() {
 		}
 	}
 }
-
 func (m *Manager) LogPalantir(guildID, category, title, desc, userID, channelID string) {
 	if pCfg, err := m.GetPalantirCfg(); err == nil && pCfg.Enabled {
 		allowed := true
@@ -401,7 +377,6 @@ func (m *Manager) LogPalantir(guildID, category, title, desc, userID, channelID 
 		if !allowed {
 			return
 		}
-
 		select {
 		case m.palantirChan <- &PalantirLog{
 			Timestamp: time.Now(),
@@ -413,11 +388,9 @@ func (m *Manager) LogPalantir(guildID, category, title, desc, userID, channelID 
 			ChannelID: channelID,
 		}:
 		default:
-			// queue full, drop
 		}
 	}
 }
-
 func containsBypass(content, blocked, normContent string) bool {
 	blocked = strings.ToLower(blocked)
 	if blocked == "" {
@@ -432,7 +405,6 @@ func containsBypass(content, blocked, normContent string) bool {
 	}
 	return scanWithNoise(normContent, normBlocked)
 }
-
 func scanWithNoise(content, blocked string) bool {
 	if len(blocked) == 0 {
 		return false
@@ -462,14 +434,12 @@ func scanWithNoise(content, blocked string) bool {
 	}
 	return false
 }
-
 func isNoise(r rune) bool {
 	if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
 		return false
 	}
 	return true
 }
-
 func normalizeHomoglyphs(s string) string {
 	var sb strings.Builder
 	sb.Grow(len(s))
@@ -521,12 +491,10 @@ func normalizeHomoglyphs(s string) string {
 	}
 	return sb.String()
 }
-
 var rxLinkFull = regexp.MustCompile(`(?i)(?:https?://|//)[^\s<>"']+`)
 var rxLinkWWW = regexp.MustCompile(`(?i)\bwww\.[^\s<>"']+`)
 var rxLinkBare = regexp.MustCompile(`(?i)\b(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+(?:com|net|org|io|gg|tv|me|app|dev|xyz|info|link|click|ly|to|sh|cc|tk|ml|ga|cf|gq|pw|online|site|biz|edu|gov|co|uk|us|ca|au|de|fr|ru|jp|cn|br|nl|se|no|fi|dk|pl|es|it|pt|be|ch|at|nz|sg|hk|in|kr|mx|ar|za|ng|pk|vn|th|id|eg|club|icu|top|vip|live|stream|news|store|shop|tech|art|pro|media)(?:/[^\s<>"']*)?`)
 var rxInvite = regexp.MustCompile(`(?i)(?:discord\.gg/|discord(?:app)?\.com/invite/)[^\s<>"']+`)
-
 func extractLinks(content string) []string {
 	seen := make(map[string]bool)
 	var out []string
@@ -545,7 +513,6 @@ func extractLinks(content string) []string {
 	add(rxLinkBare.FindAllString(content, -1))
 	return out
 }
-
 func (m *Manager) checkAntilink(s *discordgo.Session, msg *discordgo.MessageCreate) bool {
 	if msg.GuildID == "" || msg.Author == nil {
 		return false
@@ -638,7 +605,6 @@ func (m *Manager) checkAntilink(s *discordgo.Session, msg *discordgo.MessageCrea
 	}
 	return false
 }
-
 func (m *Manager) IsFiltered(gid string, content string) bool {
 	cfg, err := m.GetFilterCfg(gid)
 	if err != nil || !cfg.Enabled {
@@ -673,7 +639,6 @@ func (m *Manager) IsFiltered(gid string, content string) bool {
 	}
 	return false
 }
-
 func (m *Manager) GetAntinukeCfg(gid string) (storage.AntinukeCfg, error) {
 	m.configMu.RLock()
 	cfg, ok := m.antinukeCache[gid]
@@ -689,7 +654,6 @@ func (m *Manager) GetAntinukeCfg(gid string) (storage.AntinukeCfg, error) {
 	}
 	return cfg, err
 }
-
 func (m *Manager) SaveAntinukeCfg(gid string, cfg storage.AntinukeCfg) error {
 	err := m.db.SaveAntinukeCfg(gid, cfg)
 	if err == nil {
@@ -699,7 +663,6 @@ func (m *Manager) SaveAntinukeCfg(gid string, cfg storage.AntinukeCfg) error {
 	}
 	return err
 }
-
 func (m *Manager) GetAntiraidCfg(gid string) (storage.AntiraidCfg, error) {
 	m.configMu.RLock()
 	cfg, ok := m.antiraidCache[gid]
@@ -715,7 +678,6 @@ func (m *Manager) GetAntiraidCfg(gid string) (storage.AntiraidCfg, error) {
 	}
 	return cfg, err
 }
-
 func (m *Manager) SaveAntiraidCfg(gid string, cfg storage.AntiraidCfg) error {
 	err := m.db.SaveAntiraidCfg(gid, cfg)
 	if err == nil {
@@ -725,4 +687,3 @@ func (m *Manager) SaveAntiraidCfg(gid string, cfg storage.AntiraidCfg) error {
 	}
 	return err
 }
-

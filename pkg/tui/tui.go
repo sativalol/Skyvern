@@ -1,5 +1,4 @@
 package tui
-
 import (
 	"fmt"
 	"skyvern/internal/config"
@@ -8,12 +7,10 @@ import (
 	"skyvern/internal/storage"
 	"strings"
 	"time"
-
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
-
 type Theme struct {
 	Name        string
 	Bg          lipgloss.Color
@@ -24,7 +21,6 @@ type Theme struct {
 	Red         lipgloss.Color
 	Subtle      lipgloss.Color
 }
-
 var Themes = []Theme{
 	{
 		Name:        "Gruvbox Dark",
@@ -67,11 +63,8 @@ var Themes = []Theme{
 		Subtle:      lipgloss.Color("#6272a4"),
 	},
 }
-
 var curTheme = 0
-
 type cmdMsg struct{ err error }
-
 type Model struct {
 	db       *storage.DB
 	mgr      *manager.Manager
@@ -91,7 +84,6 @@ type Model struct {
 	spProg   int
 	spTot    int
 }
-
 func NewModel(db *storage.DB, mgr *manager.Manager) Model {
 	g := config.GetGlobal()
 	if g.TuiTheme >= 0 && g.TuiTheme < len(Themes) {
@@ -106,7 +98,6 @@ func NewModel(db *storage.DB, mgr *manager.Manager) Model {
 	m.reload()
 	return m
 }
-
 func (m *Model) reload() {
 	if bots, err := m.db.ListBots(); err == nil {
 		m.bots = bots
@@ -127,27 +118,21 @@ func (m *Model) reload() {
 		}
 	}
 }
-
 type tickMsg time.Time
-
 func tick() tea.Cmd {
 	return tea.Tick(150*time.Millisecond, func(t time.Time) tea.Msg {
 		return tickMsg(t)
 	})
 }
-
 func (m Model) Init() tea.Cmd {
 	return tick()
 }
-
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
-
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-
 	case tea.KeyMsg:
 		if m.editing {
 			switch msg.String() {
@@ -210,12 +195,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, tea.Batch(cmds...)
 		}
-
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "tab":
-			m.tab = (m.tab + 1) % 5
+			m.tab = (m.tab + 1) % 6
 		case "up", "k", "left", "h":
 			if m.tab == 4 {
 				if m.aiSelIdx > 0 {
@@ -299,12 +283,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.reload()
 			}
 		}
-
 	case tickMsg:
 		m.ticks++
 		g := config.GetGlobal()
 		if m.tab == 0 && (strings.ToLower(g.Spotify) == "yes" || strings.ToLower(g.Spotify) == "enabled") {
-			// using the internal background tracking for simulated progress
 			t := spotify.GetSpotifyTrack()
 			if t != "" {
 				if t != m.spTrack {
@@ -325,7 +307,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, tick()
-
 	case cmdMsg:
 		if msg.err != nil {
 			m.err = msg.err
@@ -334,26 +315,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.reload()
 	}
-
 	return m, nil
 }
-
 func (m Model) View() string {
 	if m.width < 30 || m.height < 8 {
 		return "Too small."
 	}
-
 	th := Themes[curTheme]
 	bgStyle := lipgloss.NewStyle().Background(th.Bg)
 	bannerStyle := lipgloss.NewStyle().Foreground(th.Accent).Background(th.BorderFocus).Bold(true).Padding(0, 2).MarginBottom(1)
-
 	headerHeight := 2
 	footerHeight := 1
 	contentHeight := m.height - headerHeight - footerHeight - 2
 	if contentHeight < 4 {
 		contentHeight = 4
 	}
-
 	showSidebar := m.width >= 65
 	sidebarWidth := 0
 	if showSidebar {
@@ -369,7 +345,6 @@ func (m Model) View() string {
 	if mainWidth < 20 {
 		mainWidth = 20
 	}
-
 	viewName := "DASHBOARD"
 	if m.tab == 1 {
 		viewName = "SETTINGS"
@@ -379,16 +354,15 @@ func (m Model) View() string {
 		viewName = "LAVALINK"
 	} else if m.tab == 4 {
 		viewName = "AI CONFIG"
+	} else if m.tab == 5 {
+		viewName = "CONSOLE"
 	}
 	banner := bannerStyle.Render(fmt.Sprintf(" SKYVERN  |  %s  |  %d BOTS ACTIVE  |  THEME: %s ", viewName, len(m.bots), th.Name))
-
 	var sidebar string
 	if showSidebar {
 		sidebar = m.renderSidebar(contentHeight, sidebarWidth, th)
 	}
-
 	mainPanel := m.renderMainPanel(mainWidth, contentHeight, th)
-
 	var footer string
 	if m.tab == 0 {
 		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [↑/↓] Scroll Bots   [Tab] Settings   [N] New   [E] Edit   [S] Toggle State   [T] Cycle Themes   [X] Delete   [Q] Quit")
@@ -398,24 +372,23 @@ func (m Model) View() string {
 		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Lavalink Status   [E] Edit Palantir   [T] Cycle Themes   [Q] Quit")
 	} else if m.tab == 3 {
 		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] AI Configuration   [T] Cycle Themes   [Q] Quit")
+	} else if m.tab == 4 {
+		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Console   [N] New Provider   [E] Edit   [X] Delete   [P] Edit Prompt   [Q] Quit")
 	} else {
-		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Dashboard   [N] New Provider   [E] Edit   [X] Delete   [P] Edit Prompt   [Q] Quit")
+		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Dashboard   Live system log stream   [Q] Quit")
 	}
-
 	var body string
 	if showSidebar {
 		body = lipgloss.JoinHorizontal(lipgloss.Top, sidebar, mainPanel)
 	} else {
 		body = mainPanel
 	}
-
 	return bgStyle.Render(lipgloss.JoinVertical(lipgloss.Left, banner, body, "", footer))
 }
-
 func Run(db *storage.DB, mgr *manager.Manager) error {
 	fmt.Print("\033[8;32;125t")
 	SetAlwaysOnTop(config.GetGlobal().AlwaysOnTop)
 	p := tea.NewProgram(NewModel(db, mgr), tea.WithAltScreen())
 	_, err := p.Run()
 	return err
-}
+}

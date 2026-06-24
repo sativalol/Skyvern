@@ -1,13 +1,10 @@
 package moderation
-
 import (
 	"fmt"
 	"strings"
 	"skyvern/internal/manager"
-
 	"github.com/bwmarrin/discordgo"
 )
-
 func init() {
 	manager.RegisterHelp("prefix", []manager.HelpPage{
 		{
@@ -32,7 +29,6 @@ func init() {
 		},
 	})
 }
-
 var Prefix = &manager.Command{
 	Trigger:     "prefix",
 	Name:        "prefix",
@@ -42,19 +38,19 @@ var Prefix = &manager.Command{
 		gid := ctx.GuildID()
 		if len(ctx.Args) == 0 {
 			prefix := ctx.Cfg.Prefix
-			if gp, err := ctx.DB.GetPrefix(gid); err == nil && gp != "" {
+			if gp, err := ctx.Mgr.GetPrefix(gid); err == nil && gp != "" {
 				prefix = gp
 			}
 			return ctx.Reply(fmt.Sprintf("[*] Current prefix for this server is: `%s`", prefix))
 		}
-
 		sub := strings.ToLower(ctx.Args[0])
-
+		if sub == "help" || sub == "?" {
+			return ctx.SendHelp("prefix")
+		}
 		switch sub {
 		case "self":
 			uid := ctx.AuthorID()
 			if len(ctx.Args) < 2 {
-				// Show current self prefix
 				if p, err := ctx.DB.GetUserPrefix(uid); err == nil && p != "" {
 					return ctx.Reply(fmt.Sprintf("[*] Your personal prefix is: `%s`", p))
 				}
@@ -70,33 +66,32 @@ var Prefix = &manager.Command{
 			}
 			_ = ctx.DB.SaveUserPrefix(uid, newPrefix)
 			return ctx.Reply(fmt.Sprintf("[+] Set your personal prefix to `%s` across all servers.", newPrefix))
-
 		case "set":
 			if !checkPerm(ctx, discordgo.PermissionManageServer) {
 				return ctx.Reply("[!] Manage Server permission required to set guild prefix.")
 			}
 			if len(ctx.Args) < 2 {
-				return ctx.Reply("Usage: `.prefix set <prefix>`")
+				return ctx.SendHelp("prefix")
 			}
 			newPrefix := ctx.Args[1]
 			if len(newPrefix) > 5 {
 				return ctx.Reply("[!] Prefix cannot be longer than 5 characters.")
 			}
-			err := ctx.DB.SavePrefix(gid, newPrefix)
+			err := ctx.Mgr.SavePrefix(gid, newPrefix)
 			if err != nil {
 				return ctx.Reply(fmt.Sprintf("[!] Failed to save prefix: %v", err))
 			}
 			return ctx.Reply(fmt.Sprintf("[+] Server command prefix successfully set to `%s`.", newPrefix))
-
 		case "remove", "delete":
 			if !checkPerm(ctx, discordgo.PermissionManageServer) {
 				return ctx.Reply("[!] Manage Server permission required to remove guild prefix.")
 			}
-			_ = ctx.DB.DeletePrefix(gid)
+			_ = ctx.Mgr.DeletePrefix(gid)
 			return ctx.Reply("[+] Server prefix reset to default.")
-
 		default:
-			// Fallback: treat .prefix <val> as setting the guild prefix for compatibility
+			if len(ctx.Args) > 1 {
+				return ctx.SendHelp("prefix")
+			}
 			if !checkPerm(ctx, discordgo.PermissionManageServer) {
 				return ctx.Reply("[!] Manage Server permission required to set guild prefix.")
 			}
@@ -105,10 +100,10 @@ var Prefix = &manager.Command{
 				return ctx.Reply("[!] Prefix cannot be longer than 5 characters.")
 			}
 			if newPrefix == "default" || newPrefix == "reset" {
-				_ = ctx.DB.DeletePrefix(gid)
+				_ = ctx.Mgr.DeletePrefix(gid)
 				return ctx.Reply("[+] Server prefix reset to default.")
 			}
-			_ = ctx.DB.SavePrefix(gid, newPrefix)
+			_ = ctx.Mgr.SavePrefix(gid, newPrefix)
 			return ctx.Reply(fmt.Sprintf("[+] Server prefix successfully set to `%s`.", newPrefix))
 		}
 	},

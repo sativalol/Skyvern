@@ -1,14 +1,11 @@
 //go:build linux
 package spotify
-
 import (
 	"bytes"
 	"os/exec"
 	"strings"
 )
-
 func GetSpotifyTrack() string {
-	// playerctl handles MPRIS players cleanly
 	if p, err := exec.LookPath("playerctl"); err == nil {
 		c := exec.Command(p, "-p", "spotify", "metadata", "--format", "{{artist}} - {{title}}")
 		var buf bytes.Buffer
@@ -19,8 +16,6 @@ func GetSpotifyTrack() string {
 				return t
 			}
 		}
-
-		// check browsers too if they're holding active tabs
 		c = exec.Command(p, "-a", "metadata", "--format", "{{playerName}}::{{artist}}::{{title}}")
 		buf.Reset()
 		c.Stdout = &buf
@@ -46,8 +41,6 @@ func GetSpotifyTrack() string {
 			}
 		}
 	}
-
-	// fallback directly to dbus if playerctl isn't installed
 	if p, err := exec.LookPath("dbus-send"); err == nil {
 		c := exec.Command(p, "--print-reply", "--dest=org.mpris.MediaPlayer2.spotify", "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties.Get", "string:org.mpris.MediaPlayer2.Player", "string:Metadata")
 		var buf bytes.Buffer
@@ -64,10 +57,8 @@ func GetSpotifyTrack() string {
 			}
 		}
 	}
-
 	return ""
 }
-
 func parseDbus(out, key string) string {
 	lns := strings.Split(out, "\n")
 	for i, l := range lns {

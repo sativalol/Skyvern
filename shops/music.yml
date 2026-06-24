@@ -1,0 +1,133 @@
+pages:
+  page1:
+    items:
+      disc_11:
+        material: MUSIC_DISC_11
+        buy: 75
+        sell: 18.75
+      disc_13:
+        material: MUSIC_DISC_13
+        buy: 75
+        sell: 18.75
+      disc_5:
+        material: MUSIC_DISC_5
+        buy: 945
+        sell: 236.25
+      disc_blocks:
+        material: MUSIC_DISC_BLOCKS
+        buy: 75
+        sell: 18.75
+      disc_cat:
+        material: MUSIC_DISC_CAT
+        buy: 75
+        sell: 18.75
+      disc_chirp:
+        material: MUSIC_DISC_CHIRP
+        buy: 75
+        sell: 18.75
+      disc_creator:
+        material: MUSIC_DISC_CREATOR
+        buy: 100
+        sell: 25
+      disc_creator_music_box:
+        material: MUSIC_DISC_CREATOR_MUSIC_BOX
+        buy: 100
+        sell: 25
+      disc_far:
+        material: MUSIC_DISC_FAR
+        buy: 75
+        sell: 18.75
+      disc_mall:
+        material: MUSIC_DISC_MALL
+        buy: 75
+        sell: 18.75
+      disc_mellohi:
+        material: MUSIC_DISC_MELLOHI
+        buy: 75
+        sell: 18.75
+      disc_otherside:
+        material: MUSIC_DISC_OTHERSIDE
+        buy: 75
+        sell: 18.75
+      disc_pigstep:
+        material: MUSIC_DISC_PIGSTEP
+        buy: 75
+        sell: 18.75
+      disc_precipice:
+        material: MUSIC_DISC_PRECIPICE
+        buy: 100
+        sell: 25
+      disc_relic:
+        material: MUSIC_DISC_RELIC
+        buy: 100
+        sell: 25
+      disc_stal:
+        material: MUSIC_DISC_STAL
+        buy: 75
+        sell: 18.75
+      disc_strad:
+        material: MUSIC_DISC_STRAD
+        buy: 75
+        sell: 18.75
+      disc_wait:
+        material: MUSIC_DISC_WAIT
+        buy: 75
+        sell: 18.75
+      disc_ward:
+        material: MUSIC_DISC_WARD
+        buy: 75
+        sell: 18.75
+      horn_ponder:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: ponder
+      horn_admire:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: admire
+      horn_call:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: call
+      horn_dream:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: dream
+      horn_feel:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: feel
+      horn_seek:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: seek
+      horn_sing:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: sing
+      horn_yearn:
+        material: GOAT_HORN
+        buy: 100
+        sell: 25
+        instrument: yearn
+      jukebox:
+        material: JUKEBOX
+        buy: 64.39
+        sell: 16.1
+  page2:
+    items:
+      note_block:
+        material: NOTE_BLOCK
+        buy: 12.94
+        sell: 3.24
+      disc_fragment:
+        material: DISC_FRAGMENT
+        buy: 100
+        sell: 25

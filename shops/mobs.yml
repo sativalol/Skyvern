@@ -1,0 +1,14 @@
+pages:
+  page1:
+    gui-rows: 3
+    items:
+      gunpowder:
+        material: GUNPOWDER
+        displayname: '&2&lMob drops'
+        section: mob_drops
+        slot: 12
+      spawner:
+        material: SPAWNER
+        displayname: '&4&lSpawners'
+        section: spawners
+        slot: 16

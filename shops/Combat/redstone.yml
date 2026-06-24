@@ -1,0 +1,95 @@
+pages:
+  page1:
+    items:
+      redstone_torch:
+        material: REDSTONE_TORCH
+        buy: 4.29
+        sell: 1.08
+      redstone_lamp:
+        material: REDSTONE_LAMP
+        buy: 45.57
+        sell: 11.4
+      repeater:
+        material: REPEATER
+        buy: 14.92
+        sell: 3.73
+      comparator:
+        material: COMPARATOR
+        buy: 24.43
+        sell: 6.11
+      observer:
+        material: OBSERVER
+        buy: 20.32
+        sell: 5.08
+      dispenser:
+        material: DISPENSER
+        buy: 33.74
+        sell: 8.44
+      dropper:
+        material: DROPPER
+        buy: 8.68
+        sell: 2.17
+      hopper:
+        material: HOPPER
+        buy: 38.67
+        sell: 9.67
+      piston:
+        material: PISTON
+        buy: 15.8
+        sell: 3.95
+      sticky_piston:
+        material: STICKY_PISTON
+        buy: 21.84
+        sell: 5.46
+      lever:
+        material: LEVER
+        buy: 1.33
+        sell: 0.34
+      tripwire_hook:
+        material: TRIPWIRE_HOOK
+        buy: 3.78
+        sell: 0.95
+      rail:
+        material: RAIL
+        buy: 2.21
+        sell: 0.56
+      powered_rail:
+        material: POWERED_RAIL
+        buy: 6.75
+        sell: 1.69
+      activator_rail:
+        material: ACTIVATOR_RAIL
+        buy: 6.75
+        sell: 1.69
+      detector_rail:
+        material: DETECTOR_RAIL
+        buy: 6.67
+        sell: 1.67
+      tnt:
+        material: TNT
+        buy: 106.58
+        sell: 26.65
+      daylight_detector:
+        material: DAYLIGHT_DETECTOR
+        buy: 47.72
+        sell: 11.93
+      note_block:
+        material: NOTE_BLOCK
+        buy: 12.94
+        sell: 3.24
+      crafter:
+        material: CRAFTER
+        buy: 50.26
+        sell: 12.57
+      target:
+        material: TARGET
+        buy: 64.32
+        sell: 16.08
+      calibrated_sculk_sensor:
+        material: CALIBRATED_SCULK_SENSOR
+        buy: 16.74
+        sell: 4.19
+      sculk_sensor:
+        material: SCULK_SENSOR
+        buy: 125
+        sell: 31.25

@@ -626,6 +626,17 @@ func (d *DB) DeleteTempVoiceChan(chanID string) error {
 	})
 }
 
+func (d *DB) ListTempVoiceChans() ([]string, error) {
+	var list []string
+	err := d.b.View(func(tx *bolt.Tx) error {
+		return tx.Bucket(bktTempVoiceChan).ForEach(func(k, v []byte) error {
+			list = append(list, string(k))
+			return nil
+		})
+	})
+	return list, err
+}
+
 type Vouch struct {
 	TargetUserID string `json:"target_user_id"`
 	VoucherID    string `json:"voucher_id"`
@@ -662,10 +673,18 @@ func (d *DB) DeleteVouch(targetUID, voucherUID string) error {
 }
 
 type WeedPlant struct {
-	Growth     float64   `json:"growth"`
-	Water      float64   `json:"water"`
-	Fertilizer float64   `json:"fertilizer"`
-	LastAction time.Time `json:"last_action"`
+	Growth      float64   `json:"growth"`
+	Water       float64   `json:"water"`
+	Fertilizer  float64   `json:"fertilizer"`
+	Health      float64   `json:"health"`
+	LastAction  time.Time `json:"last_action"`
+	LastWater   time.Time `json:"last_water"`
+	LastFert    time.Time `json:"last_fert"`
+	LastLight   time.Time `json:"last_light"`
+	LightUntil  time.Time `json:"light_until"`
+	Infested    bool      `json:"infested"`
+	PestUntil   time.Time `json:"pest_until"`
+	Yields      int       `json:"yields"`
 }
 
 func (d *DB) SaveWeedPlant(gid string, wp WeedPlant) error {
@@ -844,15 +863,16 @@ func (d *DB) ListTouches(gid string) ([]TouchRecord, error) {
 }
 
 type GuildSettings struct {
-	BaseRoleID     string `json:"base_role_id"`
-	JoinLogsChanID string `json:"join_logs_chan_id"`
-	JailRoleID     string `json:"jail_role_id"`
-	JailChanID     string `json:"jail_chan_id"`
-	JailMessage    string `json:"jail_message"`
-	JailRoles      bool   `json:"jail_roles"`
-	Autoplay       string `json:"autoplay"`
-	MaxShares      int    `json:"max_shares"`
-	BoosterLimit   int    `json:"booster_limit"`
+	BaseRoleID            string `json:"base_role_id"`
+	JoinLogsChanID        string `json:"join_logs_chan_id"`
+	JailRoleID            string `json:"jail_role_id"`
+	JailChanID            string `json:"jail_chan_id"`
+	JailMessage           string `json:"jail_message"`
+	JailRoles             bool   `json:"jail_roles"`
+	Autoplay              string `json:"autoplay"`
+	MaxShares             int    `json:"max_shares"`
+	BoosterLimit          int    `json:"booster_limit"`
+	ReactionRolesRestore  bool   `json:"reaction_roles_restore"`
 }
 
 func (d *DB) GetGuildSettings(gid string) (GuildSettings, error) {
@@ -915,7 +935,13 @@ func (d *DB) DeleteAllAliases(gid string) error {
 		b := tx.Bucket(bktAliases)
 		c := b.Cursor()
 		prefix := gid + ":"
+		var keys [][]byte
 		for k, _ := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, _ = c.Next() {
+			buf := make([]byte, len(k))
+			copy(buf, k)
+			keys = append(keys, buf)
+		}
+		for _, k := range keys {
 			_ = b.Delete(k)
 		}
 		return nil
@@ -1354,22 +1380,47 @@ func (d *DB) ListLockdownIgnores(gid string) ([]string, error) {
 	return out, err
 }
 
-func (d *DB) SaveRestrictedCommand(gid, cmd, roleID string) error {
+func (d *DB) GetCmdRestriction(gid, cmd string) (CmdRestriction, error) {
+	var res CmdRestriction
+	err := d.b.View(func(tx *bolt.Tx) error {
+		v := tx.Bucket(bktRestrictedCmds).Get([]byte(gid + ":" + strings.ToLower(cmd)))
+		if v == nil {
+			return nil
+		}
+		if len(v) > 0 && v[0] == '{' {
+			return json.Unmarshal(v, &res)
+		}
+		res.RoleID = string(v)
+		return nil
+	})
+	return res, err
+}
+
+func (d *DB) SaveCmdRestriction(gid, cmd string, res CmdRestriction) error {
 	return d.b.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(bktRestrictedCmds).Put([]byte(gid+":"+strings.ToLower(cmd)), []byte(roleID))
+		bkt := tx.Bucket(bktRestrictedCmds)
+		if res.RoleID == "" && !res.ServerDisabled && len(res.WhitelistChans) == 0 && len(res.BlacklistChans) == 0 {
+			return bkt.Delete([]byte(gid + ":" + strings.ToLower(cmd)))
+		}
+		return putJSON(bkt, []byte(gid+":"+strings.ToLower(cmd)), res)
 	})
 }
 
+func (d *DB) SaveRestrictedCommand(gid, cmd, roleID string) error {
+	res, err := d.GetCmdRestriction(gid, cmd)
+	if err != nil {
+		res = CmdRestriction{}
+	}
+	res.RoleID = roleID
+	return d.SaveCmdRestriction(gid, cmd, res)
+}
+
 func (d *DB) GetRestrictedCommand(gid, cmd string) (string, error) {
-	var roleID string
-	err := d.b.View(func(tx *bolt.Tx) error {
-		v := tx.Bucket(bktRestrictedCmds).Get([]byte(gid + ":" + strings.ToLower(cmd)))
-		if v != nil {
-			roleID = string(v)
-		}
-		return nil
-	})
-	return roleID, err
+	res, err := d.GetCmdRestriction(gid, cmd)
+	if err != nil {
+		return "", err
+	}
+	return res.RoleID, nil
 }
 
 func (d *DB) DeleteRestrictedCommand(gid, cmd string) error {
@@ -1386,7 +1437,37 @@ func (d *DB) ListRestrictedCommands(gid string) (map[string]string, error) {
 		prefix := gid + ":"
 		for k, v := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, v = c.Next() {
 			cmd := strings.TrimPrefix(string(k), prefix)
-			out[cmd] = string(v)
+			var roleID string
+			if len(v) > 0 && v[0] == '{' {
+				var res CmdRestriction
+				if json.Unmarshal(v, &res) == nil {
+					roleID = res.RoleID
+				}
+			} else {
+				roleID = string(v)
+			}
+			out[cmd] = roleID
+		}
+		return nil
+	})
+	return out, err
+}
+
+func (d *DB) ListCmdRestrictions(gid string) (map[string]CmdRestriction, error) {
+	out := make(map[string]CmdRestriction)
+	err := d.b.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktRestrictedCmds)
+		c := b.Cursor()
+		prefix := gid + ":"
+		for k, v := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, v = c.Next() {
+			cmd := strings.TrimPrefix(string(k), prefix)
+			var res CmdRestriction
+			if len(v) > 0 && v[0] == '{' {
+				_ = json.Unmarshal(v, &res)
+			} else {
+				res.RoleID = string(v)
+			}
+			out[cmd] = res
 		}
 		return nil
 	})
@@ -1442,5 +1523,143 @@ func (d *DB) ListWatchedThreads(gid string) ([]string, error) {
 		return nil
 	})
 	return out, err
+}
+
+func (d *DB) ListButtonRoles(gid string) (map[string]string, error) {
+	out := make(map[string]string)
+	err := d.b.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktButtonRoles)
+		c := b.Cursor()
+		prefix := gid + ":"
+		for k, v := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, v = c.Next() {
+			parts := strings.Split(string(k), ":")
+			if len(parts) >= 3 {
+				msgID := parts[1]
+				customID := parts[2]
+				out[msgID+":"+customID] = string(v)
+			}
+		}
+		return nil
+	})
+	return out, err
+}
+
+func (d *DB) DeleteButtonRole(gid, msgID, customID string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bktButtonRoles).Delete([]byte(gid + ":" + msgID + ":" + customID))
+	})
+}
+
+func (d *DB) DeleteAllButtonRolesForMsg(gid, msgID string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktButtonRoles)
+		c := b.Cursor()
+		prefix := gid + ":" + msgID + ":"
+		for k, _ := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, _ = c.Next() {
+			_ = b.Delete(k)
+		}
+		return nil
+	})
+}
+
+func (d *DB) ClearButtonRoles(gid string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktButtonRoles)
+		c := b.Cursor()
+		prefix := gid + ":"
+		for k, _ := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, _ = c.Next() {
+			_ = b.Delete(k)
+		}
+		return nil
+	})
+}
+
+func (d *DB) ListAllGuildReactRoles(gid string) ([]string, error) {
+	var out []string
+	seen := make(map[string]bool)
+	err := d.b.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktReactRoles)
+		c := b.Cursor()
+		prefix := gid + ":"
+		for k, v := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, v = c.Next() {
+			roleID := string(v)
+			if !seen[roleID] {
+				seen[roleID] = true
+				out = append(out, roleID)
+			}
+		}
+		return nil
+	})
+	return out, err
+}
+
+func (d *DB) ListReactRoles(gid string) (map[string]map[string]string, error) {
+	out := make(map[string]map[string]string)
+	err := d.b.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktReactRoles)
+		c := b.Cursor()
+		prefix := gid + ":"
+		for k, v := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, v = c.Next() {
+			parts := strings.Split(string(k), ":")
+			if len(parts) >= 3 {
+				msgID := parts[1]
+				emoji := parts[2]
+				if out[msgID] == nil {
+					out[msgID] = make(map[string]string)
+				}
+				out[msgID][emoji] = string(v)
+			}
+		}
+		return nil
+	})
+	return out, err
+}
+
+func (d *DB) DeleteAllReactRolesForMsg(gid, msgID string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktReactRoles)
+		c := b.Cursor()
+		prefix := gid + ":" + msgID + ":"
+		for k, _ := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, _ = c.Next() {
+			_ = b.Delete(k)
+		}
+		return nil
+	})
+}
+
+func (d *DB) ClearReactRoles(gid string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bktReactRoles)
+		c := b.Cursor()
+		prefix := gid + ":"
+		for k, _ := c.Seek([]byte(prefix)); k != nil && strings.HasPrefix(string(k), prefix); k, _ = c.Next() {
+			_ = b.Delete(k)
+		}
+		return nil
+	})
+}
+
+func (d *DB) SaveRestoreRoles(gid, uid string, roles []string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		return putJSON(tx.Bucket(bktRestoreRoles), []byte(gid+":"+uid), roles)
+	})
+}
+
+func (d *DB) GetRestoreRoles(gid, uid string) ([]string, error) {
+	var roles []string
+	err := d.b.View(func(tx *bolt.Tx) error {
+		v := tx.Bucket(bktRestoreRoles).Get([]byte(gid + ":" + uid))
+		if v == nil {
+			return fmt.Errorf("not found")
+		}
+		return json.Unmarshal(v, &roles)
+	})
+	return roles, err
+}
+
+func (d *DB) DeleteRestoreRoles(gid, uid string) error {
+	return d.b.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(bktRestoreRoles).Delete([]byte(gid + ":" + uid))
+	})
 }
 
