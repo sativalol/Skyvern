@@ -1,4 +1,4 @@
-# Skyvern `v0.1.0-alpha`
+# Skyvern 
 
 A multi-instance Discord bot runner and moderation tool built in Go, managed directly from a terminal user interface (TUI).
 
