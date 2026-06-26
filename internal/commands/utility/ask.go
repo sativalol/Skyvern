@@ -1,12 +1,15 @@
 package utility
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"skyvern/internal/ai"
 	"skyvern/internal/config"
 	"skyvern/internal/manager"
+	"skyvern/internal/obfuscator"
 	"skyvern/internal/search"
 	"skyvern/internal/storage"
 	"skyvern/internal/ai/tools"
@@ -293,13 +296,158 @@ var AskCmd = &manager.Command{
 			},
 		})
 
+		toolsList = append(toolsList, ai.ToolDef{
+			Name:        "lua_obfuscate",
+			Description: "Obfuscate a Lua or LuaU code script using custom settings.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"code": map[string]interface{}{
+						"type":        "string",
+						"description": "The raw Lua/LuaU script code to obfuscate.",
+					},
+					"anti_tamper": map[string]interface{}{
+						"type":        "string",
+						"description": "Optional anti-tamper action to inject. Choices: 'none', 'kick', 'ban', 'crash'. Default is 'none'.",
+					},
+					"double_vm": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Whether to use double virtual machines for obfuscation. Default is false.",
+					},
+					"lyrics": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Whether to inject lyric-based string obfuscation. Default is false.",
+					},
+					"song": map[string]interface{}{
+						"type":        "string",
+						"description": "The ID of the lyric song to inject if lyrics is true. e.g. 'astley'.",
+					},
+					"place_id": map[string]interface{}{
+						"type":        "integer",
+						"description": "Optional place ID to lock the script to.",
+					},
+				},
+				"required": []string{"code"},
+			},
+			Handler: func(args map[string]interface{}) (string, error) {
+				code, _ := args["code"].(string)
+				if code == "" {
+					return "Error: code parameter is empty", nil
+				}
+				antiTamper, _ := args["anti_tamper"].(string)
+				if antiTamper == "" {
+					antiTamper = "none"
+				}
+				doubleVM, _ := args["double_vm"].(bool)
+				lyrics, _ := args["lyrics"].(bool)
+				song, _ := args["song"].(string)
+				placeIDVal, _ := args["place_id"].(float64)
+
+				cfg := obfuscator.Opts{
+					PlaceID:      int(placeIDVal),
+					AntiTamper:   antiTamper,
+					UseDoubleVM:  doubleVM,
+					UseLyrics:    lyrics,
+					SelectedSong: song,
+				}
+				res, err := obfuscator.Obfuscate(code, antiTamper, cfg)
+				if err != nil {
+					return fmt.Sprintf("Error obfuscating script: %v", err), nil
+				}
+				return res, nil
+			},
+		})
+
+		toolsList = append(toolsList, ai.ToolDef{
+			Name:        "get_weather",
+			Description: "Get detailed current weather information for a specified location.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"location": map[string]interface{}{
+						"type":        "string",
+						"description": "The city and/or country to check weather for (e.g. 'London', 'Tokyo, Japan').",
+					},
+				},
+				"required": []string{"location"},
+			},
+			Handler: func(args map[string]interface{}) (string, error) {
+				loc, _ := args["location"].(string)
+				if loc == "" {
+					return "Error: location parameter is empty", nil
+				}
+				apiURL := fmt.Sprintf("https://wttr.in/%s?format=j1", url.QueryEscape(loc))
+				resp, err := http.Get(apiURL)
+				if err != nil {
+					return fmt.Sprintf("Error fetching weather: %v", err), nil
+				}
+				defer resp.Body.Close()
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return fmt.Sprintf("Error reading weather response: %v", err), nil
+				}
+				var data struct {
+					Current []struct {
+						TempC       string `json:"temp_C"`
+						TempF       string `json:"temp_F"`
+						FeelsLikeC  string `json:"FeelsLikeC"`
+						FeelsLikeF  string `json:"FeelsLikeF"`
+						Humidity    string `json:"humidity"`
+						WindSpeed   string `json:"windspeedKmph"`
+						UVIndex     string `json:"uvIndex"`
+						PrecipMM    string `json:"precipMM"`
+						WeatherDesc []struct {
+							Value string `json:"value"`
+						} `json:"weatherDesc"`
+					} `json:"current_condition"`
+					Area []struct {
+						AreaName []struct {
+							Value string `json:"value"`
+						} `json:"areaName"`
+						Region []struct {
+							Value string `json:"value"`
+						} `json:"region"`
+						Country []struct {
+							Value string `json:"value"`
+						} `json:"country"`
+					} `json:"nearest_area"`
+				}
+				if err := json.Unmarshal(body, &data); err != nil || len(data.Current) == 0 {
+					return "Error parsing weather data or location not found.", nil
+				}
+				cur := data.Current[0]
+				desc := "Unknown"
+				if len(cur.WeatherDesc) > 0 {
+					desc = cur.WeatherDesc[0].Value
+				}
+				areaName := loc
+				if len(data.Area) > 0 {
+					a := data.Area[0]
+					var aParts []string
+					if len(a.AreaName) > 0 {
+						aParts = append(aParts, a.AreaName[0].Value)
+					}
+					if len(a.Region) > 0 {
+						aParts = append(aParts, a.Region[0].Value)
+					}
+					if len(a.Country) > 0 {
+						aParts = append(aParts, a.Country[0].Value)
+					}
+					areaName = strings.Join(aParts, ", ")
+				}
+				summary := fmt.Sprintf("Weather for %s:\n- Condition: %s\n- Temperature: %s°C (%s°F)\n- Feels Like: %s°C (%s°F)\n- Humidity: %s%%\n- Wind Speed: %s km/h\n- UV Index: %s\n- Precipitation: %s mm",
+					areaName, desc, cur.TempC, cur.TempF, cur.FeelsLikeC, cur.FeelsLikeF, cur.Humidity, cur.WindSpeed, cur.UVIndex, cur.PrecipMM)
+				return summary, nil
+			},
+		})
+
 		pCfg, err := ai.LoadPrompts()
 		sysMsg := pCfg.SystemPrompt
 
 		sysMsg = strings.ReplaceAll(sysMsg, "${currentDate}", time.Now().Format("Monday, January 2, 2006 3:04 PM MST"))
 		sysMsg = strings.ReplaceAll(sysMsg, "${userRecognition}", fmt.Sprintf("User: %s (ID: %s)", ctx.AuthorTag(), ctx.AuthorID()))
 		sysMsg = strings.ReplaceAll(sysMsg, "${channelContext}", fmt.Sprintf("Channel: <#%s>", ctx.ChanID()))
-		sysMsg = strings.ReplaceAll(sysMsg, "${searchInstructions}", "You have tools available to search the web, search Wikipedia, scrape specific web pages, or crawl domains if you need information.")
+		sysMsg = strings.ReplaceAll(sysMsg, "${searchInstructions}", "You have tools available to search the web, search Wikipedia, scrape specific web pages, crawl domains, obfuscate Lua scripts, or check the weather.")
 
 		thinkingMsg, err := ctx.ReplyAndGet("[*] Thinking, please wait...")
 		if err != nil {
