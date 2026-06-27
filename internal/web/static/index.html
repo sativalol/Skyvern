@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyvern | Web Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ SKYVERN <span class="badge">Web UI</span></h1>
+            <div id="connection-status" class="connected">● Connected</div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Active Instances</div>
+                <div id="stat-active" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Commands</div>
+                <div id="stat-cmds" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Uptime</div>
+                <div id="stat-uptime" class="stat-value">0s</div>
+            </div>
+        </div>
+
+        <div class="bots-section">
+            <div class="section-title">
+                <span>Bot Instances</span>
+                <span id="bot-count" class="count-lbl">0 loaded</span>
+            </div>
+            <div id="bot-list" class="bot-list">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
