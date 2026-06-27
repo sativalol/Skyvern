@@ -106,20 +106,43 @@ If neither is set, Skyvern will print a warning on boot and use a fallback defau
 
 ---
 
-## Plugins
+## Plugins System
 
-Skyvern uses an in-tree plugin system to keep the manager clean. Plugins are given direct access to the database and session manager, meaning they can register commands, attach custom event handlers, or spin up workers.
+Skyvern features a modular, in-tree plugin registry defined in **[plugins.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/internal/plugins/plugins.go)**. This allows modularizing the bot's codebase and registering custom command groups and event triggers cleanly.
 
-### How to Add a Plugin
+### How it works (`plugins.go`)
+Plugins must implement the `Plugin` interface:
+```go
+type Plugin interface {
+    Name() string
+    Init(db *storage.DB, mgr *manager.Manager) error
+    Commands() []*manager.Command
+}
+```
+* **`Name() string`**: Returns the unique registry handle.
+* **`Init(...)`**: Grants access to the Bolt database instance (`storage.DB`) and session manager (`manager.Manager`), allowing you to hook into Discord events or initialize databases.
+* **`Commands()`**: Returns list of bot commands to mount.
 
-1. Create a new package under `internal/plugins/` (e.g., `internal/plugins/economy/`).
-2. Implement the `plugins.Plugin` interface.
-3. Call `plugins.Register()` inside your package's `init()` function.
-4. Import the package anonymously in `main.go` so it compiles into the binary:
-   ```go
-   import _ "skyvern/internal/plugins/economy"
-   ```
-5. Rebuild the bot.
+Every plugin calls `plugins.Register(&MyPlugin{})` inside its self-contained `init()` function. By anonymously importing the plugins in **[main.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/main.go)**:
+```go
+import _ "skyvern/internal/plugins/economy"
+```
+The packages are executed at boot, appending themselves to the central loaded registry slice retrieved via `plugins.Loaded()`.
+
+---
+
+### Built-in Plugins
+
+* **`link`**: Multi-node agent synchronization. Lets you control bot processes remotely on other machines via constant-time secure token authentication and request rate limits.
+* **`captcha`**: User verification. Creates a verification workflow requiring new members to click buttons in Discord to solve interactive image challenges.
+* **`customcommands`**: Dynamic text command mapping. Allows server staff to create static custom text triggers directly from the chat interface.
+* **`economy`**: Virtual server economy. Includes virtual banks, Blackjack, High-Low, and server shop interfaces.
+* **`fun`**: Basic server entertainment commands (e.g., `.coinflip`).
+* **`lua_plugin`**: Gopher-Lua VM plugin runner. Scans the local `plugins/lua/` folder and loads commands written in Lua scripts, supporting hot reloads via `.reloadlua`.
+* **`moon`**: Lunar cycle statistics displayed in terminal-style ASCII diagrams.
+* **`vouch`**: Reputation points and vouches management system.
+
+---
 
 ---
 

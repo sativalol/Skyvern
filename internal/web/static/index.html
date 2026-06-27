@@ -3,40 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skyvern | Web Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Esoteric.win | Home</title>
+    <meta name="description" content="The industry's most advanced protection and software. Scripts, executor, auth systems.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚡ SKYVERN <span class="badge">Web UI</span></h1>
-            <div id="connection-status" class="connected">● Connected</div>
-        </header>
+    <div class="topo-bg"></div>
+    <div class="topo-lines"></div>
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Active Instances</div>
-                <div id="stat-active" class="stat-value">0</div>
+    <nav class="navbar" id="navbar">
+        <a class="nav-logo" onclick="showPage('home')">
+            <img src="https://files.catbox.moe/o1hd0x.webp" alt="Esoteric Logo">
+            <span class="nav-logo-text" id="logoText">esoteric.win</span>
+        </a>
+        <ul class="nav-links" id="navLinks">
+            <li><a onclick="showPage('auth')">Auth</a></li>
+            <li><a onclick="showPage('bot')">Bot</a></li>
+            <li><a onclick="showPage('script')">Scripts</a></li>
+            <li><a onclick="showPage('skyvern')">Skyvern</a></li>
+            <li><a href="/media">Media</a></li>
+            <li><a href="/discord" class="discord-btn" target="_blank"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;margin-right:6px;display:inline-block;vertical-align:-2px;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>Discord</a></li>
+        </ul>
+        <button class="burger-btn" id="burgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-backdrop" id="mobileBackdrop"></div>
+        <div class="mobile-drawer">
+            <div class="mobile-drawer-header">
+                <span>Menu</span>
+                <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Commands</div>
-                <div id="stat-cmds" class="stat-value">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Uptime</div>
-                <div id="stat-uptime" class="stat-value">0s</div>
+            <nav class="mobile-nav">
+                <a onclick="showPage('auth')">Auth</a>
+                <a onclick="showPage('bot')">Bot</a>
+                <a onclick="showPage('script')">Scripts</a>
+                <a onclick="showPage('skyvern')">Skyvern</a>
+                <a href="/media">Media</a>
+            </nav>
+            <div class="mobile-nav-footer"><a href="/discord" class="discord-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;" target="_blank"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>Discord</a></div>
+        </div>
+    </div>
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+        <div class="home-hero" style="min-height: auto; padding-bottom: 40px;">
+            <h1 class="home-title animate-in">esoteric.win</h1>
+            
+            <!-- Skyvern Spotlight Section -->
+            <div class="ecosystem-section animate-in delay-2" style="margin-top: 40px; margin-bottom: 60px; max-width: 800px; width: 100%;">
+                <div class="ecosystem-card" style="flex-direction: column; align-items: center; text-align: center; gap: 24px; padding: 40px; background: rgba(255, 255, 255, 0.01); border-color: rgba(255, 255, 255, 0.08); position: relative; overflow: hidden; border-radius: 24px; width: 100%;">
+                    <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -2px; line-height: 1; margin-bottom: 16px; color: #fff;">Skyvern</h2>
+                    <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.6; font-size: 1.05rem; margin-bottom: 32px;">Go-based Discord bot runner. Run and manage multiple bot instances from one executable with a terminal dashboard and SQLite logging.</p>
+                    
+                    <div style="width: 100%; max-width: 600px; background: #0c0c0e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden; margin-bottom: 24px; position: relative; display: flex; align-items: center; justify-content: center; min-height: 280px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+                        <canvas id="skyvernProjection" style="width: 100%; height: 100%; max-width: 400px; max-height: 280px; opacity: 0.9;"></canvas>
+                        <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%); background-size: 100% 4px; opacity: 0.4;"></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                        <span style="background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">In Development</span>
+                        <a onclick="showPage('skyvern')" class="btn-secondary" style="border-color: rgba(255, 255, 255, 0.15); color: #fff; font-size: 0.8rem; background: rgba(255, 255, 255, 0.02); display: flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer;">View Project →</a>
+                    </div>
+                </div>
+                
+                <script>
+                    (function() {
+                        const canvas = document.getElementById('skyvernProjection');
+                        if (!canvas) return;
+                        const ctx = canvas.getContext('2d');
+                        const img = new Image();
+                        img.src = 'https://files.catbox.moe/o1hd0x.webp'; // Fallback to Esoteric Logo since banner may not exist
+                        let dots = [];
+                        let scanY = 0;
+                        let scanDir = 1.5;
+
+                        img.onload = () => {
+                            canvas.width = 400;
+                            canvas.height = 280;
+                            
+                            const offscreen = document.createElement('canvas');
+                            offscreen.width = 100;
+                            offscreen.height = 70;
+                            const octx = offscreen.getContext('2d');
+                            octx.drawImage(img, 0, 0, 100, 70);
+                            const imgData = octx.getImageData(0, 0, 100, 70).data;
+                            
+                            for (let y = 0; y < 70; y++) {
+                                for (let x = 0; x < 100; x++) {
+                                    const idx = (y * 100 + x) * 4;
+                                    const r = imgData[idx];
+                                    const g = imgData[idx+1];
+                                    const b = imgData[idx+2];
+                                    const brightness = (r + g + b) / 3;
+                                    if (brightness > 60) {
+                                        dots.push({
+                                            x: x * 4,
+                                            y: y * 4,
+                                            b: brightness / 255
+                                        });
+                                    }
+                                }
+                            }
+                            
+                            animate();
+                        };
+
+                        function animate() {
+                            requestAnimationFrame(animate);
+                            ctx.fillStyle = 'rgba(12, 12, 14, 0.25)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            
+                            const glitch = Math.random() > 0.99;
+                            const glitchOffset = glitch ? (Math.random() - 0.5) * 10 : 0;
+                            
+                            dots.forEach(d => {
+                                let dist = Math.abs(d.y - scanY);
+                                let opacity = 0.08;
+                                if (dist < 45) {
+                                    opacity = (1 - dist / 45) * 0.85;
+                                }
+                                
+                                ctx.fillStyle = `rgba(255, 255, 255, ${opacity * d.b})`;
+                                const gx = glitch && Math.random() > 0.9 ? d.x + glitchOffset : d.x;
+                                ctx.fillRect(gx, d.y, 2, 2);
+                            });
+                            
+                            scanY += scanDir;
+                            if (scanY > canvas.height || scanY < 0) {
+                                scanDir = -scanDir;
+                            }
+                            
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(0, scanY);
+                            ctx.lineTo(canvas.width, scanY);
+                            ctx.stroke();
+                        }
+                    })();
+                </script>
             </div>
         </div>
 
-        <div class="bots-section">
-            <div class="section-title">
-                <span>Bot Instances</span>
-                <span id="bot-count" class="count-lbl">0 loaded</span>
+        <!-- Legacy Products Section -->
+        <div class="section" style="padding-top: 20px; padding-bottom: 80px;">
+            <div class="section-label">Legacy Catalog</div>
+            <h2 class="section-title">Previous Work</h2>
+            <p class="section-desc" style="margin-bottom: 40px;">Archived projects and legacy software systems from the esoteric.win timeline.</p>
+            
+            <div class="home-products">
+                <div class="home-card" onclick="showPage('auth')">
+                    <div class="home-card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    <div class="home-card-label">Protection</div>
+                    <div class="home-card-title">Auth System</div>
+                    <div class="home-card-desc">Advanced Luau obfuscation and authentication systems. Secure your scripts with industry-leading protection.</div>
+                    <div class="home-card-footer">
+                        <div class="home-card-price"><span style="background:rgba(239,68,68,0.2);color:rgba(239,68,68,0.9);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Discontinued</span></div>
+                        <span class="home-card-cta">Auth Page →</span>
+                    </div>
+                </div>
+                <div class="home-card" onclick="showPage('bot')">
+                    <div class="home-card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg></div>
+                    <div class="home-card-label">Bot</div>
+                    <div class="home-card-title">Esoterica Bot</div>
+                    <div class="home-card-desc">The flagship Discord bot. Handles key gen, buyer roles, verification logs, and more. Invite-only access.</div>
+                    <div class="home-card-footer">
+                        <div class="home-card-price"><span style="background:rgba(239,68,68,0.2);color:rgba(239,68,68,0.9);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Discontinued</span></div>
+                        <span class="home-card-cta">View Bot →</span>
+                    </div>
+                </div>
+                <div class="home-card" onclick="showPage('script')">
+                    <div class="home-card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+                    <div class="home-card-label">Scripts</div>
+                    <div class="home-card-title">Script Hub</div>
+                    <div class="home-card-desc">Premium scripts for the top Roblox games. Redeemed instantly on Discord. Active development, frequent updates.</div>
+                    <div class="home-card-footer">
+                        <div class="home-card-price"><span style="background:rgba(234,179,8,0.2);color:rgba(234,179,8,0.9);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Being Updated</span></div>
+                        <span class="home-card-cta">Browse Hub →</span>
+                    </div>
+                </div>
             </div>
-            <div id="bot-list" class="bot-list">
-                <!-- Loaded dynamically -->
+            
+            <div class="ecosystem-section" style="margin-top: 60px;">
+                <div class="ecosystem-card">
+                    <div class="ecosystem-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                    <div style="text-align: left;">
+                        <div class="ecosystem-title">Clarification</div>
+                        <div class="ecosystem-text">The <span>Esoterica Bot</span> and <span>Skyvern</span> are our proprietary products, developed and maintained exclusively by esoteric.win. For all other tools listed in our shop, we act as a <span>reseller</span>, providing official access keys for third-party software.</div>
+                    </div>
+                </div>
             </div>
+        </div>
+        
+        <div class="site-footer" style="border-top:1px solid var(--border);margin-top:60px;">
+            <div class="footer-brand"><img src="https://files.catbox.moe/o1hd0x.webp" alt="Logo"><span>ESOTERICA</span></div>
+            <div class="footer-links"><a href="#" onclick="showPage('home')">Home</a><a href="#" onclick="showPage('script')">Scripts</a><a href="/tos">Terms of Service</a><a href="/policy">Privacy Policy</a></div>
+            <div class="footer-copy">© 2026 ESOTERICA ALL RIGHTS RESERVED.</div>
+        </div>
+    </div>
+
+    <!-- AUTH PAGE -->
+    <div class="page" id="page-auth">
+        <div class="hero-section">
+            <div class="hero-left">
+                <h1 class="hero-title">Protection & Auth</h1>
+                <p class="hero-desc">Advanced Luau obfuscation and authentication systems.<br>Secure your scripts with industry-leading protection.</p>
+                <div class="hero-buttons">
+                    <a class="btn-primary" href="/auth" target="_self">Get Started →</a>
+                    <a class="btn-secondary" href="/discord" target="_blank"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;margin-right:6px;display:inline-block;vertical-align:-2px;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>Discord</a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-mockup" style="max-width:480px;">
+                    <div class="mockup-header"><div class="mockup-dots"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div></div><span class="mockup-title">Esoteric Auth — v1.4.2</span><div style="width:40px"></div></div>
+                    <div class="mockup-body" style="min-height:240px;">
+                        <span class="mockup-comment">-- Obfuscation complete</span><br>
+                        <span class="mockup-code">local</span> <span style="color:#a78bfa">_ENV</span> = <span class="mockup-code">getfenv</span>()<br>
+                        <span class="mockup-code">local</span> <span style="color:#a78bfa">key</span> = <span class="mockup-string">"esoteric_auth_v2"</span><br><br>
+                        <span class="mockup-comment">-- Integrity check passed</span><br>
+                        <span style="color:#4ade80">✓</span> <span class="mockup-comment">HWID bound</span><br>
+                        <span style="color:#4ade80">✓</span> <span class="mockup-comment">Encryption active</span><br>
+                        <span style="color:#4ade80">✓</span> <span class="mockup-comment">Anti-tamper enabled</span>
+                    </div>
+                    <div class="mockup-footer"><div class="mockup-btn">Authenticate</div><div class="mockup-btn">Obfuscate</div><div class="mockup-btn">Bind HWID</div><div class="mockup-btn">Settings</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Enterprise-grade security.</h2>
+            <p class="section-desc">Protect your Luau scripts with multi-layered obfuscation, HWID binding, and real-time authentication.</p>
+            <div class="feature-grid">
+                <div class="feature-card"><div class="feature-icon">🔒</div><div class="feature-text">Multi-layered Luau obfuscation with custom VM</div></div>
+                <div class="feature-card"><div class="feature-icon">🔑</div><div class="feature-text">HWID-based authentication per user</div></div>
+                <div class="feature-card"><div class="feature-icon">🛡️</div><div class="feature-text">Anti-tamper and anti-debug protections</div></div>
+                <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-text">Real-time webhook logging and analytics</div></div>
+                <div class="feature-card"><div class="feature-icon">📡</div><div class="feature-text">Remote key management and blacklisting</div></div>
+                <div class="feature-card"><div class="feature-icon">🧩</div><div class="feature-text">Easy API integration for any project</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-label">Pricing</div>
+            <h2 class="section-title">Secure your scripts.</h2>
+            <div class="pricing-card-main" style="max-width:500px;">
+                <div class="pricing-left"><div class="pricing-price-big"><span class="pricing-currency">$</span>5</div><div class="pricing-period">Per script</div></div>
+                <div class="pricing-right">
+                    <ul class="pricing-features"><li>Full obfuscation</li><li>HWID auth</li><li>Webhook logging</li><li>Lifetime updates</li></ul>
+                    <a class="btn-primary" style="width:100%;justify-content:center" href="/auth" target="_self">Purchase →</a>
+                </div>
+            </div>
+        </div>
+        <div class="site-footer">
+            <div class="footer-brand"><img src="https://files.catbox.moe/o1hd0x.webp" alt="Logo"><span>ESOTERICA</span></div>
+            <div class="footer-links"><a href="#" onclick="showPage('home')">Home</a><a href="#" onclick="showPage('script')">Scripts</a><a href="/tos">Terms</a><a href="/policy">Privacy</a></div>
+            <div class="footer-copy">© 2026 ESOTERICA ALL RIGHTS RESERVED.</div>
+        </div>
+    </div>
+
+    <!-- BOT PAGE -->
+    <div class="page" id="page-bot">
+        <div class="hero-section">
+            <div class="hero-left">
+                <h1 class="hero-title">Esoterica Bot</h1>
+                <p class="hero-desc">The flagship Discord bot. Handles key gen, buyer roles, verification logs, and more. Invite-only access.</p>
+                <div class="hero-buttons">
+                    <a class="btn-primary" href="/esoterica" target="_self">View Dashboard →</a>
+                    <a class="btn-secondary" href="/discord" target="_blank"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;margin-right:6px;display:inline-block;vertical-align:-2px;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>Discord</a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-mockup">
+                    <div class="mockup-header"><div class="mockup-dots"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div></div><span class="mockup-title">Esoterica Bot — v2.0.0</span><div style="width:40px"></div></div>
+                    <div class="mockup-body"><span class="mockup-code">print</span>(<span class="mockup-string">"Hello"</span>)<br><span class="mockup-comment">-- Welcome to Esoterica</span><br><br><span class="mockup-comment">-- Ready to execute</span></div>
+                    <div class="mockup-footer"><div class="mockup-btn">/buy</div><div class="mockup-btn">/key</div><div class="mockup-btn">/redeem</div><div class="mockup-btn">/download</div><div class="mockup-btn">/help</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Automated ecosystem.</h2>
+            <p class="section-desc">Esoterica handles the entire purchase flow automatically. Manage keys, roles, verification, and more—all in one place.</p>
+            <div class="feature-grid">
+                <div class="feature-card"><div class="feature-icon">🔑</div><div class="feature-text">Automatic key generation on purchase</div></div>
+                <div class="feature-card"><div class="feature-icon">👥</div><div class="feature-text">Buyer role sync and verification logs</div></div>
+                <div class="feature-card"><div class="feature-icon">🔒</div><div class="feature-text">Invite-only access, runs in our server</div></div>
+                <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-text">Real-time webhook integration</div></div>
+                <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-text">Analytics and usage tracking</div></div>
+                <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-text">Customizable commands and responses</div></div>
+            </div>
+        </div>
+        <div class="site-footer">
+            <div class="footer-brand"><img src="https://files.catbox.moe/o1hd0x.webp" alt="Logo"><span>ESOTERICA</span></div>
+            <div class="footer-links"><a href="#" onclick="showPage('home')">Home</a><a href="#" onclick="showPage('script')">Scripts</a><a href="/tos">Terms</a><a href="/policy">Privacy</a></div>
+            <div class="footer-copy">© 2026 ESOTERICA ALL RIGHTS RESERVED.</div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS PAGE -->
+    <div class="page" id="page-script">
+        <div class="hero-section">
+            <div class="hero-left">
+                <h1 class="hero-title">Esoteric Hub</h1>
+                <p class="hero-desc">Premium scripts for the top Roblox games. Redeemed instantly on Discord. Active development, frequent updates.</p>
+                <div class="hero-buttons">
+                    <a class="btn-primary" href="/script" target="_self">Get Script →</a>
+                    <a class="btn-secondary" href="/discord" target="_blank"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;margin-right:6px;display:inline-block;vertical-align:-2px;"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/></svg>Discord</a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="script-mockup">
+                    <div class="script-mockup-header"><span>esoteric.best</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                    <div class="script-mockup-body">
+                        <div class="script-row"><span class="script-label">Aimbot</span><div class="script-toggle"></div></div>
+                        <div class="script-row"><span class="script-label">Silent Aim</span><span class="script-value">None</span></div>
+                        <div class="script-row"><span class="script-label">Aim Through Walls</span><div class="script-toggle"></div></div>
+                        <div class="script-row"><span class="script-label">Auto Reload</span><div class="script-toggle"></div></div>
+                        <div class="script-row"><span class="script-label">Hit Part</span><span class="script-value">Head</span></div>
+                        <div class="script-row"><span class="script-label">Fov Size</span><div class="script-slider"></div></div>
+                        <div class="script-row"><span class="script-label">Hit Chance</span><span class="script-value">100%</span></div>
+                        <div class="script-row"><span class="script-label">Anti Aim</span><div class="script-toggle off"></div></div>
+                        <div class="script-row"><span class="script-label">No Spread</span><div class="script-toggle"></div></div>
+                        <div class="script-row"><span class="script-label">Instant Reload</span><div class="script-toggle"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-label">About</div>
+            <h2 class="section-title">Built for the meta.</h2>
+            <p class="section-desc">Esoteric scripts deliver premium features for the most popular Roblox games. Active development, frequent updates.</p>
+            <div class="feature-grid">
+                <div class="feature-card"><div class="feature-icon">✓</div><div class="feature-text">Premium scripts for top Roblox games</div></div>
+                <div class="feature-card"><div class="feature-icon">✓</div><div class="feature-text">Active development and frequent updates</div></div>
+                <div class="feature-card"><div class="feature-icon">✓</div><div class="feature-text">Instant redemption via our Discord</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-label">Games</div>
+            <h2 class="section-title">Supported games.</h2>
+            <p class="section-desc">Live now and more coming soon.</p>
+            <div class="games-grid">
+                <div class="game-card"><div class="game-name">Bloxstrike</div><span class="game-status status-live">● Live/Updated</span></div>
+                <div class="game-card"><div class="game-name">Blade Ball</div><span class="game-status status-dev">● In Development</span></div>
+                <div class="game-card"><div class="game-name">Death Ball</div><span class="game-status status-dev">● In Development</span></div>
+                <div class="game-card"><div class="game-name">Sniper Duels</div><span class="game-status status-dev">● In Development</span></div>
+                <div class="game-card"><div class="game-name">Operation One</div><span class="game-status status-dev">● In Development</span></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-label">Pricing</div>
+            <h2 class="section-title">Pick your plan.</h2>
+            <div class="pricing-cards">
+                <div class="pricing-card-alt">
+                    <div class="pricing-price-big"><span class="pricing-currency">$</span>5</div>
+                    <div class="pricing-period">Per Month</div>
+                    <ul class="pricing-features"><li>Access to all scripts</li><li>All current & future scripts</li><li class="x-mark">Never expires</li></ul>
+                    <a class="btn-primary" style="width:100%;justify-content:center" href="/script" target="_self">Purchase →</a>
+                </div>
+                <div class="pricing-card-alt">
+                    <div class="best-value-badge">Best Value</div>
+                    <div class="pricing-price-big"><span class="pricing-currency">$</span>10</div>
+                    <div class="pricing-period">One-time Payment</div>
+                    <ul class="pricing-features"><li>Access to all scripts</li><li>All current & future scripts</li><li>Never expires</li></ul>
+                    <a class="btn-primary" style="width:100%;justify-content:center" href="/script" target="_self">Purchase →</a>
+                </div>
+            </div>
+            <p class="pricing-note">Both plans are redeemed in our <a href="/discord" target="_blank">Discord server</a>.</p>
+        </div>
+        <div class="site-footer">
+            <div class="footer-brand"><img src="https://files.catbox.moe/o1hd0x.webp" alt="Logo"><span>ESOTERICA</span></div>
+            <div class="footer-links"><a href="#" onclick="showPage('home')">Home</a><a href="#" onclick="showPage('script')">Scripts</a><a href="/tos">Terms</a><a href="/policy">Privacy</a></div>
+            <div class="footer-copy">© 2026 ESOTERICA ALL RIGHTS RESERVED.</div>
+        </div>
+    </div>
+
+    <!-- SHOP PAGE -->
+    <div class="page" id="page-shop">
+        <div class="home-hero" style="min-height:auto; padding: 140px 20px 60px;">
+            <h1 class="home-title animate-in" style="font-size:clamp(2.5rem,6vw,4rem);">Shop</h1>
+            <p class="home-subtitle animate-in delay-1" style="margin-bottom:60px;">Browse our full catalog of products and services.</p>
+            <div class="home-products" style="max-width:1000px;">
+                <div class="home-card animate-in delay-2" onclick="showPage('auth')">
+                    <div class="home-card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    <div class="home-card-label">Protection</div>
+                    <div class="home-card-title">Auth System</div>
+                    <div class="home-card-desc">Advanced Luau obfuscation and authentication systems.</div>
+                    <div class="home-card-footer"><div class="home-card-price"><span class="price">$5</span><span class="period">Per script</span></div><span class="home-card-cta">View →</span></div>
+                </div>
+
+                <div class="home-card animate-in delay-4" onclick="showPage('script')">
+                    <div class="home-card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+                    <div class="home-card-label">Scripts</div>
+                    <div class="home-card-title">Script Hub</div>
+                    <div class="home-card-desc">Premium scripts for the top Roblox games. Monthly or lifetime.</div>
+                    <div class="home-card-footer"><div class="home-card-price"><span class="price">$5</span><span class="period">Monthly</span><span class="price" style="font-size:1.2rem;text-decoration:line-through;color:var(--text-muted);margin-left:8px">$10</span><span class="period">Lifetime</span></div><span class="home-card-cta">View →</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="site-footer">
+            <div class="footer-brand"><img src="https://files.catbox.moe/o1hd0x.webp" alt="Logo"><span>ESOTERICA</span></div>
+            <div class="footer-links"><a href="#" onclick="showPage('home')">Home</a><a href="#" onclick="showPage('script')">Scripts</a><a href="/tos">Terms</a><a href="/policy">Privacy</a></div>
+            <div class="footer-copy">© 2026 ESOTERICA ALL RIGHTS RESERVED.</div>
+        </div>
+    </div>
+
+    <!-- SKYVERN PAGE -->
+    <div class="page" id="page-skyvern">
+        <div class="home-hero" style="min-height: auto; padding-top: 140px; padding-bottom: 40px; display: block; max-width: 1200px; margin: 0 auto; width: 100%;">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0 20px;">
+                <h1 class="hero-title" style="margin-bottom:0; font-family:'Space Grotesk',sans-serif;">Skyvern</h1>
+                <span class="connection-pill">● connected</span>
+            </div>
+
+            <!-- Metrics row -->
+            <div class="stats-grid" style="padding: 0 20px;">
+                <div class="stat-card">
+                    <div class="stat-label">Active Bots</div>
+                    <div id="stat-active" class="stat-value" style="font-family:'Space Grotesk',sans-serif;">0 / 0</div>
+                    <div style="height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-top:12px;">
+                        <div id="active-progress" style="width:0%; height:100%; background:linear-gradient(90deg, var(--purple) 0%, var(--green) 100%); transition:width 0.4s ease;"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Uptime</div>
+                    <div id="stat-uptime" class="stat-value" style="font-family:'Space Grotesk',sans-serif;">0s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Commands</div>
+                    <div id="stat-cmds" class="stat-value" style="font-family:'Space Grotesk',sans-serif;">0</div>
+                </div>
+            </div>
+
+            <!-- Bot Instance Workspace -->
+            <div class="workspace-card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:32px; backdrop-filter:blur(10px); margin: 2rem 20px 0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:12px;">
+                    <h2 style="font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700;">Bots</h2>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <div class="search-bar">
+                            <input type="text" id="bot-search" placeholder="Search bots...">
+                        </div>
+                        <span id="bot-count" class="count-badge">0 bots</span>
+                    </div>
+                </div>
+
+                <div id="bot-grid" class="bot-grid">
+                    <div class="grid-loading">
+                        <span class="spinner"></span>
+                        <span>Loading bots...</span>   
+                                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="site-footer" style="margin-top:80px;">
+            <div class="footer-brand"><img src="https://files.catbox.moe/o1hd0x.webp" alt="Logo"><span>ESOTERICA</span></div>
+            <div class="footer-links"><a href="#" onclick="showPage('home')">Home</a><a href="#" onclick="showPage('script')">Scripts</a><a href="/tos">Terms</a><a href="/policy">Privacy</a></div>
+            <div class="footer-copy">© 2026 ESOTERICA ALL RIGHTS RESERVED.</div>
         </div>
     </div>
 

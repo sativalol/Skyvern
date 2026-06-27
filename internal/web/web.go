@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"skyvern/internal/manager"
+	"skyvern/internal/plugins/link"
 	"skyvern/internal/storage"
 	"time"
 )
@@ -38,6 +39,9 @@ func StartServer(db *storage.DB, mgr *manager.Manager) {
 	http.HandleFunc("/api/bot/start", handleStartBot)
 	http.HandleFunc("/api/bot/stop", handleStopBot)
 	http.HandleFunc("/api/stats", handleStats)
+	
+	// Register peer synchronization routes
+	link.Routes()
 
 	go func() {
 		fmt.Printf("  [+] Starting Web Dashboard on http://localhost:%s\n", portStr)

@@ -24,6 +24,7 @@ import (
 	_ "skyvern/internal/plugins/lua_plugin"
 	"skyvern/internal/storage"
 	"skyvern/internal/web"
+	"skyvern/internal/plugins/link"
 	"strings"
 	"skyvern/pkg/tui"
 	"skyvern/internal/updater"
@@ -142,12 +143,23 @@ func main() {
 		}
 		mgr.AddCommands(p.Commands())
 	}
+	isAgent := false
 	headless := false
 	for _, arg := range os.Args {
+		if arg == "--agent" {
+			isAgent = true
+		}
 		if arg == "--headless" || arg == "-d" || arg == "--daemon" {
 			headless = true
-			break
 		}
+	}
+
+	if isAgent {
+		go link.Connect(db, mgr)
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		<-sig
+		return
 	}
 
 	if list, err := db.ListBots(); err == nil {
