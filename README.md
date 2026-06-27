@@ -133,21 +133,77 @@ The packages are executed at boot, appending themselves to the central loaded re
 
 ### Built-in Plugins
 
-* **`link`**: Multi-node agent synchronization. Lets you control bot processes remotely on other machines via constant-time secure token authentication and request rate limits.
-* **`captcha`**: User verification. Creates a verification workflow requiring new members to click buttons in Discord to solve interactive image challenges.
-* **`customcommands`**: Dynamic text command mapping. Allows server staff to create static custom text triggers directly from the chat interface.
-* **`economy`**: Virtual server economy. Includes virtual banks, Blackjack, High-Low, and server shop interfaces.
-* **`fun`**: Basic server entertainment commands (e.g., `.coinflip`).
-* **`lua_plugin`**: Gopher-Lua VM plugin runner. Scans the local `plugins/lua/` folder and loads commands written in Lua scripts, supporting hot reloads via `.reloadlua`.
-* **`moon`**: Lunar cycle statistics displayed in terminal-style ASCII diagrams.
-* **`vouch`**: Reputation points and vouches management system.
+#### 1. `link` (Multi-Node Link & Peer Synchronization)
+Enables running bot workers across multiple machines while orchestrating them centrally from a single Controller Web UI.
+* **Features:**
+  1. **Centralized Configuration Sync:** Peer nodes query `/api/link/config?bot=ID` to fetch bot tokens and credentials on-demand, removing the need for local databases.
+  2. **Log Streaming Pipeline:** Peers post local status reports and execution console confirmations back to the Controller `/api/link/logs`.
+  3. **Load Balancing Scheduler:** The controller dynamically schedules new bot executions on whichever connected peer has the lowest CPU and memory utilization.
+  4. **Web UI Peer Visualizer:** Visualizes active peer nodes, resource allocations, up-to-date latency, and running bots directly inside the Web UI dashboard on the **Peers** tab.
+* **How to run:**
+  * **On Controller Node:** Start the web server:
+    ```bash
+    $env:SKYVERN_NODE_TOKEN="my-secret-token"
+    go run main.go
+    ```
+  * **On Peer Node:** Run in agent mode, pointing to the Controller host:
+    ```bash
+    $env:SKYVERN_CONTROLLER="http://controller-ip:8080"
+    $env:SKYVERN_NODE_TOKEN="my-secret-token"
+    go run main.go --agent
+    ```
 
----
+#### 2. `captcha` (Verification Workflow)
+Automates user verification on join.
+* **How to use:**
+  1. Create a `verification` text channel.
+  2. Set up the role given to verified members.
+  3. The bot registers interactive message buttons `captcha_start:*` and `captcha_select:*` for image challenges.
+  4. Once resolved, the verified role is assigned automatically.
+
+#### 3. `customcommands` (Dynamic Custom Command Triggers)
+Enables server staff to set up static text replies for frequently asked questions.
+* **Usage Commands:**
+  * Create: `.customcmd create <trigger> [description]`
+  * Delete: `.customcmd delete <trigger>`
+  * List: `.customcmd list`
+
+#### 4. `economy` (Ecosystem Games & Shop)
+Hosts virtual currency wallets and betting games.
+* **Usage Commands:**
+  * Check wallet balance: `.balance` or `.bal`
+  * Claim daily credits: `.daily`
+  * Play Blackjack: `.blackjack <bet>` or `.bj <bet>`
+  * High-Low guessing game: `.hl <bet>`
+  * Shop operations: `.shop` (lists items to buy/redeem)
+
+#### 5. `fun` (Entertainment Controls)
+Basic server amusement commands.
+* **Usage Commands:**
+  * `.coinflip` (results in Heads or Tails)
+
+#### 6. `lua_plugin` (Gopher-Lua Dynamic Extensibility)
+Executes hot-reloadable Lua scripts inside `plugins/lua/` folder.
+* **Usage Commands:**
+  * Mount a new script: Place a `.lua` script inside `plugins/lua/` defining `skyvern.register_command`.
+  * Reload changes instantly: `.reloadlua`
+
+#### 7. `moon` (Astronomy ASCII graphics)
+Prints current lunar cycle calculations inside raw markdown blocks.
+* **Usage Commands:**
+  * `.moon` or `.mooncycle`
+
+#### 8. `vouch` (Reputation Scoring)
+Maintains client vouch records.
+* **Usage Commands:**
+  * `.vouch @user +1 <reason>`
+  * `.vouches [@user] [page]` (shows paginated vouches history)
 
 ---
 
 ## Latest Updates
 See [updates.md](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/updates.md) for full details on recent features:
+* **Distributed Peer Sync & Load Balancing:** Automated scheduling on remote workers, centralized config sync, log pipelines, and Web UI Peer Visualizer.
 * **Dynamic Lua Plugins:** Write commands dynamically in `plugins/lua/` and reload them on the fly with `.reloadlua`.
 * **TUI DB Browser:** View and search database buckets and keys for `bots.db` and `palantir.db` inside TUI (`Tab 6`).
 * **Server History RAG:** Ask AI questions about the server's history using `.asklogs`.

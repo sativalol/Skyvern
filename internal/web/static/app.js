@@ -26,11 +26,14 @@ function showPage(name) {
     if (mobileMenu) mobileMenu.classList.remove('active');
     document.body.style.overflow = 'auto';
 
+    stopDashboardSync();
+    stopPeersSync();
+
     // Start/Stop dashboard sync depending on page focus
     if (name === 'skyvern') {
         startDashboardSync();
-    } else {
-        stopDashboardSync();
+    } else if (name === 'peers') {
+        startPeersSync();
     }
 }
 
@@ -44,7 +47,8 @@ const hashMap = {
     esoterica: 'bot', 
     script: 'script', 
     bot: 'bot',
-    skyvern: 'skyvern'
+    skyvern: 'skyvern',
+    peers: 'peers'
 };
 
 const path = window.location.pathname.replace('/', '');
@@ -276,5 +280,78 @@ function stopDashboardSync() {
     if (dashboardInterval) {
         clearInterval(dashboardInterval);
         dashboardInterval = null;
+    }
+}
+
+let peersInterval = null;
+
+async function fetchPeers() {
+    try {
+        const res = await fetch('/api/link/peers');
+        if (!res.ok) return;
+        const peers = await res.json();
+        
+        const peersCount = document.getElementById('peers-count');
+        if (peersCount) {
+            peersCount.innerText = `${peers.length} peers`;
+        }
+
+        const container = document.getElementById('peers-grid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (peers.length === 0) {
+            container.innerHTML = `
+                <div class="grid-loading">
+                    <span>No active peers connected.</span>
+                </div>
+            `;
+            return;
+        }
+
+        peers.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'bot-panel';
+
+            const name = escapeHtml(p.host);
+            const id = escapeHtml(p.id);
+            const botsList = p.bots && p.bots.length > 0 ? p.bots.map(escapeHtml).join(', ') : 'none';
+
+            card.innerHTML = `
+                <div class="panel-top">
+                    <div class="panel-meta">
+                        <span class="panel-dot running"></span>
+                        <div class="panel-title-block">
+                            <span class="panel-name">${name}</span>
+                            <span class="panel-id">ID: ${id}</span>
+                        </div>
+                    </div>
+                    <span class="panel-pill running" style="color:var(--green); background:rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.1);">Online</span>
+                </div>
+                <div style="font-size:0.85rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:6px; margin: 10px 0;">
+                    <div><strong>Uptime:</strong> ${p.uptime}s</div>
+                    <div><strong>CPU Load:</strong> ${p.cpu}%</div>
+                    <div><strong>Memory Load:</strong> ${p.mem}MB</div>
+                    <div><strong>Active Bots:</strong> <span style="font-family:'Fira Code', monospace; font-size:0.8rem;">${botsList}</span></div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        console.error("Peers sync error:", err);
+    }
+}
+
+function startPeersSync() {
+    if (peersInterval) return;
+    fetchPeers();
+    peersInterval = setInterval(fetchPeers, 3000);
+}
+
+function stopPeersSync() {
+    if (peersInterval) {
+        clearInterval(peersInterval);
+        peersInterval = null;
     }
 }

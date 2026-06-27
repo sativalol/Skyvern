@@ -492,6 +492,18 @@ func (m *Manager) HasRunningBots() bool {
 	}
 	return false
 }
+
+func (m *Manager) RunningBots() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var ids []string
+	for k, v := range m.instances {
+		if v.running {
+			ids = append(ids, k)
+		}
+	}
+	return ids
+}
 func (m *Manager) LastErr(clientID string) string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

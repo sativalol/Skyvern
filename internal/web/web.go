@@ -41,7 +41,7 @@ func StartServer(db *storage.DB, mgr *manager.Manager) {
 	http.HandleFunc("/api/stats", handleStats)
 	
 	// Register peer synchronization routes
-	link.Routes()
+	link.Routes(db)
 
 	go func() {
 		fmt.Printf("  [+] Starting Web Dashboard on http://localhost:%s\n", portStr)
@@ -96,6 +96,17 @@ func handleStartBot(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, "missing id", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Load Balancing - Try scheduling remotely first if peer is connected
+	if peerID := link.ScheduleBot(id); peerID != "" {
+		if bot, errGet := dbRef.GetBot(id); errGet == nil {
+			bot.IsEnabled = true
+			_ = dbRef.SaveBot(bot)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok","peer":"` + peerID + `"}`))
 		return
 	}
 
