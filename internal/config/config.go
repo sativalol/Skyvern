@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	Version       = "0.2.5"
+	Version       = "0.2.6"
 	ColorDefault  = 0x1a1a1a
 	ColorBlack    = 0x0d0d0d
 	ColorGunmetal = 0x2c2f33
