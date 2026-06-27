@@ -120,3 +120,11 @@ Skyvern uses an in-tree plugin system to keep the manager clean. Plugins are giv
    import _ "skyvern/internal/plugins/economy"
    ```
 5. Rebuild the bot.
+
+---
+
+## Latest Updates
+See [updates.md](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/updates.md) for full details on recent features:
+* **Dynamic Lua Plugins:** Write commands dynamically in `plugins/lua/` and reload them on the fly with `.reloadlua`.
+* **TUI DB Browser:** View and search database buckets and keys for `bots.db` and `palantir.db` inside TUI (`Tab 6`).
+* **Server History RAG:** Ask AI questions about the server's history using `.asklogs`.
