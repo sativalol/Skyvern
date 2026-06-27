@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/notnil/chess v1.9.0
 	github.com/steambap/captcha v1.4.1
+	github.com/yuin/gopher-lua v1.1.2
 	go.etcd.io/bbolt v1.4.3
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
 	golang.org/x/image v0.43.0

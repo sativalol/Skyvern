@@ -343,7 +343,7 @@ func main() {
 	for _, target := range targetsToBuild {
 		out := fmt.Sprintf("skyvern-%s-%s-%s%s", config.Version, target.OS, target.Arch, target.Ext)
 		fmt.Printf("\nBuilding for %s (%s/%s)...\n", target.Name, target.OS, target.Arch)
-		c := exec.Command("go", "build", "-ldflags=-s -w", "-o", out, "main.go")
+		c := exec.Command("go", "build", "-mod=mod", "-ldflags=-s -w", "-o", out, "main.go")
 		c.Env = append(os.Environ(),
 			"GOOS="+target.OS,
 			"GOARCH="+target.Arch,

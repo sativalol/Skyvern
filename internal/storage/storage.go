@@ -119,6 +119,10 @@ type DB struct {
 	b *bolt.DB
 }
 
+func (d *DB) BoltDB() *bolt.DB {
+	return d.b
+}
+
 func Open(path string) (*DB, error) {
 	if err := InitCrypto(); err != nil {
 		return nil, fmt.Errorf("crypto init: %w", err)

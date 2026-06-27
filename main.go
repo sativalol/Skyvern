@@ -21,6 +21,7 @@ import (
 	_ "skyvern/internal/plugins/moon"
 	_ "skyvern/internal/plugins/economy"
 	_ "skyvern/internal/plugins/customcommands"
+	_ "skyvern/internal/plugins/lua_plugin"
 	"skyvern/internal/storage"
 	"strings"
 	"skyvern/pkg/tui"

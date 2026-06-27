@@ -167,6 +167,9 @@ func New(db *storage.DB, cmds []*Command) *Manager {
 func (m *Manager) DB() *storage.DB {
 	return m.db
 }
+func (m *Manager) PalantirDB() *bolt.DB {
+	return m.palantirDB
+}
 func (m *Manager) RegisterComponentHandler(customID string, fn func(s *discordgo.Session, i *discordgo.InteractionCreate)) {
 	m.mu.Lock()
 	if m.compHandlers == nil {

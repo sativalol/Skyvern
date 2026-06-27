@@ -142,6 +142,7 @@ var Registry = []*manager.Command{
 	utility.ScrapeCmd,
 	utility.CrawlCmd,
 	utility.AskCmd,
+	utility.AskLogsCmd,
 	utility.RedeemCmd,
 	utility.TokensCmd,
 	utility.AIHistoryCmd,
@@ -237,6 +238,7 @@ var Registry = []*manager.Command{
 	fun.Quote,
 	fun.FakeMessage,
 	fun.Impersonate,
+	fun.BlackTea,
 
 	music.Play,
 	music.Stop,
@@ -301,6 +303,9 @@ func Init(mgr *manager.Manager) {
 	})
 	mgr.RegisterComponentHandler("obf_lyrics:*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utility.HandleObfuscateLyricsComponent(s, i, mgr)
+	})
+	mgr.RegisterComponentHandler("blacktea_*", func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		fun.HandleBlackTeaComponent(s, i, mgr)
 	})
 }
 

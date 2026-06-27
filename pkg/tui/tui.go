@@ -83,19 +83,35 @@ type Model struct {
 	spTrack  string
 	spProg   int
 	spTot    int
+
+	dbSelIdx    int
+	dbPane      int
+	dbBuckets   []string
+	dbBktIdx    int
+	dbKeys      []string
+	dbKeyIdx    int
+	dbValue     string
+	dbSearch    textinput.Model
+	dbSearching bool
 }
 func NewModel(db *storage.DB, mgr *manager.Manager) Model {
 	g := config.GetGlobal()
 	if g.TuiTheme >= 0 && g.TuiTheme < len(Themes) {
 		curTheme = g.TuiTheme
 	}
+	ti := textinput.New()
+	ti.Placeholder = "Search keys..."
+	ti.CharLimit = 50
+	ti.Width = 30
 	m := Model{
-		db:      db,
-		mgr:     mgr,
-		bots:    []config.BotInst{},
-		aiProvs: []storage.AIProvider{},
+		db:       db,
+		mgr:      mgr,
+		bots:     []config.BotInst{},
+		aiProvs:  []storage.AIProvider{},
+		dbSearch: ti,
 	}
 	m.reload()
+	m.dbReloadBuckets()
 	return m
 }
 func (m *Model) reload() {
@@ -134,6 +150,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 	case tea.KeyMsg:
+		if m.tab == 6 {
+			return m.updateDbBrowser(msg)
+		}
 		if m.editing {
 			switch msg.String() {
 			case "esc":
@@ -199,7 +218,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "tab":
-			m.tab = (m.tab + 1) % 6
+			m.tab = (m.tab + 1) % 7
 		case "up", "k", "left", "h":
 			if m.tab == 4 {
 				if m.aiSelIdx > 0 {
@@ -356,6 +375,8 @@ func (m Model) View() string {
 		viewName = "AI CONFIG"
 	} else if m.tab == 5 {
 		viewName = "CONSOLE"
+	} else if m.tab == 6 {
+		viewName = "DB BROWSER"
 	}
 	banner := bannerStyle.Render(fmt.Sprintf(" SKYVERN  |  %s  |  %d BOTS ACTIVE  |  THEME: %s ", viewName, len(m.bots), th.Name))
 	var sidebar string
@@ -374,8 +395,10 @@ func (m Model) View() string {
 		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] AI Configuration   [T] Cycle Themes   [Q] Quit")
 	} else if m.tab == 4 {
 		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Console   [N] New Provider   [E] Edit   [X] Delete   [P] Edit Prompt   [Q] Quit")
+	} else if m.tab == 5 {
+		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] DB Browser   Live system log stream   [Q] Quit")
 	} else {
-		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Dashboard   Live system log stream   [Q] Quit")
+		footer = lipgloss.NewStyle().Foreground(th.Subtle).Render("  [Tab] Dashboard   [D] Toggle DB   [↑/↓] Select Bucket/Key   [←/→] Switch Pane   [/] Search   [Q] Quit")
 	}
 	var body string
 	if showSidebar {

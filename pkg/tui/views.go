@@ -214,6 +214,9 @@ func (m Model) renderMainPanel(mainWidth, contentHeight int, th Theme) string {
 	if m.tab == 5 {
 		return m.renderConsole(mainWidth, contentHeight, th)
 	}
+	if m.tab == 6 {
+		return m.renderDbBrowser(mainWidth, contentHeight, th)
+	}
 	showAnalytics := contentHeight >= 20
 	topRightHeight := contentHeight
 	if showAnalytics {
