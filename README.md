@@ -2,7 +2,7 @@
 
 A multi-instance Discord bot runner and moderation tool built in Go, managed directly from a terminal user interface (TUI).
 
-> **Warning:** Skyvern is currently in **alpha**. Features are subject to change, and bugs may occur.
+> **Warning:** Skyvern is currently in **early-release**. Features are subject to change, and bugs may occur.
 
 ---
 
