@@ -23,6 +23,7 @@ import (
 	_ "skyvern/internal/plugins/customcommands"
 	_ "skyvern/internal/plugins/lua_plugin"
 	"skyvern/internal/storage"
+	"skyvern/internal/web"
 	"strings"
 	"skyvern/pkg/tui"
 	"skyvern/internal/updater"
@@ -133,6 +134,7 @@ func main() {
 	mgr := manager.New(db, commands.Registry)
 	defer mgr.Close()
 	commands.Init(mgr)
+	web.StartServer(db, mgr)
 	for _, p := range plugins.Loaded() {
 		if err := p.Init(db, mgr); err != nil {
 			fmt.Fprintf(os.Stderr, "plugin %s init failed: %v\n", p.Name(), err)

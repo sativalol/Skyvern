@@ -521,6 +521,7 @@ type AntinukeCfg struct {
 	PruneAction     string `json:"prune_action,omitempty"`
 	PurgeAction     string `json:"purge_action,omitempty"`
 	StickerAction   string `json:"sticker_action,omitempty"`
+	NukeWebhookURL  string `json:"nuke_webhook_url,omitempty"`
 }
 func (d *DB) SaveAntinukeCfg(gid string, cfg AntinukeCfg) error {
 	return d.b.Update(func(tx *bolt.Tx) error {

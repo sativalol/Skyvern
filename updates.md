@@ -48,3 +48,28 @@ To enable the bot to answer questions using logged server history, we implemente
   3. Formats and injects the top 15 matching logs into the LLM system prompt context.
   4. Deducts 1 token from the user's AI balance and logs the conversation.
 * **Relevant files:** [asklogs.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/internal/commands/utility/asklogs.go), [commands.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/internal/commands/commands.go)
+
+---
+
+## 4. Anti-Nuke Emergency Webhooks
+To protect servers even if modlog channels are deleted during a raid/nuke attempt, we added support for an emergency Discord Webhook.
+
+* **Setup:** Exposes a `NukeWebhookURL` setting in the `AntinukeCfg` schema.
+* **How it works:** When protection thresholds are breached, the bot formats a payload outlining the perpetrator, action category, exact counts, and the punishment applied. It fires a concurrent POST request directly to the external webhook.
+* **Relevant files:** [antinuke.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/internal/manager/antinuke.go), [settings.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/internal/storage/settings.go)
+
+---
+
+## 5. Web UI Dashboard
+A premium dark-themed web management interface has been added.
+
+* **Port/Config:** Binds by default to port `8080` (overridden via the `SKYVERN_WEB_PORT` environment variable).
+* **Endpoints:**
+  * `/` - Serves the web-panel SPA.
+  * `/api/bots` - Lists all bot configurations and active statuses.
+  * `/api/bot/start?id=ID` - Launches a stopped bot.
+  * `/api/bot/stop?id=ID` - Stops an active bot.
+  * `/api/stats` - Exposes memory, command counts, and execution metrics.
+* **Aesthetic:** Features a responsive layout with a CSS glassmorphism card system, pulsating active state indicators, and auto-refresh polling intervals.
+* **Relevant files:** [web.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/internal/web/web.go), [main.go](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/main.go)
+

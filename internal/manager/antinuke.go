@@ -1,10 +1,14 @@
 package manager
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/bwmarrin/discordgo"
 	"skyvern/internal/config"
 	"skyvern/internal/storage"
@@ -430,6 +434,38 @@ func resolveAction(cfg storage.AntinukeCfg, mod string) string {
 	return act
 }
 func (m *Manager) logAntinukeAlert(s *discordgo.Session, gid, actorID, actType string, count, limit int, punish string) {
+	anCfg, err := m.db.GetAntinukeCfg(gid)
+	if err == nil && anCfg.NukeWebhookURL != "" {
+		payload := map[string]interface{}{
+			"content": "⚠️ **[Skyvern Antinuke Alert] Emergency Protection Triggered**",
+			"embeds": []map[string]interface{}{
+				{
+					"title": "Antinuke Alert - Protection Triggered",
+					"color": 16711680,
+					"fields": []map[string]interface{}{
+						{"name": "Guild ID", "value": gid, "inline": true},
+						{"name": "Administrator", "value": fmt.Sprintf("<@%s> (`%s`)", actorID, actorID), "inline": true},
+						{"name": "Action Type", "value": actType, "inline": true},
+						{"name": "Actions Count", "value": fmt.Sprintf("%d/%d", count, limit), "inline": true},
+						{"name": "Punishment Applied", "value": punish, "inline": true},
+					},
+					"timestamp": time.Now().Format(time.RFC3339),
+				},
+			},
+		}
+		if data, err := json.Marshal(payload); err == nil {
+			go func() {
+				req, _ := http.NewRequest("POST", anCfg.NukeWebhookURL, bytes.NewBuffer(data))
+				req.Header.Set("Content-Type", "application/json")
+				client := &http.Client{Timeout: 5 * time.Second}
+				resp, err := client.Do(req)
+				if err == nil {
+					resp.Body.Close()
+				}
+			}()
+		}
+	}
+
 	mCfg, err := m.db.GetModlog(gid)
 	if err != nil || mCfg.ChannelID == "" {
 		return

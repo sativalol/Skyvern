@@ -128,3 +128,5 @@ See [updates.md](file:///C:/Users/vir/Documents/percs1/n/prc/skyvern/updates.md)
 * **Dynamic Lua Plugins:** Write commands dynamically in `plugins/lua/` and reload them on the fly with `.reloadlua`.
 * **TUI DB Browser:** View and search database buckets and keys for `bots.db` and `palantir.db` inside TUI (`Tab 6`).
 * **Server History RAG:** Ask AI questions about the server's history using `.asklogs`.
+* **Emergency Webhook Alerts:** Configure off-channel Discord webhooks to alert you of raid/nuke attempts instantly.
+* **Premium Web UI Dashboard:** Control bot instances, monitor server memory, and view commands log dynamically via a dark-mode browser portal (running on port `8080` by default).
