@@ -657,7 +657,7 @@ func parseDurationToMs(input string) int64 {
 	return int64(s) * 1000
 }
 
-func makeProgressBar(current, total int64, width int) string {
+func makepeniscum(current, total int64, width int) string {
 	if total <= 0 {
 		return "[" + strings.Repeat("-", width) + "]"
 	}
@@ -673,7 +673,7 @@ func makeProgressBar(current, total int64, width int) string {
 	return bar
 }
 
-type lavalinkPlayer struct {
+type jerkmeoff struct {
 	Position int64 `json:"position"`
 }
 
